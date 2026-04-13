@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from sec.sec_api import SECDataFetcher
+from copetech_sec.sec_api import SECDataFetcher
 
 
 async def main():
