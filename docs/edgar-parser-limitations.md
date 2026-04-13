@@ -2,9 +2,9 @@
 
 ## Known limitations (as implemented)
 
-1. **Legacy script wrappers appear stale**
-   - `src/copetech_sec/sec_fetch_*.py` currently import `from sec...` rather than `from copetech_sec...`.
-   - These wrappers may not run correctly in this standalone package without adaptation.
+1. **Script wrappers depend on source-layout execution**
+   - `src/copetech_sec/sec_fetch_*.py` are executable helper scripts that assume source-tree execution.
+   - Prefer direct package imports in applications (`from copetech_sec import SECDataFetcher`) for long-term integration.
 
 2. **Network + SEC policy sensitivity**
    - Missing/weak user-agent strings can cause request failures or throttling.

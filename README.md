@@ -109,9 +109,8 @@ financials = await fetcher.get_financial_summary("MSFT")
 
 - The library is async-first; callers should use an event loop and close the fetcher session.
 - SEC access quality depends on user-agent quality and network/rate-limit conditions.
-- Some helper scripts under `src/copetech_sec/sec_fetch_*.py` currently reference `sec.*`
-  imports instead of `copetech_sec.*`; prefer direct library usage until those scripts are
-  aligned.
+- Helper scripts under `src/copetech_sec/sec_fetch_*.py` are source-layout wrappers;
+  for production integrations, prefer importing the package directly.
 
 ## Deeper documentation
 
