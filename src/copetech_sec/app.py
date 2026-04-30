@@ -1,0 +1,191 @@
+from __future__ import annotations
+
+from contextlib import asynccontextmanager
+import logging
+import re
+from typing import Annotated
+
+import uvicorn
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi.middleware.cors import CORSMiddleware
+
+from .aws_resources import AwsResourceManager
+from .sec_api import SECDataFetcher
+from .settings import ServiceSettings
+
+
+TICKER_RE = re.compile(r"^[A-Za-z][A-Za-z0-9.-]{0,9}$")
+
+settings = ServiceSettings.from_env()
+logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO))
+aws_resources = AwsResourceManager(settings)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    fetcher = getattr(app.state, "fetcher", None)
+    if fetcher is not None:
+        await fetcher.close()
+
+
+app = FastAPI(
+    title="CopeTech SEC API",
+    version="0.1.0",
+    description="HTTP API for CopeTech EDGAR/SEC demos.",
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
+
+
+def normalize_ticker(ticker: str) -> str:
+    value = ticker.strip().upper()
+    if not TICKER_RE.match(value):
+        raise HTTPException(status_code=400, detail="Invalid ticker symbol.")
+    return value
+
+
+def get_client_id(request: Request) -> str:
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        return forwarded_for.split(",", 1)[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+def get_fetcher() -> SECDataFetcher:
+    if not hasattr(app.state, "fetcher"):
+        app.state.fetcher = SECDataFetcher(
+            user_agent=settings.sec_user_agent,
+            cache_dir=settings.cache_dir,
+            rate_limit_sleep=settings.sec_request_sleep,
+        )
+    return app.state.fetcher
+
+
+async def enforce_rate_limit(request: Request) -> dict:
+    result = aws_resources.check_rate_limit(get_client_id(request))
+    if not result["allowed"]:
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "message": "Daily demo limit reached.",
+                "limit": result["limit"],
+                "count": result["count"],
+            },
+        )
+    return result
+
+
+RateLimit = Annotated[dict, Depends(enforce_rate_limit)]
+Fetcher = Annotated[SECDataFetcher, Depends(get_fetcher)]
+
+
+@app.get("/health")
+async def health() -> dict:
+    return {"ok": True, "service": "copetech-sec-api", "region": settings.aws_region}
+
+
+@app.get("/config")
+async def config() -> dict:
+    return aws_resources.public_config()
+
+
+@app.get("/api/sec/company/{ticker}")
+async def company_info(ticker: str, fetcher: Fetcher, _rate_limit: RateLimit) -> dict:
+    normalized = normalize_ticker(ticker)
+    data = await fetcher.get_company_info(normalized)
+    if data is None:
+        raise HTTPException(status_code=404, detail=f"No company info found for {normalized}.")
+    aws_resources.record_sec_cache_lookup(normalized, "company_info", True, {"source": "sec_fetcher"})
+    return data
+
+
+@app.get("/api/sec/transactions/{ticker}")
+async def insider_transactions(
+    ticker: str,
+    fetcher: Fetcher,
+    _rate_limit: RateLimit,
+    days_back: Annotated[int, Query(ge=1, le=730)] = 180,
+    filing_limit: Annotated[int, Query(ge=1, le=80)] = 25,
+) -> dict:
+    normalized = normalize_ticker(ticker)
+    transactions = await fetcher.get_recent_insider_transactions(
+        normalized,
+        days_back=days_back,
+        filing_limit=filing_limit,
+    )
+    aws_resources.record_sec_cache_lookup(
+        normalized,
+        "transactions",
+        True,
+        {"days_back": days_back, "filing_limit": filing_limit, "count": len(transactions)},
+    )
+    return {"ticker": normalized, "days_back": days_back, "transactions": transactions}
+
+
+async def build_insiders_payload(
+    ticker: str,
+    fetcher: SECDataFetcher,
+    days_back: int,
+    filing_limit: int,
+    anchor_type: str,
+) -> dict:
+    normalized = normalize_ticker(ticker)
+    payload = await fetcher.get_insider_signal_payload(
+        normalized,
+        days_back=days_back,
+        filing_limit=filing_limit,
+        anchor_type=anchor_type,
+    )
+    aws_resources.record_sec_cache_lookup(
+        normalized,
+        "insiders",
+        True,
+        {
+            "days_back": days_back,
+            "filing_limit": filing_limit,
+            "anchor_type": anchor_type,
+            "event_count": len(payload.get("events", [])),
+        },
+    )
+    return payload
+
+
+@app.get("/sec/insiders")
+@app.get("/api/sec/insiders")
+async def insiders_by_symbol(
+    symbol: Annotated[str, Query(min_length=1, max_length=10)],
+    fetcher: Fetcher,
+    _rate_limit: RateLimit,
+    days_back: Annotated[int, Query(ge=1, le=730)] = 180,
+    filing_limit: Annotated[int, Query(ge=1, le=120)] = 40,
+    anchor_type: Annotated[str, Query(pattern="^(filing_date|transaction_date)$")] = "filing_date",
+) -> dict:
+    return await build_insiders_payload(symbol, fetcher, days_back, filing_limit, anchor_type)
+
+
+@app.get("/api/sec/insider-signals/{ticker}")
+async def insider_signals(
+    ticker: str,
+    fetcher: Fetcher,
+    _rate_limit: RateLimit,
+    days_back: Annotated[int, Query(ge=1, le=730)] = 180,
+    filing_limit: Annotated[int, Query(ge=1, le=120)] = 40,
+    anchor_type: Annotated[str, Query(pattern="^(filing_date|transaction_date)$")] = "filing_date",
+) -> dict:
+    return await build_insiders_payload(ticker, fetcher, days_back, filing_limit, anchor_type)
+
+
+def run() -> None:
+    uvicorn.run("copetech_sec.app:app", host="0.0.0.0", port=settings.port)
+
+
+if __name__ == "__main__":
+    run()

@@ -16,6 +16,8 @@ Core capabilities today:
 - Financial summary extraction from XBRL company facts.
 - Optional file cache and SQLite persistence helpers.
 
+This package preserves Sentinel's existing SEC backend behavior as closely as possible while making it reusable across projects.
+
 ## Repository layout
 
 - `src/copetech_sec/sec_api.py` – `SECDataFetcher` orchestration facade.
@@ -104,6 +106,62 @@ filings_10k = await fetcher.fetch_annual_reports("MSFT")
 # Company facts summary
 financials = await fetcher.get_financial_summary("MSFT")
 ```
+
+## HTTP API
+
+The repo also exposes a small FastAPI service for cloud demos.
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Local endpoints:
+
+- `GET /health`
+- `GET /config`
+- `GET /api/sec/company/{ticker}`
+- `GET /api/sec/transactions/{ticker}?days_back=180&filing_limit=25`
+- `GET /sec/insiders?symbol=AAPL`
+- `GET /api/sec/insiders?symbol=AAPL`
+- `GET /api/sec/insider-signals/{ticker}?days_back=180&filing_limit=40&anchor_type=filing_date`
+
+Required SEC setting:
+
+- `SEC_API_USER_AGENT` should identify the app and contact email for SEC requests.
+
+AWS deployment settings:
+
+- `AWS_REGION=us-east-1`
+- `S3_BUCKET=copeharder-artifacts`
+- `DYNAMODB_RATE_LIMITS_TABLE=rate_limits`
+- `DYNAMODB_DEMO_JOBS_TABLE=demo_jobs`
+- `DYNAMODB_SEC_CACHE_INDEX_TABLE=sec_cache_index`
+
+The service never hardcodes AWS credentials. On EC2, attach an instance profile/IAM role with scoped DynamoDB and S3 permissions. For local testing, use your normal AWS CLI profile if you want DynamoDB writes to work.
+
+The DynamoDB partition key defaults to `id` for all tables. Override with these env vars if the existing tables use a different key name:
+
+- `DYNAMODB_RATE_LIMITS_PK`
+- `DYNAMODB_DEMO_JOBS_PK`
+- `DYNAMODB_SEC_CACHE_INDEX_PK`
+
+If DynamoDB is unavailable locally, rate limiting falls back to in-memory counters so the API can still run.
+
+## EC2 shape
+
+Suggested first deployment on the Ubuntu EC2 box:
+
+```bash
+git clone <repo-url>
+cd CopeTech-Edgar
+cp .env.example .env
+docker compose up -d --build
+```
+
+Put Caddy or nginx in front of the container for public HTTPS, then point `api.lolcopeharder.com` at the EC2 instance.
+
+See `README_DEPLOY.md` for exact EC2 commands.
 
 ## Caveats and current limitations
 

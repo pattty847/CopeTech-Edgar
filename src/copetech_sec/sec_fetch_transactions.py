@@ -9,13 +9,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from copetech_sec.sec_api import SECDataFetcher
 
+
 async def main():
     if len(sys.argv) < 2:
         print("ERROR_DATA:" + json.dumps({"error": "Missing ticker argument"}))
         sys.exit(1)
-    
+
     ticker = sys.argv[1]
-    
+
     try:
         fetcher = SECDataFetcher()
         transactions = await fetcher.get_recent_insider_transactions(ticker)
@@ -23,6 +24,7 @@ async def main():
     except Exception as e:
         print("ERROR_DATA:" + json.dumps({"error": str(e)}))
         sys.exit(1)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

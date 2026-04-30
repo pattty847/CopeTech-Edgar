@@ -1,0 +1,21 @@
+services:
+  sec-api:
+    build: .
+    ports:
+      - "${HOST_PORT:-8000}:${PORT:-8000}"
+    environment:
+      PORT: "${PORT:-8000}"
+      AWS_REGION: "${AWS_REGION:-us-east-1}"
+      S3_BUCKET: "${S3_BUCKET:-copeharder-artifacts}"
+      DYNAMODB_RATE_LIMITS_TABLE: "${DYNAMODB_RATE_LIMITS_TABLE:-rate_limits}"
+      DYNAMODB_DEMO_JOBS_TABLE: "${DYNAMODB_DEMO_JOBS_TABLE:-demo_jobs}"
+      DYNAMODB_SEC_CACHE_INDEX_TABLE: "${DYNAMODB_SEC_CACHE_INDEX_TABLE:-sec_cache_index}"
+      SEC_API_USER_AGENT: "${SEC_API_USER_AGENT:-}"
+      SEC_CACHE_DIR: "${SEC_CACHE_DIR:-/data/edgar}"
+      RATE_LIMIT_PER_DAY: "${RATE_LIMIT_PER_DAY:-60}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+    volumes:
+      - sec-cache:/data
+
+volumes:
+  sec-cache:

@@ -13,6 +13,17 @@ dependencies = [
   "python-dotenv>=1.2.1",
   "aiosqlite>=0.22.1",
   "pandas>=2.0.0",
+  "fastapi>=0.115.0",
+  "uvicorn[standard]>=0.32.0",
+  "boto3>=1.35.0",
+]
+
+[project.scripts]
+copetech-sec-api = "copetech_sec.app:run"
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
 ]
 
 [tool.hatch.build.targets.wheel]
