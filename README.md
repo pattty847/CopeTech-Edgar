@@ -142,13 +142,16 @@ AWS deployment settings:
 - `DYNAMODB_RATE_LIMITS_TABLE=rate_limits`
 - `DYNAMODB_DEMO_JOBS_TABLE=demo_jobs`
 - `DYNAMODB_SEC_CACHE_INDEX_TABLE=sec_cache_index`
+- `DYNAMODB_RATE_LIMITS_PK=ip`
+- `DYNAMODB_DEMO_JOBS_PK=job_id`
+- `DYNAMODB_SEC_CACHE_INDEX_PK=cache_key`
 - `BACKEND_API_SECRET=<long random secret for the Vercel proxy>`
 
 The service never hardcodes AWS credentials. On EC2, attach an instance profile/IAM role with scoped DynamoDB and S3 permissions. For local testing, use your normal AWS CLI profile if you want DynamoDB writes to work.
 
 Rate limits are keyed by `demo_key + IP + YYYY-MM-DD`. The demo key is hashed before it is written to DynamoDB.
 
-The DynamoDB partition key defaults to `id` for all tables. Override with these env vars if the existing tables use a different key name:
+The current AWS tables use these partition keys:
 
 - `DYNAMODB_RATE_LIMITS_PK`
 - `DYNAMODB_DEMO_JOBS_PK`

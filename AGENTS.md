@@ -80,6 +80,7 @@ python -c "from copetech_sec import SECDataFetcher; print(SECDataFetcher.__name_
 - Restart command: `ssh -i /Users/copeharder/Downloads/copeharder-key.pem ubuntu@54.162.23.10 'cd ~/CopeTech-Edgar && git pull --ff-only && docker compose up -d --build'`.
 - Current `.env` lives only on EC2 and should not be committed.
 - DynamoDB rate limiting keys by `demo_key + IP + YYYY-MM-DD`; without credentials, the app falls back to in-memory rate limiting and local file cache.
+- Existing DynamoDB partition keys are `rate_limits.ip`, `demo_jobs.job_id`, and `sec_cache_index.cache_key`.
 
 ## Style expectations
 
