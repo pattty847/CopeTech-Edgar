@@ -126,6 +126,11 @@ Local endpoints:
 - `GET /api/sec/insiders?symbol=AAPL`
 - `GET /api/sec/insider-signals/{ticker}?days_back=180&filing_limit=40&anchor_type=filing_date`
 
+Protected demo endpoints require:
+
+- `x-backend-secret`: private proxy secret from `BACKEND_API_SECRET`
+- `x-demo-key`: friend/demo invite key used for rate-limit accounting
+
 Required SEC setting:
 
 - `SEC_API_USER_AGENT` should identify the app and contact email for SEC requests.
@@ -137,8 +142,11 @@ AWS deployment settings:
 - `DYNAMODB_RATE_LIMITS_TABLE=rate_limits`
 - `DYNAMODB_DEMO_JOBS_TABLE=demo_jobs`
 - `DYNAMODB_SEC_CACHE_INDEX_TABLE=sec_cache_index`
+- `BACKEND_API_SECRET=<long random secret for the Vercel proxy>`
 
 The service never hardcodes AWS credentials. On EC2, attach an instance profile/IAM role with scoped DynamoDB and S3 permissions. For local testing, use your normal AWS CLI profile if you want DynamoDB writes to work.
+
+Rate limits are keyed by `demo_key + IP + YYYY-MM-DD`. The demo key is hashed before it is written to DynamoDB.
 
 The DynamoDB partition key defaults to `id` for all tables. Override with these env vars if the existing tables use a different key name:
 

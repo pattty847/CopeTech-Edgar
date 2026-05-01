@@ -66,6 +66,21 @@ If you change package import surfaces, also run:
 python -c "from copetech_sec import SECDataFetcher; print(SECDataFetcher.__name__)"
 ```
 
+## Current EC2 demo deployment
+
+- AWS region: `us-east-1`.
+- EC2 public IP: `100.31.76.242`.
+- SSH user/host: `ubuntu@100.31.76.242`.
+- Local SSH key path on Patrick's Mac: `/Users/copeharder/Downloads/copeharder-key.pem` (never commit this; `*.pem` is ignored).
+- Remote checkout path: `/home/ubuntu/CopeTech-Edgar`.
+- Runtime: Docker Compose service `sec-api`, mapping host `80` to container `8000`.
+- IAM instance role: `copeharder-ec2-backend-role`.
+- Public healthcheck: `curl http://100.31.76.242/health`.
+- Protected SEC test: `curl -H "x-backend-secret: $BACKEND_API_SECRET" -H "x-demo-key: friend-demo-key-1" "http://100.31.76.242/api/sec/insiders?symbol=AAPL&days_back=1&filing_limit=1"`.
+- Restart command: `ssh -i /Users/copeharder/Downloads/copeharder-key.pem ubuntu@100.31.76.242 'cd ~/CopeTech-Edgar && git pull --ff-only && docker compose up -d --build'`.
+- Current `.env` lives only on EC2 and should not be committed.
+- DynamoDB rate limiting keys by `demo_key + IP + YYYY-MM-DD`; without credentials, the app falls back to in-memory rate limiting and local file cache.
+
 ## Style expectations
 
 - Keep changes focused and minimal; avoid unrelated refactors.

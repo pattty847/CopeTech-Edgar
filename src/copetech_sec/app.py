@@ -53,6 +53,9 @@ def normalize_ticker(ticker: str) -> str:
 
 
 def get_client_id(request: Request) -> str:
+    real_ip = request.headers.get("x-real-ip")
+    if real_ip:
+        return real_ip.strip()
     forwarded_for = request.headers.get("x-forwarded-for")
     if forwarded_for:
         return forwarded_for.split(",", 1)[0].strip()
@@ -69,8 +72,22 @@ def get_fetcher() -> SECDataFetcher:
     return app.state.fetcher
 
 
-async def enforce_rate_limit(request: Request) -> dict:
-    result = aws_resources.check_rate_limit(get_client_id(request))
+def get_demo_key(request: Request) -> str:
+    demo_key = request.headers.get("x-demo-key") or request.query_params.get("demo_key")
+    if not demo_key or not demo_key.strip():
+        raise HTTPException(status_code=401, detail="Missing demo access key.")
+    return demo_key.strip()
+
+
+def enforce_backend_secret(request: Request) -> None:
+    if settings.secret_matches(request.headers.get("x-backend-secret")):
+        return
+    raise HTTPException(status_code=401, detail="Invalid backend credentials.")
+
+
+async def enforce_demo_access(request: Request) -> dict:
+    enforce_backend_secret(request)
+    result = aws_resources.check_rate_limit(get_demo_key(request), get_client_id(request))
     if not result["allowed"]:
         raise HTTPException(
             status_code=429,
@@ -83,7 +100,7 @@ async def enforce_rate_limit(request: Request) -> dict:
     return result
 
 
-RateLimit = Annotated[dict, Depends(enforce_rate_limit)]
+DemoAccess = Annotated[dict, Depends(enforce_demo_access)]
 Fetcher = Annotated[SECDataFetcher, Depends(get_fetcher)]
 
 
@@ -98,7 +115,7 @@ async def config() -> dict:
 
 
 @app.get("/api/sec/company/{ticker}")
-async def company_info(ticker: str, fetcher: Fetcher, _rate_limit: RateLimit) -> dict:
+async def company_info(ticker: str, fetcher: Fetcher, _demo_access: DemoAccess) -> dict:
     normalized = normalize_ticker(ticker)
     data = await fetcher.get_company_info(normalized)
     if data is None:
@@ -111,7 +128,7 @@ async def company_info(ticker: str, fetcher: Fetcher, _rate_limit: RateLimit) ->
 async def insider_transactions(
     ticker: str,
     fetcher: Fetcher,
-    _rate_limit: RateLimit,
+    _demo_access: DemoAccess,
     days_back: Annotated[int, Query(ge=1, le=730)] = 180,
     filing_limit: Annotated[int, Query(ge=1, le=80)] = 25,
 ) -> dict:
@@ -163,7 +180,7 @@ async def build_insiders_payload(
 async def insiders_by_symbol(
     symbol: Annotated[str, Query(min_length=1, max_length=10)],
     fetcher: Fetcher,
-    _rate_limit: RateLimit,
+    _demo_access: DemoAccess,
     days_back: Annotated[int, Query(ge=1, le=730)] = 180,
     filing_limit: Annotated[int, Query(ge=1, le=120)] = 40,
     anchor_type: Annotated[str, Query(pattern="^(filing_date|transaction_date)$")] = "filing_date",
@@ -175,7 +192,7 @@ async def insiders_by_symbol(
 async def insider_signals(
     ticker: str,
     fetcher: Fetcher,
-    _rate_limit: RateLimit,
+    _demo_access: DemoAccess,
     days_back: Annotated[int, Query(ge=1, le=730)] = 180,
     filing_limit: Annotated[int, Query(ge=1, le=120)] = 40,
     anchor_type: Annotated[str, Query(pattern="^(filing_date|transaction_date)$")] = "filing_date",

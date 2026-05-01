@@ -50,9 +50,11 @@ class AwsResourceManager:
             "rate_limit_per_day": self.settings.rate_limit_per_day,
         }
 
-    def check_rate_limit(self, client_id: str) -> dict[str, Any]:
+    def check_rate_limit(self, demo_key: str, client_ip: str) -> dict[str, Any]:
         day = datetime.now(timezone.utc).strftime("%Y%m%d")
-        key = f"{client_id}#{day}"
+        demo_key_hash = hashlib.sha256(demo_key.encode("utf-8")).hexdigest()[:16]
+        client_ip_hash = hashlib.sha256(client_ip.encode("utf-8")).hexdigest()[:16]
+        key = f"{demo_key_hash}#{client_ip_hash}#{day}"
 
         if self.settings.rate_limits_table:
             try:
@@ -61,9 +63,17 @@ class AwsResourceManager:
                     Key={self.settings.rate_limits_pk: key},
                     UpdateExpression=(
                         "SET first_seen = if_not_exists(first_seen, :now), "
-                        "last_seen = :now ADD request_count :one"
+                        "last_seen = :now, demo_key_hash = :demo_key_hash, "
+                        "client_ip_hash = :client_ip_hash, usage_day = :day "
+                        "ADD request_count :one"
                     ),
-                    ExpressionAttributeValues={":now": int(time.time()), ":one": 1},
+                    ExpressionAttributeValues={
+                        ":now": int(time.time()),
+                        ":one": 1,
+                        ":demo_key_hash": demo_key_hash,
+                        ":client_ip_hash": client_ip_hash,
+                        ":day": day,
+                    },
                     ReturnValues="UPDATED_NEW",
                 )
                 count = int(response.get("Attributes", {}).get("request_count", 1))

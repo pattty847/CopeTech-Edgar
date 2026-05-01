@@ -6,7 +6,7 @@ Deploy target:
 - Docker + Docker Compose plugin installed
 - HTTP port 80 or 8000 open in the security group
 - No AWS keys in the repo
-- Later: attach an EC2 IAM role for DynamoDB/S3 access
+- EC2 IAM role attached for DynamoDB/S3 access, e.g. `copeharder-ec2-backend-role`
 
 ## 1. Clone the repo
 
@@ -41,6 +41,7 @@ DYNAMODB_RATE_LIMITS_TABLE=rate_limits
 DYNAMODB_DEMO_JOBS_TABLE=demo_jobs
 DYNAMODB_SEC_CACHE_INDEX_TABLE=sec_cache_index
 SEC_API_USER_AGENT=CopeHarder your-email@example.com
+BACKEND_API_SECRET=replace-with-long-random-secret
 RATE_LIMIT_PER_DAY=60
 SEC_CACHE_DIR=/data/edgar
 LOG_LEVEL=INFO
@@ -106,6 +107,15 @@ If `HOST_PORT=80`:
 curl "http://localhost/api/sec/insiders?symbol=AAPL"
 ```
 
+When `BACKEND_API_SECRET` is set, include the proxy secret and a friend/demo access key:
+
+```bash
+curl \
+  -H "x-backend-secret: $BACKEND_API_SECRET" \
+  -H "x-demo-key: friend-demo-key-1" \
+  "http://localhost/api/sec/insiders?symbol=AAPL"
+```
+
 Alternate endpoint:
 
 ```bash
@@ -136,7 +146,7 @@ docker compose down
 
 Do not put AWS access keys in this repo or `.env`.
 
-For initial EC2 testing, the app can run without DynamoDB writes; it falls back to local in-memory rate limiting if AWS credentials are unavailable.
+The app uses boto3's default AWS credential provider chain. Do not put static AWS access keys in this repo, `.env`, Docker Compose, or Vercel.
 
 For the real deployment, attach an EC2 IAM role with scoped access to:
 
@@ -146,3 +156,5 @@ For the real deployment, attach an EC2 IAM role with scoped access to:
 - S3 bucket `copeharder-artifacts`
 
 The app reads resource names from environment variables only.
+
+Rate limiting writes one daily counter per `demo_key + IP + YYYY-MM-DD` to `DYNAMODB_RATE_LIMITS_TABLE`.
