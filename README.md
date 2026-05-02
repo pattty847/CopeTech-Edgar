@@ -13,6 +13,7 @@ Core capabilities today:
 - Filing discovery by form type (`4`, `4/A`, `10-K`, `10-Q`, `8-K`, etc.).
 - Form 4 XML parsing into normalized insider transactions.
 - Insider signal payload generation (`events`, `daily_aggregates`, `llm_digest`).
+- Protected insider chart payloads with cached daily OHLC candles for demo overlays.
 - Financial summary extraction from XBRL company facts.
 - Optional file cache and SQLite persistence helpers.
 
@@ -124,6 +125,7 @@ Local endpoints:
 - `GET /api/sec/transactions/{ticker}?days_back=180&filing_limit=25`
 - `GET /sec/insiders?symbol=AAPL`
 - `GET /api/sec/insiders?symbol=AAPL`
+- `GET /api/sec/chart?symbol=AAPL&days_back=180&filing_limit=40`
 - `GET /api/sec/insider-signals/{ticker}?days_back=180&filing_limit=40&anchor_type=filing_date`
 
 Protected demo endpoints require:
@@ -148,6 +150,7 @@ AWS deployment settings:
 - `BACKEND_API_SECRET=<long random secret for the Vercel proxy>`
 - `DEMO_ACCESS_KEYS=<comma-separated friend invite keys>`
 - `CORS_ALLOW_ORIGINS=https://lolcopeharder.com,https://www.lolcopeharder.com,http://localhost:5173`
+- `MARKET_CACHE_TTL_SECONDS=21600`
 
 The service never hardcodes AWS credentials. On EC2, attach an instance profile/IAM role with scoped DynamoDB and S3 permissions. For local testing, use your normal AWS CLI profile if you want DynamoDB writes to work.
 

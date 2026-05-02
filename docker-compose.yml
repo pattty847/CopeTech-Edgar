@@ -19,6 +19,7 @@ services:
       CORS_ALLOW_ORIGINS: "${CORS_ALLOW_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}"
       SEC_CACHE_DIR: "${SEC_CACHE_DIR:-/data/edgar}"
       RATE_LIMIT_PER_DAY: "${RATE_LIMIT_PER_DAY:-60}"
+      MARKET_CACHE_TTL_SECONDS: "${MARKET_CACHE_TTL_SECONDS:-21600}"
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
     volumes:
       - sec-cache:/data

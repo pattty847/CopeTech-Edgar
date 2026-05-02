@@ -10,6 +10,7 @@ from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from .aws_resources import AwsResourceManager
+from .market_data import PriceCandleFetcher
 from .sec_api import SECDataFetcher
 from .settings import ServiceSettings
 
@@ -72,6 +73,15 @@ def get_fetcher() -> SECDataFetcher:
     return app.state.fetcher
 
 
+def get_price_fetcher() -> PriceCandleFetcher:
+    if not hasattr(app.state, "price_fetcher"):
+        app.state.price_fetcher = PriceCandleFetcher(
+            cache_dir=settings.cache_dir,
+            ttl_seconds=settings.market_cache_ttl_seconds,
+        )
+    return app.state.price_fetcher
+
+
 def get_demo_key(request: Request) -> str:
     demo_key = request.headers.get("x-demo-key") or request.query_params.get("demo_key")
     if not demo_key or not demo_key.strip():
@@ -107,6 +117,7 @@ async def enforce_demo_access(request: Request) -> dict:
 
 DemoAccess = Annotated[dict, Depends(enforce_demo_access)]
 Fetcher = Annotated[SECDataFetcher, Depends(get_fetcher)]
+PriceFetcher = Annotated[PriceCandleFetcher, Depends(get_price_fetcher)]
 
 
 @app.get("/health")
@@ -191,6 +202,33 @@ async def insiders_by_symbol(
     anchor_type: Annotated[str, Query(pattern="^(filing_date|transaction_date)$")] = "filing_date",
 ) -> dict:
     return await build_insiders_payload(symbol, fetcher, days_back, filing_limit, anchor_type)
+
+
+@app.get("/api/sec/chart")
+async def insider_chart(
+    symbol: Annotated[str, Query(min_length=1, max_length=10)],
+    fetcher: Fetcher,
+    price_fetcher: PriceFetcher,
+    _demo_access: DemoAccess,
+    days_back: Annotated[int, Query(ge=1, le=730)] = 180,
+    filing_limit: Annotated[int, Query(ge=1, le=120)] = 40,
+    anchor_type: Annotated[str, Query(pattern="^(filing_date|transaction_date)$")] = "filing_date",
+) -> dict:
+    normalized = normalize_ticker(symbol)
+    payload = await build_insiders_payload(normalized, fetcher, days_back, filing_limit, anchor_type)
+    payload["candles"] = await price_fetcher.get_daily_candles(normalized, days_back)
+    aws_resources.record_sec_cache_lookup(
+        normalized,
+        "chart",
+        True,
+        {
+            "days_back": days_back,
+            "filing_limit": filing_limit,
+            "anchor_type": anchor_type,
+            "candle_count": len(payload["candles"]),
+        },
+    )
+    return payload
 
 
 @app.get("/api/sec/insider-signals/{ticker}")

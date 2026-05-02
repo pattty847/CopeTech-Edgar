@@ -19,6 +19,7 @@ class ServiceSettings:
     demo_access_keys: tuple[str, ...]
     cors_allow_origins: tuple[str, ...]
     rate_limit_per_day: int
+    market_cache_ttl_seconds: int
     sec_request_sleep: float
     log_level: str
     port: int
@@ -41,6 +42,7 @@ class ServiceSettings:
             cors_allow_origins=cls._csv_values(os.environ.get("CORS_ALLOW_ORIGINS"))
             or ("http://localhost:5173", "http://127.0.0.1:5173"),
             rate_limit_per_day=int(os.environ.get("RATE_LIMIT_PER_DAY", "60")),
+            market_cache_ttl_seconds=int(os.environ.get("MARKET_CACHE_TTL_SECONDS", "21600")),
             sec_request_sleep=float(os.environ.get("SEC_REQUEST_SLEEP", "0.1")),
             log_level=os.environ.get("LOG_LEVEL", "INFO"),
             port=int(os.environ.get("PORT", "8000")),

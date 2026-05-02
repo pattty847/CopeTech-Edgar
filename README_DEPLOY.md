@@ -48,6 +48,7 @@ BACKEND_API_SECRET=replace-with-long-random-secret
 DEMO_ACCESS_KEYS=friend-demo-key-1,friend-demo-key-2
 CORS_ALLOW_ORIGINS=https://lolcopeharder.com,https://www.lolcopeharder.com,http://localhost:5173,http://127.0.0.1:5173
 RATE_LIMIT_PER_DAY=60
+MARKET_CACHE_TTL_SECONDS=21600
 SEC_CACHE_DIR=/data/edgar
 LOG_LEVEL=INFO
 ```
@@ -133,6 +134,15 @@ Useful bounded test:
 
 ```bash
 curl "http://localhost:8000/api/sec/insiders?symbol=AAPL&days_back=90&filing_limit=10"
+```
+
+Protected chart payload test:
+
+```bash
+curl \
+  -H "x-backend-secret: $BACKEND_API_SECRET" \
+  -H "x-demo-key: friend-demo-key-1" \
+  "http://localhost/api/sec/chart?symbol=AAPL&days_back=180&filing_limit=20"
 ```
 
 ## 7. Stop or restart
