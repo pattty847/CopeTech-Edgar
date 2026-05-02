@@ -129,7 +129,7 @@ Local endpoints:
 Protected demo endpoints require:
 
 - `x-backend-secret`: private proxy secret from `BACKEND_API_SECRET`
-- `x-demo-key`: friend/demo invite key used for rate-limit accounting
+- `x-demo-key`: friend/demo invite key from `DEMO_ACCESS_KEYS`, used for rate-limit accounting
 
 Required SEC setting:
 
@@ -146,6 +146,8 @@ AWS deployment settings:
 - `DYNAMODB_DEMO_JOBS_PK=job_id`
 - `DYNAMODB_SEC_CACHE_INDEX_PK=cache_key`
 - `BACKEND_API_SECRET=<long random secret for the Vercel proxy>`
+- `DEMO_ACCESS_KEYS=<comma-separated friend invite keys>`
+- `CORS_ALLOW_ORIGINS=https://lolcopeharder.com,https://www.lolcopeharder.com,http://localhost:5173`
 
 The service never hardcodes AWS credentials. On EC2, attach an instance profile/IAM role with scoped DynamoDB and S3 permissions. For local testing, use your normal AWS CLI profile if you want DynamoDB writes to work.
 

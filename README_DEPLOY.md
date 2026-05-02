@@ -45,6 +45,8 @@ DYNAMODB_DEMO_JOBS_PK=job_id
 DYNAMODB_SEC_CACHE_INDEX_PK=cache_key
 SEC_API_USER_AGENT=CopeHarder your-email@example.com
 BACKEND_API_SECRET=replace-with-long-random-secret
+DEMO_ACCESS_KEYS=friend-demo-key-1,friend-demo-key-2
+CORS_ALLOW_ORIGINS=https://lolcopeharder.com,https://www.lolcopeharder.com,http://localhost:5173,http://127.0.0.1:5173
 RATE_LIMIT_PER_DAY=60
 SEC_CACHE_DIR=/data/edgar
 LOG_LEVEL=INFO
@@ -118,6 +120,8 @@ curl \
   -H "x-demo-key: friend-demo-key-1" \
   "http://localhost/api/sec/insiders?symbol=AAPL"
 ```
+
+The backend validates `x-demo-key` against `DEMO_ACCESS_KEYS`; invalid keys fail before rate-limit counters are written.
 
 Alternate endpoint:
 

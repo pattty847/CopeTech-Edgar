@@ -16,6 +16,8 @@ class ServiceSettings:
     cache_dir: str
     sec_user_agent: str | None
     backend_api_secret: str | None
+    demo_access_keys: tuple[str, ...]
+    cors_allow_origins: tuple[str, ...]
     rate_limit_per_day: int
     sec_request_sleep: float
     log_level: str
@@ -35,6 +37,9 @@ class ServiceSettings:
             cache_dir=os.environ.get("SEC_CACHE_DIR", "data/edgar"),
             sec_user_agent=os.environ.get("SEC_API_USER_AGENT"),
             backend_api_secret=cls._optional_secret(os.environ.get("BACKEND_API_SECRET")),
+            demo_access_keys=cls._csv_values(os.environ.get("DEMO_ACCESS_KEYS")),
+            cors_allow_origins=cls._csv_values(os.environ.get("CORS_ALLOW_ORIGINS"))
+            or ("http://localhost:5173", "http://127.0.0.1:5173"),
             rate_limit_per_day=int(os.environ.get("RATE_LIMIT_PER_DAY", "60")),
             sec_request_sleep=float(os.environ.get("SEC_REQUEST_SLEEP", "0.1")),
             log_level=os.environ.get("LOG_LEVEL", "INFO"),
@@ -56,3 +61,14 @@ class ServiceSettings:
         if candidate is None:
             return False
         return secrets.compare_digest(candidate, self.backend_api_secret)
+
+    @staticmethod
+    def _csv_values(value: str | None) -> tuple[str, ...]:
+        if value is None:
+            return ()
+        return tuple(item.strip() for item in value.split(",") if item.strip())
+
+    def demo_key_allowed(self, candidate: str | None) -> bool:
+        if not self.demo_access_keys or candidate is None:
+            return False
+        return any(secrets.compare_digest(candidate, key) for key in self.demo_access_keys)

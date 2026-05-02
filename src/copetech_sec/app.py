@@ -38,10 +38,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=list(settings.cors_allow_origins),
     allow_credentials=False,
     allow_methods=["GET"],
-    allow_headers=["*"],
+    allow_headers=["x-demo-key", "x-backend-secret", "content-type"],
 )
 
 
@@ -76,7 +76,12 @@ def get_demo_key(request: Request) -> str:
     demo_key = request.headers.get("x-demo-key") or request.query_params.get("demo_key")
     if not demo_key or not demo_key.strip():
         raise HTTPException(status_code=401, detail="Missing demo access key.")
-    return demo_key.strip()
+    cleaned = demo_key.strip()
+    if not settings.demo_access_keys:
+        raise HTTPException(status_code=503, detail="Demo access keys are not configured.")
+    if not settings.demo_key_allowed(cleaned):
+        raise HTTPException(status_code=403, detail="Invalid demo access key.")
+    return cleaned
 
 
 def enforce_backend_secret(request: Request) -> None:

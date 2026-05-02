@@ -79,6 +79,7 @@ python -c "from copetech_sec import SECDataFetcher; print(SECDataFetcher.__name_
 - Protected SEC test: `curl -H "x-backend-secret: $BACKEND_API_SECRET" -H "x-demo-key: friend-demo-key-1" "http://54.162.23.10/api/sec/insiders?symbol=AAPL&days_back=1&filing_limit=1"`.
 - Restart command: `ssh -i /Users/copeharder/Downloads/copeharder-key.pem ubuntu@54.162.23.10 'cd ~/CopeTech-Edgar && git pull --ff-only && docker compose up -d --build'`.
 - Current `.env` lives only on EC2 and should not be committed.
+- Friend/demo invite keys are configured with `DEMO_ACCESS_KEYS` on EC2 and in Vercel; backend fails closed when no keys are configured.
 - DynamoDB rate limiting keys by `demo_key + IP + YYYY-MM-DD`; without credentials, the app falls back to in-memory rate limiting and local file cache.
 - Existing DynamoDB partition keys are `rate_limits.ip`, `demo_jobs.job_id`, and `sec_cache_index.cache_key`.
 
