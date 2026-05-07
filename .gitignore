@@ -19,3 +19,5 @@ dist/
 data/
 *.sqlite
 *.db
+analysis/phase0_thesis/*.duckdb
+analysis/phase0_thesis/*.csv

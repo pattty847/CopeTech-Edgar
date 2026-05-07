@@ -145,6 +145,15 @@ curl \
   "http://localhost/api/sec/chart?symbol=AAPL&days_back=180&filing_limit=20"
 ```
 
+Protected 13F SIG debug test:
+
+```bash
+curl \
+  -H "x-backend-secret: $BACKEND_API_SECRET" \
+  -H "x-demo-key: friend-demo-key-1" \
+  "http://localhost/api/sec/debug/13f/sig?row_limit=10"
+```
+
 ## 7. Stop or restart
 
 Restart after code/config changes:

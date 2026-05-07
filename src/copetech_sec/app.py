@@ -13,6 +13,7 @@ from .aws_resources import AwsResourceManager
 from .market_data import PriceCandleFetcher
 from .sec_api import SECDataFetcher
 from .settings import ServiceSettings
+from .thirteenf_processor import SIG_CIK, normalize_cik
 
 
 TICKER_RE = re.compile(r"^[A-Za-z][A-Za-z0-9.-]{0,9}$")
@@ -51,6 +52,13 @@ def normalize_ticker(ticker: str) -> str:
     if not TICKER_RE.match(value):
         raise HTTPException(status_code=400, detail="Invalid ticker symbol.")
     return value
+
+
+def normalize_manager_cik(cik: str) -> str:
+    try:
+        return normalize_cik(cik)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 def get_client_id(request: Request) -> str:
@@ -228,6 +236,43 @@ async def insider_chart(
             "candle_count": len(payload["candles"]),
         },
     )
+    return payload
+
+
+@app.get("/api/sec/13f/{cik}")
+async def thirteenf_holdings(
+    cik: str,
+    fetcher: Fetcher,
+    _demo_access: DemoAccess,
+    days_back: Annotated[int, Query(ge=1, le=3650)] = 365 * 3,
+    row_limit: Annotated[int, Query(ge=1, le=5000)] = 5000,
+) -> dict:
+    normalized = normalize_manager_cik(cik)
+    payload = await fetcher.get_latest_13f_holdings(
+        normalized,
+        days_back=days_back,
+        row_limit=row_limit,
+    )
+    if payload.get("filing") is None:
+        raise HTTPException(status_code=404, detail=f"No 13F-HR filing found for CIK {normalized}.")
+    aws_resources.record_sec_cache_lookup(
+        normalized,
+        "13f_holdings",
+        True,
+        {"days_back": days_back, "row_limit": row_limit, "holdings_count": payload.get("holdings_count", 0)},
+    )
+    return payload
+
+
+@app.get("/api/sec/debug/13f/sig")
+async def sig_13f_debug(
+    fetcher: Fetcher,
+    _demo_access: DemoAccess,
+    row_limit: Annotated[int, Query(ge=1, le=100)] = 25,
+) -> dict:
+    payload = await fetcher.get_latest_13f_holdings(SIG_CIK, row_limit=row_limit)
+    if payload.get("filing") is None:
+        raise HTTPException(status_code=404, detail="No 13F-HR filing found for SIG.")
     return payload
 
 
