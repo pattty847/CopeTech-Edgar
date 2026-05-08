@@ -15,6 +15,7 @@ from .form4_processor import Form4Processor
 from .financial_processor import FinancialDataProcessor
 from .supply_chain_parser import SupplyChainParser
 from .sql_cache_manager import SqlCacheManager
+from .thirteenf_processor import ThirteenFProcessor
 
 import pandas as pd
 
@@ -73,6 +74,11 @@ class SECDataFetcher:
         )
         self.financial_processor = FinancialDataProcessor(
             fetch_facts_func=self.get_company_facts # Pass the method directly
+        )
+        self.thirteenf_processor = ThirteenFProcessor(
+            http_client=self.http_client,
+            cache_manager=self.cache_manager,
+            document_handler=self.document_handler,
         )
         self.supply_chain_parser = SupplyChainParser() # Initialize Parser
 
@@ -311,7 +317,30 @@ class SECDataFetcher:
         """Convenience method to fetch Form 8-K (current report) filings."""
         return await self.get_filings_by_form(ticker, "8-K", days_back, use_cache)
 
-    # --- DELEGATED PROCESSOR METHODS --- 
+    async def get_13f_filings(self, cik: str, days_back: int = 365*3, use_cache: bool = True) -> List[Dict]:
+        """Convenience method to fetch Form 13F-HR filing metadata for an institutional manager CIK."""
+        return await self.thirteenf_processor.get_13f_filings(
+            cik=cik,
+            days_back=days_back,
+            use_cache=use_cache,
+        )
+
+    async def get_latest_13f_holdings(
+        self,
+        cik: str,
+        days_back: int = 365*3,
+        use_cache: bool = True,
+        row_limit: Optional[int] = None,
+    ) -> Dict:
+        """Fetches and parses the latest Form 13F-HR information table for an institutional manager CIK."""
+        return await self.thirteenf_processor.get_latest_13f_holdings(
+            cik=cik,
+            days_back=days_back,
+            use_cache=use_cache,
+            row_limit=row_limit,
+        )
+
+    # --- DELEGATED PROCESSOR METHODS ---
 
     async def get_recent_insider_transactions(self, ticker: str, days_back: int = 90,
                                              use_cache: bool = True, filing_limit: int = 10) -> List[Dict]:

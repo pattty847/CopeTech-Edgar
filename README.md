@@ -14,6 +14,7 @@ Core capabilities today:
 - Form 4 XML parsing into normalized insider transactions.
 - Insider signal payload generation (`events`, `daily_aggregates`, `llm_digest`).
 - Protected insider chart payloads with cached daily OHLC candles for demo overlays.
+- Form 13F-HR institutional holdings parsing for a single manager CIK.
 - Financial summary extraction from XBRL company facts.
 - Optional file cache and SQLite persistence helpers.
 
@@ -104,6 +105,9 @@ transactions = await fetcher.get_recent_insider_transactions("MSFT", days_back=9
 # Filing metadata by form
 filings_10k = await fetcher.fetch_annual_reports("MSFT")
 
+# Latest institutional holdings for one manager CIK, e.g. SIG
+holdings = await fetcher.get_latest_13f_holdings("0001446194", row_limit=25)
+
 # Company facts summary
 financials = await fetcher.get_financial_summary("MSFT")
 ```
@@ -126,6 +130,8 @@ Local endpoints:
 - `GET /sec/insiders?symbol=AAPL`
 - `GET /api/sec/insiders?symbol=AAPL`
 - `GET /api/sec/chart?symbol=AAPL&days_back=180&filing_limit=40`
+- `GET /api/sec/13f/{cik}?row_limit=5000`
+- `GET /api/sec/debug/13f/sig?row_limit=25`
 - `GET /api/sec/insider-signals/{ticker}?days_back=180&filing_limit=40&anchor_type=filing_date`
 
 Protected demo endpoints require:
