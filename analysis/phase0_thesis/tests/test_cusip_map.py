@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import tempfile
+import time
+import urllib.error
 import unittest
+from email.message import Message
 from pathlib import Path
 
-from analysis.phase0_thesis.cusip_map import CusipMapper, sec_name_match
+from analysis.phase0_thesis.cusip_map import CusipMapper, openfigi_retry_after_seconds, sec_name_match
 from analysis.phase0_thesis.db import connect, init_schema
 
 
@@ -105,6 +108,19 @@ class Phase0CusipMapTests(unittest.TestCase):
 
             self.assertEqual([len(call) for call in fake_client.calls], [10, 10, 3])
             con.close()
+
+    def test_openfigi_ratelimit_reset_is_timestamp_not_duration(self) -> None:
+        headers = Message()
+        headers["ratelimit-reset"] = str(time.time() + 2)
+        error = urllib.error.HTTPError("https://api.openfigi.com", 429, "rate limited", headers, None)
+
+        try:
+            retry_after = openfigi_retry_after_seconds(error)
+        finally:
+            error.close()
+
+        self.assertGreaterEqual(retry_after, 0)
+        self.assertLess(retry_after, 5)
 
 
 if __name__ == "__main__":

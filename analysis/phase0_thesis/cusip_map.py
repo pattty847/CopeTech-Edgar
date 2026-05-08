@@ -63,7 +63,7 @@ class OpenFigiClient:
             except urllib.error.HTTPError as error:
                 if error.code != 429 or attempt >= self.max_retries:
                     raise
-                retry_after = float(error.headers.get("ratelimit-reset") or error.headers.get("Retry-After") or 60)
+                retry_after = openfigi_retry_after_seconds(error)
                 time.sleep(max(retry_after, self.sleep_seconds))
         time.sleep(self.sleep_seconds)
         mapped: dict[str, str | None] = {}
@@ -71,6 +71,20 @@ class OpenFigiClient:
             rows = item.get("data") or []
             mapped[cusip] = rows[0].get("ticker") if rows else None
         return mapped
+
+
+def openfigi_retry_after_seconds(error: urllib.error.HTTPError) -> float:
+    reset_value = error.headers.get("X-RateLimit-Reset") or error.headers.get("ratelimit-reset")
+    if reset_value:
+        try:
+            return max(0.0, float(reset_value) - time.time())
+        except ValueError:
+            pass
+
+    try:
+        return float(error.headers.get("Retry-After") or 60)
+    except ValueError:
+        return 60.0
 
 
 def normalize_name(value: str) -> str:

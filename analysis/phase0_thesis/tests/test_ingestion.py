@@ -6,6 +6,7 @@ from analysis.phase0_thesis.ingest import (
     canonicalize_filings,
     dedupe_holdings,
     infer_holding_kind,
+    normalize_holding,
     select_filings_window,
 )
 
@@ -46,7 +47,25 @@ class Phase0IngestionTests(unittest.TestCase):
             sorted(row["put_call"] for row in deduped),
             ["CALL", "PUT"],
         )
-        self.assertEqual(next(row for row in deduped if row["put_call"] == "CALL")["value_usd"], 300)
+        call_row = next(row for row in deduped if row["put_call"] == "CALL")
+        self.assertEqual(call_row["shares"], 2)
+        self.assertEqual(call_row["value_usd"], 400)
+
+    def test_normalize_holding_uses_full_usd_value(self) -> None:
+        normalized = normalize_holding(
+            "1446194",
+            "2025-12-31",
+            "accession",
+            {
+                "cusip": "037833100",
+                "issuer": "Apple Inc.",
+                "shares": 100,
+                "value_thousands": 1450,
+                "value": 1_450_000,
+            },
+        )
+
+        self.assertEqual(normalized["value_usd"], 1_450_000)
 
     def test_window_selects_eight_quarter_range_across_year_boundary(self) -> None:
         filings = [

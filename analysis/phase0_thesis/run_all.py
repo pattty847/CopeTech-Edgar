@@ -5,7 +5,7 @@ import argparse
 import json
 import logging
 
-from .backtest import run_backtest
+from .backtest import run_backtest_async
 from .config import BACKTEST_CSV, DB_PATH, MANAGER_SET, REPORT_PATH
 from .consensus_score import generate_consensus_signals
 from .cusip_map import CusipMapper
@@ -48,7 +48,7 @@ async def run_pipeline(summary_only: bool = False, map_limit: int = 250) -> dict
             backtest_rows = []
         else:
             logging.info("Running yfinance backtest")
-            backtest_rows = run_backtest(con, BACKTEST_CSV)
+            backtest_rows = await run_backtest_async(con, BACKTEST_CSV)
 
         logging.info("Writing report")
         report_path = write_report(con, BACKTEST_CSV, REPORT_PATH)

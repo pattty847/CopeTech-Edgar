@@ -248,11 +248,14 @@ async def thirteenf_holdings(
     row_limit: Annotated[int, Query(ge=1, le=5000)] = 5000,
 ) -> dict:
     normalized = normalize_manager_cik(cik)
-    payload = await fetcher.get_latest_13f_holdings(
-        normalized,
-        days_back=days_back,
-        row_limit=row_limit,
-    )
+    try:
+        payload = await fetcher.get_latest_13f_holdings(
+            normalized,
+            days_back=days_back,
+            row_limit=row_limit,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     if payload.get("filing") is None:
         raise HTTPException(status_code=404, detail=f"No 13F-HR filing found for CIK {normalized}.")
     aws_resources.record_sec_cache_lookup(

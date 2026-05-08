@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -54,3 +55,7 @@ def run_backtest(con: duckdb.DuckDBPyConnection, output_path: Path = BACKTEST_CS
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output.to_csv(output_path, index=False)
     return output
+
+
+async def run_backtest_async(con: duckdb.DuckDBPyConnection, output_path: Path = BACKTEST_CSV) -> pd.DataFrame:
+    return await asyncio.to_thread(run_backtest, con, output_path)

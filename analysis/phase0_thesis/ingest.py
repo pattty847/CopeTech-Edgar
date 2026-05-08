@@ -72,7 +72,7 @@ def normalize_holding(manager_cik: str, report_date: str, accession_no: str, hol
         "issuer_name": (holding.get("issuer") or "").strip().upper(),
         "put_call": put_call,
         "shares": holding.get("shares"),
-        "value_usd": holding.get("value_thousands"),
+        "value_usd": holding.get("value"),
         "holding_kind": infer_holding_kind(holding),
     }
 
@@ -87,8 +87,22 @@ def dedupe_holdings(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             row["put_call"],
             row["issuer_name"],
         )
-        deduped[key] = row
+        if key not in deduped:
+            deduped[key] = dict(row)
+            continue
+
+        existing = deduped[key]
+        existing["shares"] = _sum_optional(existing.get("shares"), row.get("shares"))
+        existing["value_usd"] = _sum_optional(existing.get("value_usd"), row.get("value_usd"))
     return list(deduped.values())
+
+
+def _sum_optional(left: Any, right: Any) -> Any:
+    if left is None:
+        return right
+    if right is None:
+        return left
+    return left + right
 
 
 async def fetch_historical_manager(fetcher: SECDataFetcher, manager: ManagerSeed) -> tuple[list[dict], list[dict]]:
