@@ -1,0 +1,19 @@
+# Force LF line endings on all text source files so editors and CI on different
+# platforms (Linux, macOS, Windows) can't drift the working tree into mixed
+# CRLF/LF state. Without this, web-session edits to historically-CRLF files
+# produced 1k-line "phantom" diffs.
+* text=auto eol=lf
+*.py text eol=lf
+*.toml text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Binary types should never be normalized.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
