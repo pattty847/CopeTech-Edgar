@@ -117,6 +117,73 @@ class FakeFetcher:
             "metrics": {"revenue": {"quarterly": [{"period": "Q2 2025", "value": 110, "qoq_pct": 0.1}], "annual": []}},
         }
 
+    async def get_planned_insider_sales(
+        self, ticker: str, *, days_back: int = 90, filing_limit: int = 25
+    ) -> dict[str, Any]:
+        self.calls.append(("planned_sales", {"ticker": ticker, "days_back": days_back, "filing_limit": filing_limit}))
+        return {
+            "symbol": ticker,
+            "window": {"days_back": days_back, "filing_limit": filing_limit},
+            "as_of": "2026-05-10T00:00:00Z",
+            "records": [
+                {
+                    "accession_no": "ACC-1",
+                    "issuer_symbol": ticker,
+                    "account_name": "Tim Cook",
+                    "planned_shares": 10000,
+                    "aggregate_market_value": 1_750_000.0,
+                    "approx_sale_date": "2026-05-15",
+                }
+            ],
+            "totals": {
+                "record_count": 1, "planned_shares": 10000,
+                "aggregate_market_value": 1_750_000.0, "unique_filers": 1,
+            },
+        }
+
+    async def get_8k_events(
+        self,
+        ticker: str,
+        *,
+        days_back: int = 180,
+        filing_limit: int = 50,
+        categories: list[str] | None = None,
+    ) -> dict[str, Any]:
+        self.calls.append(
+            (
+                "8k_events",
+                {
+                    "ticker": ticker,
+                    "days_back": days_back,
+                    "filing_limit": filing_limit,
+                    "categories": categories,
+                },
+            )
+        )
+        events = [
+            {
+                "accession_no": "8K-1",
+                "filing_date": "2026-05-10",
+                "form": "8-K",
+                "items": [{"code": "5.02", "label": "Departure or Election of Directors / Officers", "category": "exec_change"}],
+                "item_count": 1,
+                "high_signal": True,
+            }
+        ]
+        if categories and "exec_change" not in categories:
+            events = []
+        return {
+            "symbol": ticker,
+            "window": {"days_back": days_back, "filing_limit": filing_limit},
+            "as_of": "2026-05-10T00:00:00Z",
+            "events": events,
+            "totals": {
+                "event_count": len(events),
+                "high_signal_count": len(events),
+                "category_counts": {"exec_change": 1} if events else {},
+            },
+        }
+
     async def get_13f_holdings_changes(
         self, cik: str, *, days_back: int = 0, top_n: int = 25
     ) -> dict[str, Any]:
@@ -354,6 +421,61 @@ def test_thirteenf_changes_404_when_no_filing(client: TestClient) -> None:
 
 def test_thirteenf_changes_invalid_cik_is_400(client: TestClient) -> None:
     response = client.get("/api/sec/13f/notacik/changes", headers=VALID_HEADERS)
+    assert response.status_code == 400
+
+
+def test_planned_sales_route_happy_path(client: TestClient, fake_fetcher: FakeFetcher) -> None:
+    response = client.get(
+        "/api/sec/planned-sales/AAPL?days_back=120&filing_limit=10",
+        headers=VALID_HEADERS,
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["symbol"] == "AAPL"
+    assert body["totals"]["record_count"] == 1
+    assert body["records"][0]["planned_shares"] == 10000
+    assert fake_fetcher.calls[-1] == ("planned_sales", {"ticker": "AAPL", "days_back": 120, "filing_limit": 10})
+
+
+def test_planned_sales_invalid_ticker_is_400(client: TestClient) -> None:
+    response = client.get("/api/sec/planned-sales/!!!", headers=VALID_HEADERS)
+    assert response.status_code == 400
+
+
+def test_events_route_returns_8k_payload(client: TestClient, fake_fetcher: FakeFetcher) -> None:
+    response = client.get(
+        "/api/sec/events/AAPL?days_back=90&filing_limit=20", headers=VALID_HEADERS
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["symbol"] == "AAPL"
+    assert body["events"][0]["high_signal"] is True
+    assert body["totals"]["high_signal_count"] == 1
+    assert fake_fetcher.calls[-1][1]["days_back"] == 90
+    assert fake_fetcher.calls[-1][1]["categories"] is None
+
+
+def test_events_route_passes_categories_filter(client: TestClient, fake_fetcher: FakeFetcher) -> None:
+    response = client.get(
+        "/api/sec/events/AAPL?categories=exec_change,financial_results",
+        headers=VALID_HEADERS,
+    )
+    assert response.status_code == 200
+    assert fake_fetcher.calls[-1][1]["categories"] == ["exec_change", "financial_results"]
+
+
+def test_events_route_filter_excludes_non_matching(client: TestClient, fake_fetcher: FakeFetcher) -> None:
+    response = client.get(
+        "/api/sec/events/AAPL?categories=disclosure", headers=VALID_HEADERS
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["events"] == []
+    assert body["totals"]["event_count"] == 0
+
+
+def test_events_route_invalid_ticker_is_400(client: TestClient) -> None:
+    response = client.get("/api/sec/events/!!!", headers=VALID_HEADERS)
     assert response.status_code == 400
 
 

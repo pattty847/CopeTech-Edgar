@@ -12,6 +12,8 @@ from .http_client import SecHttpClient
 from .cache_manager import SecCacheManager
 from .document_handler import FilingDocumentHandler
 from .form4_processor import Form4Processor
+from .form8k_processor import Form8KProcessor
+from .form144_processor import Form144Processor
 from .financial_processor import FinancialDataProcessor
 from .supply_chain_parser import SupplyChainParser
 from .sql_cache_manager import SqlCacheManager
@@ -71,6 +73,13 @@ class SECDataFetcher:
         self.form4_processor = Form4Processor(
             document_handler=self.document_handler,
             fetch_filings_func=self.fetch_insider_filings # Pass the method directly
+        )
+        self.form144_processor = Form144Processor(
+            document_handler=self.document_handler,
+            fetch_filings_func=self.fetch_planned_sale_filings,
+        )
+        self.form8k_processor = Form8KProcessor(
+            fetch_filings_func=self.fetch_current_reports,
         )
         self.financial_processor = FinancialDataProcessor(
             fetch_facts_func=self.get_company_facts # Pass the method directly
@@ -263,6 +272,7 @@ class SECDataFetcher:
             report_date_list = recent_filings.get('reportDate', [])
             primary_document_list = recent_filings.get('primaryDocument', [])
             primary_doc_desc_list = recent_filings.get('primaryDocDescription', []) # Added Description
+            items_list = recent_filings.get('items', []) # 8-K items as comma-separated strings
 
             min_len = min(len(form_list), len(filing_date_list), len(accession_number_list), len(report_date_list))
 
@@ -280,6 +290,7 @@ class SECDataFetcher:
 
                     primary_doc = primary_document_list[i] if i < len(primary_document_list) else None
                     primary_doc_desc = primary_doc_desc_list[i] if i < len(primary_doc_desc_list) else None
+                    items = items_list[i] if i < len(items_list) else ''
 
                     filing_dict = {
                         'accession_no': accession_no,
@@ -288,7 +299,8 @@ class SECDataFetcher:
                         'report_date': report_date,
                         'url': filing_url,
                         'primary_document': primary_doc,
-                        'primary_document_description': primary_doc_desc
+                        'primary_document_description': primary_doc_desc,
+                        'items': items,
                     }
                     filings.append(filing_dict)
 
@@ -316,6 +328,10 @@ class SECDataFetcher:
     async def fetch_current_reports(self, ticker: str, days_back: int = 90, use_cache: bool = True) -> List[Dict]:
         """Convenience method to fetch Form 8-K (current report) filings."""
         return await self.get_filings_by_form(ticker, "8-K", days_back, use_cache)
+
+    async def fetch_planned_sale_filings(self, ticker: str, days_back: int = 90, use_cache: bool = True) -> List[Dict]:
+        """Convenience method to fetch Form 144 (notice of proposed sale) filings."""
+        return await self.get_filings_by_form(ticker, ["144", "144/A"], days_back, use_cache)
 
     async def get_13f_filings(self, cik: str, days_back: int = 365*3, use_cache: bool = True) -> List[Dict]:
         """Convenience method to fetch Form 13F-HR filing metadata for an institutional manager CIK."""
@@ -387,6 +403,38 @@ class SECDataFetcher:
         """Returns the financial summary decorated with QoQ/YoY pct changes per metric."""
         return await self.financial_processor.get_financial_trend(
             ticker=ticker, periods=periods, use_cache=use_cache
+        )
+
+    async def get_8k_events(
+        self,
+        ticker: str,
+        days_back: int = 180,
+        use_cache: bool = True,
+        filing_limit: int = 50,
+        categories: Optional[List[str]] = None,
+    ) -> Dict:
+        """Returns parsed 8-K item-code events for a ticker."""
+        return await self.form8k_processor.get_8k_events(
+            ticker=ticker,
+            days_back=days_back,
+            use_cache=use_cache,
+            filing_limit=filing_limit,
+            categories=categories,
+        )
+
+    async def get_planned_insider_sales(
+        self,
+        ticker: str,
+        days_back: int = 90,
+        use_cache: bool = True,
+        filing_limit: int = 25,
+    ) -> Dict:
+        """Returns parsed Form 144 (planned insider sale) records for a ticker."""
+        return await self.form144_processor.get_planned_insider_sales(
+            ticker=ticker,
+            days_back=days_back,
+            use_cache=use_cache,
+            filing_limit=filing_limit,
         )
 
     async def get_13f_holdings_changes(

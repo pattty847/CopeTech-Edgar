@@ -3,7 +3,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 import logging
 import re
-from typing import Annotated
+from typing import Annotated, Optional
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
@@ -325,6 +325,64 @@ async def insider_clusters(
         "min_unique_insiders": min_unique_insiders,
         "clusters": clusters,
     }
+
+
+@app.get("/api/sec/events/{ticker}")
+async def material_events(
+    ticker: str,
+    fetcher: Fetcher,
+    _demo_access: DemoAccess,
+    days_back: Annotated[int, Query(ge=1, le=730)] = 180,
+    filing_limit: Annotated[int, Query(ge=1, le=200)] = 50,
+    categories: Annotated[Optional[str], Query(max_length=200)] = None,
+) -> dict:
+    normalized = normalize_ticker(ticker)
+    category_list = [
+        token.strip() for token in (categories or "").split(",") if token.strip()
+    ] or None
+    payload = await fetcher.get_8k_events(
+        normalized,
+        days_back=days_back,
+        filing_limit=filing_limit,
+        categories=category_list,
+    )
+    aws_resources.record_sec_cache_lookup(
+        normalized,
+        "8k_events",
+        True,
+        {
+            "days_back": days_back,
+            "filing_limit": filing_limit,
+            "event_count": payload.get("totals", {}).get("event_count", 0),
+            "categories": categories,
+        },
+    )
+    return payload
+
+
+@app.get("/api/sec/planned-sales/{ticker}")
+async def planned_insider_sales(
+    ticker: str,
+    fetcher: Fetcher,
+    _demo_access: DemoAccess,
+    days_back: Annotated[int, Query(ge=1, le=730)] = 90,
+    filing_limit: Annotated[int, Query(ge=1, le=120)] = 25,
+) -> dict:
+    normalized = normalize_ticker(ticker)
+    payload = await fetcher.get_planned_insider_sales(
+        normalized, days_back=days_back, filing_limit=filing_limit
+    )
+    aws_resources.record_sec_cache_lookup(
+        normalized,
+        "planned_sales",
+        True,
+        {
+            "days_back": days_back,
+            "filing_limit": filing_limit,
+            "record_count": payload.get("totals", {}).get("record_count", 0),
+        },
+    )
+    return payload
 
 
 @app.get("/api/sec/financials/{ticker}/trend")
