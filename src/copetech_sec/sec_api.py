@@ -375,13 +375,31 @@ class SECDataFetcher:
     async def get_financial_summary(self, ticker: str, use_cache: bool = True) -> Optional[Dict]:
         """Generates a flattened summary of key financial metrics for the UI (Delegated)."""
         summary = await self.financial_processor.get_financial_summary(ticker=ticker, use_cache=use_cache)
-        
+
         if summary:
             # Persist to SQL for faster future access and querying
             await self.sql_manager.initialize_db() # Ensure DB is ready (idempotent)
             await self.sql_manager.save_financial_history(ticker, summary)
-            
+
         return summary
+
+    async def get_financial_trend(self, ticker: str, periods: int = 8, use_cache: bool = True) -> Optional[Dict]:
+        """Returns the financial summary decorated with QoQ/YoY pct changes per metric."""
+        return await self.financial_processor.get_financial_trend(
+            ticker=ticker, periods=periods, use_cache=use_cache
+        )
+
+    async def get_13f_holdings_changes(
+        self,
+        cik: str,
+        days_back: int = 365 * 3,
+        use_cache: bool = True,
+        top_n: int = 25,
+    ) -> Dict:
+        """Returns QoQ deltas between the latest two 13F-HR filings for `cik`."""
+        return await self.thirteenf_processor.get_holdings_changes(
+            cik=cik, days_back=days_back, use_cache=use_cache, top_n=top_n,
+        )
 
     async def get_supply_chain(self, ticker: str) -> List[Dict]:
         """

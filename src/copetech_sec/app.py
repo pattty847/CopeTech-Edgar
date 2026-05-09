@@ -291,6 +291,85 @@ async def insider_signals(
     return await build_insiders_payload(ticker, fetcher, days_back, filing_limit, anchor_type)
 
 
+@app.get("/api/sec/insider-signals/{ticker}/clusters")
+async def insider_clusters(
+    ticker: str,
+    fetcher: Fetcher,
+    _demo_access: DemoAccess,
+    days_back: Annotated[int, Query(ge=1, le=730)] = 180,
+    filing_limit: Annotated[int, Query(ge=1, le=120)] = 40,
+    window_days: Annotated[int, Query(ge=1, le=90)] = 14,
+    min_unique_insiders: Annotated[int, Query(ge=2, le=10)] = 3,
+) -> dict:
+    normalized = normalize_ticker(ticker)
+    payload = await fetcher.get_insider_signal_payload(
+        normalized,
+        days_back=days_back,
+        filing_limit=filing_limit,
+        anchor_type="filing_date",
+    )
+    clusters = fetcher.form4_processor.detect_cluster_buys(
+        payload.get("events", []),
+        window_days=window_days,
+        min_unique_insiders=min_unique_insiders,
+    )
+    aws_resources.record_sec_cache_lookup(
+        normalized,
+        "insider_clusters",
+        True,
+        {"days_back": days_back, "window_days": window_days, "cluster_count": len(clusters)},
+    )
+    return {
+        "symbol": normalized,
+        "window_days": window_days,
+        "min_unique_insiders": min_unique_insiders,
+        "clusters": clusters,
+    }
+
+
+@app.get("/api/sec/financials/{ticker}/trend")
+async def financial_trend(
+    ticker: str,
+    fetcher: Fetcher,
+    _demo_access: DemoAccess,
+    periods: Annotated[int, Query(ge=1, le=20)] = 8,
+) -> dict:
+    normalized = normalize_ticker(ticker)
+    trend = await fetcher.get_financial_trend(normalized, periods=periods)
+    if trend is None:
+        raise HTTPException(status_code=404, detail=f"No XBRL company facts available for {normalized}.")
+    aws_resources.record_sec_cache_lookup(
+        normalized,
+        "financial_trend",
+        True,
+        {"periods": periods},
+    )
+    return trend
+
+
+@app.get("/api/sec/13f/{cik}/changes")
+async def thirteenf_changes(
+    cik: str,
+    fetcher: Fetcher,
+    _demo_access: DemoAccess,
+    days_back: Annotated[int, Query(ge=1, le=3650)] = 365 * 3,
+    top_n: Annotated[int, Query(ge=1, le=100)] = 25,
+) -> dict:
+    normalized = normalize_manager_cik(cik)
+    payload = await fetcher.get_13f_holdings_changes(
+        normalized, days_back=days_back, top_n=top_n
+    )
+    if payload.get("current_filing") is None:
+        raise HTTPException(status_code=404, detail=f"No 13F-HR filing found for CIK {normalized}.")
+    aws_resources.record_sec_cache_lookup(
+        normalized,
+        "13f_changes",
+        True,
+        {"days_back": days_back, "top_n": top_n},
+    )
+    return payload
+
+
 def run() -> None:
     uvicorn.run("copetech_sec.app:app", host="0.0.0.0", port=settings.port)
 

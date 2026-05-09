@@ -120,6 +120,105 @@ class Form4SignalTests(unittest.TestCase):
         self.assertIn('total_filings', digest['summary'])
         self.assertTrue(isinstance(digest['key_events'], list))
 
+    def _build_buy_event(self, *, owner_cik: str, owner_name: str, transaction_date: str,
+                         value: float = 50_000.0, role: str = 'Officer (CEO)') -> dict:
+        tx = self._make_tx(
+            owner_cik=owner_cik,
+            owner_name=owner_name,
+            owner_position=role,
+            transaction_date=transaction_date,
+            value=value,
+        )
+        meta = self._make_meta(accession_no=f'0000000000-26-{owner_cik}', filing_date=transaction_date)
+        return self.processor._normalize_signal_event(tx, meta, 'ACME')
+
+    def test_cluster_detector_returns_empty_below_threshold(self):
+        events = [
+            self._build_buy_event(owner_cik='001', owner_name='A', transaction_date='2026-03-01'),
+            self._build_buy_event(owner_cik='002', owner_name='B', transaction_date='2026-03-02'),
+        ]
+        clusters = self.processor.detect_cluster_buys(events, window_days=14, min_unique_insiders=3)
+        self.assertEqual(clusters, [])
+
+    def test_cluster_detector_finds_cluster_when_three_distinct_insiders_within_window(self):
+        events = [
+            self._build_buy_event(owner_cik='001', owner_name='A', transaction_date='2026-03-01', value=10_000),
+            self._build_buy_event(owner_cik='002', owner_name='B', transaction_date='2026-03-05', value=20_000),
+            self._build_buy_event(owner_cik='003', owner_name='C', transaction_date='2026-03-10', value=30_000),
+        ]
+        clusters = self.processor.detect_cluster_buys(events, window_days=14, min_unique_insiders=3)
+        self.assertEqual(len(clusters), 1)
+        cluster = clusters[0]
+        self.assertEqual(cluster['unique_insiders'], 3)
+        self.assertEqual(cluster['event_count'], 3)
+        self.assertEqual(cluster['window_start'], '2026-03-01')
+        self.assertEqual(cluster['window_end'], '2026-03-10')
+        self.assertEqual(cluster['total_value'], 60_000.0)
+        self.assertEqual(len(cluster['insiders']), 3)
+        # Insiders ranked by gross_value desc
+        self.assertEqual(cluster['insiders'][0]['owner_name'], 'C')
+
+    def test_cluster_detector_excludes_buys_outside_window(self):
+        events = [
+            self._build_buy_event(owner_cik='001', owner_name='A', transaction_date='2026-03-01'),
+            self._build_buy_event(owner_cik='002', owner_name='B', transaction_date='2026-03-02'),
+            # Outside the 14-day window
+            self._build_buy_event(owner_cik='003', owner_name='C', transaction_date='2026-04-15'),
+        ]
+        clusters = self.processor.detect_cluster_buys(events, window_days=14, min_unique_insiders=3)
+        self.assertEqual(clusters, [])
+
+    def test_cluster_detector_ignores_non_open_market_buys(self):
+        buy = self._build_buy_event(owner_cik='001', owner_name='A', transaction_date='2026-03-01')
+        sell_tx = self._make_tx(
+            owner_cik='002', owner_name='B', transaction_code='S',
+            transaction_type='Sale', is_acquisition=False, is_disposition=True,
+            transaction_date='2026-03-02', value=30_000,
+        )
+        sell = self.processor._normalize_signal_event(sell_tx, self._make_meta(accession_no='X-2'), 'ACME')
+        award_tx = self._make_tx(
+            owner_cik='003', owner_name='C', transaction_code='A',
+            transaction_type='Award', price_per_share=0.0,
+            transaction_date='2026-03-03', value=0.0,
+        )
+        award = self.processor._normalize_signal_event(award_tx, self._make_meta(accession_no='X-3'), 'ACME')
+
+        clusters = self.processor.detect_cluster_buys([buy, sell, award], window_days=14, min_unique_insiders=2)
+        # Only one open_market_buy → cannot form a cluster
+        self.assertEqual(clusters, [])
+
+    def test_cluster_detector_merges_overlapping_windows(self):
+        # Two overlapping anchors each see 3 insiders; merging extends the cluster end.
+        events = [
+            self._build_buy_event(owner_cik='001', owner_name='A', transaction_date='2026-03-01', value=10_000),
+            self._build_buy_event(owner_cik='002', owner_name='B', transaction_date='2026-03-04', value=20_000),
+            self._build_buy_event(owner_cik='003', owner_name='C', transaction_date='2026-03-07', value=30_000),
+            self._build_buy_event(owner_cik='004', owner_name='D', transaction_date='2026-03-12', value=40_000),
+        ]
+        clusters = self.processor.detect_cluster_buys(events, window_days=10, min_unique_insiders=3)
+        self.assertEqual(len(clusters), 1)
+        merged = clusters[0]
+        self.assertEqual(merged['unique_insiders'], 4)
+        self.assertEqual(merged['event_count'], 4)
+        self.assertEqual(merged['window_start'], '2026-03-01')
+        self.assertEqual(merged['window_end'], '2026-03-12')
+
+    def test_cluster_detector_isolates_non_overlapping_clusters(self):
+        events = [
+            self._build_buy_event(owner_cik='001', owner_name='A', transaction_date='2026-01-01', value=5_000),
+            self._build_buy_event(owner_cik='002', owner_name='B', transaction_date='2026-01-03', value=6_000),
+            self._build_buy_event(owner_cik='003', owner_name='C', transaction_date='2026-01-05', value=7_000),
+            # Big gap, then a second cluster
+            self._build_buy_event(owner_cik='004', owner_name='D', transaction_date='2026-06-01', value=80_000),
+            self._build_buy_event(owner_cik='005', owner_name='E', transaction_date='2026-06-04', value=90_000),
+            self._build_buy_event(owner_cik='006', owner_name='F', transaction_date='2026-06-07', value=100_000),
+        ]
+        clusters = self.processor.detect_cluster_buys(events, window_days=14, min_unique_insiders=3)
+        self.assertEqual(len(clusters), 2)
+        # Sorted by total_value desc → the June cluster should come first
+        self.assertEqual(clusters[0]['window_start'], '2026-06-01')
+        self.assertEqual(clusters[1]['window_start'], '2026-01-01')
+
 
 if __name__ == '__main__':
     unittest.main()

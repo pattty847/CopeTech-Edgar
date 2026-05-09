@@ -1,7 +1,7 @@
 import logging
 import xml.etree.ElementTree as ET
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional, TYPE_CHECKING, Callable, Awaitable, Any
 
 try:
@@ -600,6 +600,129 @@ class Form4Processor:
 
         return aggregates
 
+    def detect_cluster_buys(
+        self,
+        events: List[Dict[str, Any]],
+        window_days: int = 14,
+        min_unique_insiders: int = 3,
+    ) -> List[Dict[str, Any]]:
+        """Detect windows where multiple distinct insiders made open-market buys.
+
+        Slides a window of `window_days` over the open-market buy stream. Each window
+        anchored at a buy event is evaluated; if at least `min_unique_insiders` distinct
+        owners bought within the window, a cluster is emitted. Clusters are then
+        consolidated greedily so that overlapping windows merge into one (the merged
+        cluster spans the union of dates and combines all participating insiders).
+
+        Returns a list ranked by `total_value` descending. Each cluster:
+            {
+                'window_start': 'YYYY-MM-DD',
+                'window_end': 'YYYY-MM-DD',
+                'unique_insiders': int,
+                'event_count': int,
+                'total_value': float,   # sum of gross_value (USD)
+                'total_shares': float,
+                'insiders': [{'owner_name', 'owner_role', 'gross_value', 'transaction_date'}, ...],
+                'filing_urls': [...],
+            }
+        """
+        if window_days < 1 or min_unique_insiders < 2:
+            return []
+
+        buys: List[Dict[str, Any]] = []
+        for event in events:
+            if event.get('signal_class') != 'open_market_buy':
+                continue
+            tx_date = self._safe_date(event.get('transaction_date'))
+            if tx_date is None:
+                continue
+            buys.append({**event, '_tx_date': tx_date})
+
+        if len(buys) < min_unique_insiders:
+            return []
+
+        buys.sort(key=lambda buy: buy['_tx_date'])
+
+        raw_clusters: List[Dict[str, Any]] = []
+        for index, anchor in enumerate(buys):
+            window_end_date = anchor['_tx_date'] + timedelta(days=window_days)
+            members = [
+                buy for buy in buys[index:]
+                if buy['_tx_date'] <= window_end_date
+            ]
+            unique_owner_keys = {buy.get('owner_cik') or buy.get('owner_name') for buy in members}
+            if len(unique_owner_keys) < min_unique_insiders:
+                continue
+            raw_clusters.append(
+                {
+                    'start': members[0]['_tx_date'],
+                    'end': members[-1]['_tx_date'],
+                    'members': members,
+                }
+            )
+
+        if not raw_clusters:
+            return []
+
+        merged: List[Dict[str, Any]] = []
+        current = raw_clusters[0]
+        for candidate in raw_clusters[1:]:
+            if candidate['start'] <= current['end']:
+                # Overlap: merge the windows and event sets (dedupe by event_identity)
+                merged_end = max(current['end'], candidate['end'])
+                seen = {member.get('event_identity') for member in current['members']}
+                combined = list(current['members'])
+                for member in candidate['members']:
+                    if member.get('event_identity') not in seen:
+                        combined.append(member)
+                        seen.add(member.get('event_identity'))
+                current = {'start': current['start'], 'end': merged_end, 'members': combined}
+            else:
+                merged.append(current)
+                current = candidate
+        merged.append(current)
+
+        clusters: List[Dict[str, Any]] = []
+        for cluster in merged:
+            members = cluster['members']
+            unique_owner_keys = {member.get('owner_cik') or member.get('owner_name') for member in members}
+            total_value = sum(float(member.get('gross_value') or 0.0) for member in members)
+            total_shares = sum(float(member.get('shares') or 0.0) for member in members)
+            insiders_summary = [
+                {
+                    'owner_name': member.get('owner_name'),
+                    'owner_role': member.get('owner_role'),
+                    'gross_value': round(float(member.get('gross_value') or 0.0), 2),
+                    'transaction_date': member.get('transaction_date'),
+                }
+                for member in sorted(
+                    members,
+                    key=lambda member: float(member.get('gross_value') or 0.0),
+                    reverse=True,
+                )
+            ]
+            filing_urls: List[str] = []
+            for member in members:
+                url = member.get('form_url')
+                if url and url not in filing_urls:
+                    filing_urls.append(url)
+
+            clusters.append(
+                {
+                    'window_start': cluster['start'].strftime('%Y-%m-%d'),
+                    'window_end': cluster['end'].strftime('%Y-%m-%d'),
+                    'unique_insiders': len(unique_owner_keys),
+                    'event_count': len(members),
+                    'total_value': round(total_value, 2),
+                    'total_shares': total_shares,
+                    'insiders': insiders_summary,
+                    'filing_urls': filing_urls,
+                }
+            )
+
+        clusters.sort(key=lambda cluster: cluster['total_value'], reverse=True)
+        return clusters
+
     def _build_llm_digest(self, ticker: str, events: List[Dict[str, Any]], aggregates: List[Dict[str, Any]], anchor_type: str) -> Dict[str, Any]:
         open_buy_events = [event for event in events if event.get('signal_class') == 'open_market_buy']
         open_sell_events = [event for event in events if event.get('signal_class') == 'open_market_sell']
@@ -686,7 +809,10 @@ class Form4Processor:
 
         effective_events = self._dedupe_and_apply_amendments(normalized_events)
         daily_aggregates = self._build_daily_aggregates(ticker, effective_events)
+        clusters = self.detect_cluster_buys(effective_events)
         llm_digest = self._build_llm_digest(ticker, effective_events, daily_aggregates, anchor_type)
+        if clusters:
+            llm_digest.setdefault('anomalies', []).append('insider_cluster_buy')
 
         return {
             'symbol': ticker,
@@ -697,6 +823,7 @@ class Form4Processor:
             'as_of': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
             'events': effective_events,
             'daily_aggregates': daily_aggregates,
+            'clusters': clusters,
             'llm_digest': llm_digest,
         }
 

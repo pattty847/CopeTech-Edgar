@@ -24,9 +24,41 @@ from copetech_sec.app import (
 VALID_HEADERS = {"x-backend-secret": "test-backend-secret", "x-demo-key": "test-demo-key"}
 
 
+class FakeForm4Processor:
+    """Stand-in for `Form4Processor` used by the /clusters route, which calls into it directly."""
+
+    def __init__(self) -> None:
+        self.cluster_calls: list[dict[str, Any]] = []
+
+    def detect_cluster_buys(self, events, *, window_days: int = 14, min_unique_insiders: int = 3):
+        self.cluster_calls.append(
+            {
+                "event_count": len(events),
+                "window_days": window_days,
+                "min_unique_insiders": min_unique_insiders,
+            }
+        )
+        if len(events) >= min_unique_insiders:
+            return [
+                {
+                    "window_start": "2026-03-01",
+                    "window_end": "2026-03-10",
+                    "unique_insiders": min_unique_insiders,
+                    "event_count": len(events),
+                    "total_value": 100_000.0,
+                    "total_shares": 1_000.0,
+                    "insiders": [{"owner_name": f"Insider{i}", "owner_role": "Officer", "gross_value": 25_000.0}
+                                 for i in range(min_unique_insiders)],
+                    "filing_urls": [],
+                }
+            ]
+        return []
+
+
 class FakeFetcher:
     def __init__(self) -> None:
         self.calls: list[tuple[str, dict[str, Any]]] = []
+        self.form4_processor = FakeForm4Processor()
 
     async def get_company_info(self, ticker: str) -> dict[str, Any] | None:
         self.calls.append(("company_info", {"ticker": ticker}))
@@ -52,7 +84,7 @@ class FakeFetcher:
         return {
             "symbol": ticker,
             "window": {"days_back": days_back, "filing_limit": filing_limit},
-            "events": [{"id": 1}],
+            "events": [{"id": 1}, {"id": 2}, {"id": 3}],
             "daily_aggregates": [],
             "llm_digest": {"summary": {}, "key_events": [], "anomalies": [], "caveats": []},
         }
@@ -67,6 +99,50 @@ class FakeFetcher:
             "filing": {"accession_no": "0000000000-26-000001", "filing_date": "2026-04-30"},
             "holdings": [{"name_of_issuer": "ACME", "value_usd": 1000}],
             "holdings_count": 1,
+        }
+
+    async def get_financial_trend(
+        self, ticker: str, *, periods: int = 8, use_cache: bool = True
+    ) -> dict[str, Any] | None:
+        self.calls.append(("trend", {"ticker": ticker, "periods": periods}))
+        if ticker == "MISSING":
+            return None
+        return {
+            "ticker": ticker,
+            "entityName": "Acme",
+            "cik": 1,
+            "source_form": "10-Q",
+            "period_end": "2025-06-30",
+            "periods_requested": periods,
+            "metrics": {"revenue": {"quarterly": [{"period": "Q2 2025", "value": 110, "qoq_pct": 0.1}], "annual": []}},
+        }
+
+    async def get_13f_holdings_changes(
+        self, cik: str, *, days_back: int = 0, top_n: int = 25
+    ) -> dict[str, Any]:
+        self.calls.append(("13f_changes", {"cik": cik, "days_back": days_back, "top_n": top_n}))
+        if cik == "0000000404":
+            return {
+                "manager_cik": cik, "manager_name": None,
+                "current_filing": None, "prior_filing": None, "changes": None,
+            }
+        return {
+            "manager_cik": cik,
+            "manager_name": "Test Manager",
+            "current_filing": {"accession_no": "0000000000-26-000002", "filing_date": "2026-04-30"},
+            "prior_filing": {"accession_no": "0000000000-25-000099", "filing_date": "2026-01-30"},
+            "changes": {
+                "new_positions": [{"issuer": "NVDA", "value_change": 1_000_000}],
+                "increased": [],
+                "reduced": [],
+                "sold_out": [],
+                "unchanged_count": 5,
+                "totals": {
+                    "prior_value": 10_000_000, "current_value": 11_000_000,
+                    "value_change": 1_000_000, "turnover_pct": 0.1,
+                    "top10_concentration": 0.6,
+                },
+            },
         }
 
     async def close(self) -> None:
@@ -212,6 +288,72 @@ def test_thirteenf_holdings_404_when_no_filing(client: TestClient) -> None:
 
 def test_thirteenf_holdings_invalid_cik_is_400(client: TestClient) -> None:
     response = client.get("/api/sec/13f/notacik", headers=VALID_HEADERS)
+    assert response.status_code == 400
+
+
+def test_insider_clusters_route_returns_clusters(client: TestClient, fake_fetcher: FakeFetcher) -> None:
+    response = client.get(
+        "/api/sec/insider-signals/AAPL/clusters?window_days=10&min_unique_insiders=2",
+        headers=VALID_HEADERS,
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["symbol"] == "AAPL"
+    assert body["window_days"] == 10
+    assert body["min_unique_insiders"] == 2
+    assert len(body["clusters"]) == 1
+    assert body["clusters"][0]["unique_insiders"] == 2
+    cluster_call = fake_fetcher.form4_processor.cluster_calls[-1]
+    assert cluster_call["window_days"] == 10
+    assert cluster_call["min_unique_insiders"] == 2
+
+
+def test_insider_clusters_validates_thresholds(client: TestClient) -> None:
+    too_few = client.get(
+        "/api/sec/insider-signals/AAPL/clusters?min_unique_insiders=1",
+        headers=VALID_HEADERS,
+    )
+    assert too_few.status_code == 422
+
+
+def test_financial_trend_route_happy_path(client: TestClient, fake_fetcher: FakeFetcher) -> None:
+    response = client.get(
+        "/api/sec/financials/AAPL/trend?periods=4", headers=VALID_HEADERS
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ticker"] == "AAPL"
+    assert body["periods_requested"] == 4
+    assert "revenue" in body["metrics"]
+    assert fake_fetcher.calls[-1] == ("trend", {"ticker": "AAPL", "periods": 4})
+
+
+def test_financial_trend_404_when_no_facts(client: TestClient) -> None:
+    response = client.get("/api/sec/financials/MISSING/trend", headers=VALID_HEADERS)
+    assert response.status_code == 404
+
+
+def test_thirteenf_changes_route_happy_path(client: TestClient, fake_fetcher: FakeFetcher) -> None:
+    response = client.get(
+        "/api/sec/13f/0001067983/changes?top_n=5", headers=VALID_HEADERS
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["manager_cik"] == "0001067983"
+    assert body["current_filing"]["accession_no"]
+    assert body["changes"]["new_positions"][0]["issuer"] == "NVDA"
+    assert body["changes"]["totals"]["turnover_pct"] == 0.1
+    assert fake_fetcher.calls[-1][0] == "13f_changes"
+    assert fake_fetcher.calls[-1][1]["top_n"] == 5
+
+
+def test_thirteenf_changes_404_when_no_filing(client: TestClient) -> None:
+    response = client.get("/api/sec/13f/0000000404/changes", headers=VALID_HEADERS)
+    assert response.status_code == 404
+
+
+def test_thirteenf_changes_invalid_cik_is_400(client: TestClient) -> None:
+    response = client.get("/api/sec/13f/notacik/changes", headers=VALID_HEADERS)
     assert response.status_code == 400
 
 

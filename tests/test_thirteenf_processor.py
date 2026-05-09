@@ -75,5 +75,93 @@ class ThirteenFProcessorTests(unittest.TestCase):
         self.assertEqual(document, "form13fInfoTable.xml")
 
 
+def _holding(issuer: str, cusip: str, value: int, shares: int = 0,
+             put_call: str | None = None, title: str = "COM") -> dict:
+    return {
+        "issuer": issuer,
+        "title_of_class": title,
+        "cusip": cusip,
+        "value_thousands": value // 1000 if value else 0,
+        "value": value,
+        "shares": shares,
+        "share_type": "SH",
+        "put_call": put_call,
+    }
+
+
+class QuarterChangesTests(unittest.TestCase):
+    def test_categorizes_new_increased_reduced_and_sold_out(self):
+        prior = [
+            _holding("APPLE INC", "037833100", 1_000_000_000, shares=100_000),
+            _holding("TESLA INC", "88160R101", 500_000_000, shares=50_000),
+            _holding("MICROSOFT", "594918104", 700_000_000, shares=70_000),
+            _holding("META", "30303M102", 300_000_000, shares=30_000),  # will be sold out
+        ]
+        current = [
+            _holding("APPLE INC", "037833100", 1_200_000_000, shares=120_000),  # increased
+            _holding("TESLA INC", "88160R101", 200_000_000, shares=20_000),     # reduced
+            _holding("MICROSOFT", "594918104", 700_000_000, shares=70_000),     # unchanged
+            _holding("NVIDIA", "67066G104", 800_000_000, shares=80_000),        # new
+        ]
+        diff = ThirteenFProcessor.compute_quarter_changes(prior, current)
+        self.assertEqual([row["issuer"] for row in diff["new_positions"]], ["NVIDIA"])
+        self.assertEqual([row["issuer"] for row in diff["increased"]], ["APPLE INC"])
+        self.assertEqual([row["issuer"] for row in diff["reduced"]], ["TESLA INC"])
+        self.assertEqual([row["issuer"] for row in diff["sold_out"]], ["META"])
+        self.assertEqual(diff["unchanged_count"], 1)
+
+        nvidia = diff["new_positions"][0]
+        self.assertEqual(nvidia["prior_value"], 0)
+        self.assertEqual(nvidia["current_value"], 800_000_000)
+        self.assertEqual(nvidia["value_change"], 800_000_000)
+
+        meta = diff["sold_out"][0]
+        self.assertEqual(meta["current_value"], 0)
+        self.assertEqual(meta["prior_value"], 300_000_000)
+        self.assertEqual(meta["value_change"], -300_000_000)
+
+    def test_totals_include_turnover_and_top10_concentration(self):
+        prior = [_holding("ACME", "AAA", 1_000_000_000)]
+        current = [
+            _holding("ACME", "AAA", 600_000_000),
+            _holding("BETA", "BBB", 400_000_000),
+        ]
+        diff = ThirteenFProcessor.compute_quarter_changes(prior, current)
+        self.assertEqual(diff["totals"]["prior_value"], 1_000_000_000)
+        self.assertEqual(diff["totals"]["current_value"], 1_000_000_000)
+        self.assertEqual(diff["totals"]["value_change"], 0)
+        # Reduced ACME by 400m + new BETA 400m = 800m gross / 1B prior = 0.8
+        self.assertAlmostEqual(diff["totals"]["turnover_pct"], 0.8)
+        # Only two positions → top10 == 100%
+        self.assertEqual(diff["totals"]["top10_concentration"], 1.0)
+
+    def test_distinguishes_call_and_put_holdings_with_same_cusip(self):
+        prior: list[dict] = []
+        current = [
+            _holding("ACME", "AAA", 100_000_000, put_call="Call"),
+            _holding("ACME", "AAA", 50_000_000, put_call="Put"),
+        ]
+        diff = ThirteenFProcessor.compute_quarter_changes(prior, current)
+        self.assertEqual(len(diff["new_positions"]), 2)
+        put_calls = {row["put_call"] for row in diff["new_positions"]}
+        self.assertEqual(put_calls, {"CALL", "PUT"})
+
+    def test_handles_empty_prior_quarter(self):
+        current = [_holding("ACME", "AAA", 100_000_000)]
+        diff = ThirteenFProcessor.compute_quarter_changes([], current)
+        self.assertEqual(len(diff["new_positions"]), 1)
+        self.assertEqual(diff["totals"]["prior_value"], 0)
+        self.assertIsNone(diff["totals"]["turnover_pct"])
+
+    def test_handles_both_quarters_empty(self):
+        diff = ThirteenFProcessor.compute_quarter_changes([], [])
+        for bucket in ("new_positions", "increased", "reduced", "sold_out"):
+            self.assertEqual(diff[bucket], [])
+        self.assertEqual(diff["unchanged_count"], 0)
+        self.assertEqual(diff["totals"]["prior_value"], 0)
+        self.assertIsNone(diff["totals"]["turnover_pct"])
+        self.assertIsNone(diff["totals"]["top10_concentration"])
+
+
 if __name__ == "__main__":
     unittest.main()

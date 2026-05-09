@@ -545,6 +545,112 @@ class FinancialDataProcessor:
         logging.info(f"Generated financial summary for {ticker} ending {summary_data['period_end']} from form {summary_data['source_form']}.")
         return summary_data
 
+    @staticmethod
+    def _decorate_series_with_pct_changes(entries: List[Dict], cadence: str) -> List[Dict]:
+        """Returns a copy of `entries` (newest-first) with `qoq_pct` and `yoy_pct` added.
+
+        - cadence="quarterly": qoq_pct is vs index+1 (the next-newest entry); yoy_pct is vs the
+          entry exactly 4 positions later (one fiscal year prior).
+        - cadence="annual": only yoy_pct is set, comparing to index+1.
+
+        pct values are the standard `(curr - prev) / |prev|` ratio, rounded to 4 decimals.
+        Either pct field is None when the comparison entry is missing or has a zero/None value.
+        """
+        if not entries:
+            return []
+
+        decorated: List[Dict] = []
+        for index, entry in enumerate(entries):
+            decorated_entry = dict(entry)
+            current_value = entry.get("value")
+
+            if cadence == "quarterly":
+                qoq_pct = FinancialDataProcessor._safe_pct_change(
+                    current_value,
+                    entries[index + 1]["value"] if index + 1 < len(entries) else None,
+                )
+                yoy_pct = FinancialDataProcessor._safe_pct_change(
+                    current_value,
+                    entries[index + 4]["value"] if index + 4 < len(entries) else None,
+                )
+                decorated_entry["qoq_pct"] = qoq_pct
+                decorated_entry["yoy_pct"] = yoy_pct
+            else:
+                yoy_pct = FinancialDataProcessor._safe_pct_change(
+                    current_value,
+                    entries[index + 1]["value"] if index + 1 < len(entries) else None,
+                )
+                decorated_entry["yoy_pct"] = yoy_pct
+
+            decorated.append(decorated_entry)
+
+        return decorated
+
+    @staticmethod
+    def _safe_pct_change(current: Optional[float], previous: Optional[float]) -> Optional[float]:
+        if current is None or previous is None:
+            return None
+        try:
+            current_value = float(current)
+            previous_value = float(previous)
+        except (TypeError, ValueError):
+            return None
+        if previous_value == 0:
+            return None
+        return round((current_value - previous_value) / abs(previous_value), 4)
+
+    @classmethod
+    def compute_trend(cls, summary: Dict, periods: int = 8) -> Dict:
+        """Decorate a financial summary with QoQ/YoY pct changes per metric.
+
+        Input is the dict returned by `get_financial_summary`. Output preserves the top-level
+        identity fields and replaces each metric's `quarterly`/`annual` lists (truncated to
+        `periods`) with versions that include `qoq_pct` (quarterly only) and `yoy_pct`.
+
+        Metrics that are None in the input remain None in the output.
+        """
+        if not summary:
+            return {}
+        if periods < 1:
+            periods = 1
+
+        output: Dict = {
+            "ticker": summary.get("ticker"),
+            "entityName": summary.get("entityName"),
+            "cik": summary.get("cik"),
+            "source_form": summary.get("source_form"),
+            "period_end": summary.get("period_end"),
+            "periods_requested": periods,
+            "metrics": {},
+        }
+
+        for metric_key in cls.KEY_FINANCIAL_SUMMARY_METRICS:
+            history = summary.get(metric_key)
+            if not history:
+                output["metrics"][metric_key] = None
+                continue
+
+            quarterly = cls._decorate_series_with_pct_changes(
+                list(history.get("quarterly") or [])[: periods + 4],
+                cadence="quarterly",
+            )[:periods]
+            annual = cls._decorate_series_with_pct_changes(
+                list(history.get("annual") or [])[: periods + 1],
+                cadence="annual",
+            )[:periods]
+            output["metrics"][metric_key] = {"quarterly": quarterly, "annual": annual}
+
+        return output
+
+    async def get_financial_trend(
+        self, ticker: str, periods: int = 8, use_cache: bool = True
+    ) -> Optional[Dict]:
+        """High-level wrapper: fetch the summary, then decorate it with QoQ/YoY pcts."""
+        summary = await self.get_financial_summary(ticker, use_cache=use_cache)
+        if summary is None:
+            return None
+        return self.compute_trend(summary, periods=periods)
+
     # Placeholder for future ratio calculations
     def _calculate_ratios(self, summary_metrics: Dict) -> Dict:
         """

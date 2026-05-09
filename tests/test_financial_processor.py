@@ -213,5 +213,88 @@ class FinancialProcessorTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(await processor.get_financial_summary("empty"))
 
 
+class TrendComputationTests(unittest.IsolatedAsyncioTestCase):
+    def test_safe_pct_change_handles_zero_and_none(self):
+        self.assertIsNone(FinancialDataProcessor._safe_pct_change(100, 0))
+        self.assertIsNone(FinancialDataProcessor._safe_pct_change(None, 100))
+        self.assertIsNone(FinancialDataProcessor._safe_pct_change(100, None))
+        self.assertEqual(
+            FinancialDataProcessor._safe_pct_change(110, 100), 0.1
+        )
+        self.assertEqual(
+            FinancialDataProcessor._safe_pct_change(80, 100), -0.2
+        )
+
+    def test_decorate_quarterly_series_computes_qoq_and_yoy(self):
+        # Newest first: Q4 2025 ... Q1 2024 (so index+4 is the same quarter prior year)
+        series = [
+            {"period": "Q4 2025", "date": "2025-12-31", "value": 132, "form": "10-K"},
+            {"period": "Q3 2025", "date": "2025-09-30", "value": 120, "form": "10-Q"},
+            {"period": "Q2 2025", "date": "2025-06-30", "value": 110, "form": "10-Q"},
+            {"period": "Q1 2025", "date": "2025-03-31", "value": 100, "form": "10-Q"},
+            {"period": "Q4 2024", "date": "2024-12-31", "value": 110, "form": "10-K"},
+            {"period": "Q3 2024", "date": "2024-09-30", "value": 100, "form": "10-Q"},
+        ]
+        decorated = FinancialDataProcessor._decorate_series_with_pct_changes(series, cadence="quarterly")
+        # Newest entry: Q4 2025=132. QoQ vs Q3 2025=120 → 0.1. YoY vs Q4 2024=110 → 0.2.
+        self.assertAlmostEqual(decorated[0]["qoq_pct"], 0.1)
+        self.assertAlmostEqual(decorated[0]["yoy_pct"], 0.2)
+        # Oldest entry: insufficient lookback → both None.
+        self.assertIsNone(decorated[-1].get("qoq_pct"))
+        self.assertIsNone(decorated[-1].get("yoy_pct"))
+
+    def test_decorate_annual_series_computes_yoy_only(self):
+        series = [
+            {"period": "2025", "date": "2025-12-31", "value": 440, "form": "10-K"},
+            {"period": "2024", "date": "2024-12-31", "value": 400, "form": "10-K"},
+        ]
+        decorated = FinancialDataProcessor._decorate_series_with_pct_changes(series, cadence="annual")
+        self.assertAlmostEqual(decorated[0]["yoy_pct"], 0.1)
+        self.assertNotIn("qoq_pct", decorated[0])
+        self.assertIsNone(decorated[-1].get("yoy_pct"))
+
+    def test_compute_trend_preserves_top_level_metadata(self):
+        summary = {
+            "ticker": "ACME",
+            "entityName": "Acme Corp",
+            "cik": 1234567890,
+            "source_form": "10-Q",
+            "period_end": "2025-06-30",
+            "revenue": {
+                "quarterly": [
+                    {"period": "Q2 2025", "date": "2025-06-30", "value": 110, "form": "10-Q"},
+                    {"period": "Q1 2025", "date": "2025-03-31", "value": 100, "form": "10-Q"},
+                ],
+                "annual": [],
+            },
+            "net_income": None,
+            "assets": None,
+            "liabilities": None,
+            "equity": None,
+            "operating_cash_flow": None,
+            "investing_cash_flow": None,
+            "financing_cash_flow": None,
+            "eps": None,
+        }
+        trend = FinancialDataProcessor.compute_trend(summary, periods=4)
+        self.assertEqual(trend["ticker"], "ACME")
+        self.assertEqual(trend["period_end"], "2025-06-30")
+        self.assertEqual(trend["periods_requested"], 4)
+        self.assertIsNone(trend["metrics"]["net_income"])
+        revenue_quarterly = trend["metrics"]["revenue"]["quarterly"]
+        self.assertAlmostEqual(revenue_quarterly[0]["qoq_pct"], 0.1)
+
+    def test_compute_trend_returns_empty_dict_for_falsy_input(self):
+        self.assertEqual(FinancialDataProcessor.compute_trend(None), {})
+        self.assertEqual(FinancialDataProcessor.compute_trend({}), {})
+
+    async def test_get_financial_trend_returns_none_when_facts_missing(self):
+        async def fetch_none(_ticker: str, use_cache: bool = True) -> None:
+            return None
+
+        processor = FinancialDataProcessor(fetch_facts_func=fetch_none)
+        self.assertIsNone(await processor.get_financial_trend("zzz"))
+
+
 if __name__ == "__main__":
     unittest.main()

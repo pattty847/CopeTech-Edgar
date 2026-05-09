@@ -226,6 +226,175 @@ class ThirteenFProcessor:
         return holdings
 
     @staticmethod
+    def _holding_key(row: Dict[str, Any]) -> tuple:
+        return (
+            str(row.get("cusip") or "").upper(),
+            str(row.get("put_call") or "").upper(),
+            str(row.get("title_of_class") or "").upper(),
+        )
+
+    @staticmethod
+    def compute_quarter_changes(
+        prior_holdings: List[Dict[str, Any]],
+        current_holdings: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        """Compute QoQ deltas between two parsed 13F-HR information tables.
+
+        Both inputs are lists shaped like `parse_information_table_xml` output:
+          {issuer, title_of_class, cusip, value, value_thousands, shares, put_call, ...}
+
+        Returns a dict with categorized change lists (each ranked by abs value change)
+        plus aggregate stats:
+          {
+            'new_positions': [...],      # in current, not in prior
+            'increased':     [...],      # in both, current value > prior value
+            'reduced':       [...],      # in both, current value < prior value
+            'sold_out':      [...],      # in prior, not in current
+            'unchanged_count': int,
+            'totals': {
+              'prior_value': int, 'current_value': int, 'value_change': int,
+              'turnover_pct': float | None,  # gross changed / prior_total
+              'top10_concentration': float | None,
+            },
+          }
+        """
+        prior_by_key = {ThirteenFProcessor._holding_key(row): row for row in prior_holdings}
+        current_by_key = {ThirteenFProcessor._holding_key(row): row for row in current_holdings}
+
+        new_positions: List[Dict[str, Any]] = []
+        increased: List[Dict[str, Any]] = []
+        reduced: List[Dict[str, Any]] = []
+        sold_out: List[Dict[str, Any]] = []
+        unchanged_count = 0
+
+        for key in set(prior_by_key) | set(current_by_key):
+            previous = prior_by_key.get(key)
+            current = current_by_key.get(key)
+            previous_value = int(previous.get("value") or 0) if previous else 0
+            current_value = int(current.get("value") or 0) if current else 0
+            previous_shares = int(previous.get("shares") or 0) if previous else 0
+            current_shares = int(current.get("shares") or 0) if current else 0
+            source = current or previous or {}
+
+            entry = {
+                "cusip": key[0],
+                "put_call": key[1] or None,
+                "issuer": source.get("issuer"),
+                "title_of_class": source.get("title_of_class"),
+                "prior_value": previous_value,
+                "current_value": current_value,
+                "value_change": current_value - previous_value,
+                "prior_shares": previous_shares,
+                "current_shares": current_shares,
+                "share_change": current_shares - previous_shares,
+            }
+
+            if previous is None:
+                new_positions.append(entry)
+            elif current is None:
+                sold_out.append(entry)
+            elif current_value > previous_value:
+                increased.append(entry)
+            elif current_value < previous_value:
+                reduced.append(entry)
+            else:
+                unchanged_count += 1
+
+        for bucket in (new_positions, increased, reduced, sold_out):
+            bucket.sort(key=lambda row: abs(row["value_change"]), reverse=True)
+
+        prior_total = sum(int(row.get("value") or 0) for row in prior_holdings)
+        current_total = sum(int(row.get("value") or 0) for row in current_holdings)
+        gross_change = (
+            sum(row["value_change"] for row in increased)
+            + sum(abs(row["value_change"]) for row in reduced)
+            + sum(row["current_value"] for row in new_positions)
+            + sum(row["prior_value"] for row in sold_out)
+        )
+        sorted_current = sorted(
+            (int(row.get("value") or 0) for row in current_holdings), reverse=True
+        )
+        top10_concentration = (
+            sum(sorted_current[:10]) / current_total if current_total else None
+        )
+
+        return {
+            "new_positions": new_positions,
+            "increased": increased,
+            "reduced": reduced,
+            "sold_out": sold_out,
+            "unchanged_count": unchanged_count,
+            "totals": {
+                "prior_value": prior_total,
+                "current_value": current_total,
+                "value_change": current_total - prior_total,
+                "turnover_pct": (gross_change / prior_total) if prior_total else None,
+                "top10_concentration": top10_concentration,
+            },
+        }
+
+    async def get_holdings_changes(
+        self,
+        cik: str,
+        days_back: int = 365 * 3,
+        use_cache: bool = True,
+        top_n: int = 25,
+    ) -> Dict[str, Any]:
+        """Fetch the latest two 13F-HR filings and compute QoQ deltas.
+
+        Returns a payload with each change bucket truncated to `top_n`. If only one
+        filing is available, all current holdings are returned as new positions.
+        """
+        normalized_cik = normalize_cik(cik)
+        filings = await self.get_13f_filings(normalized_cik, days_back=days_back, use_cache=use_cache)
+        if not filings:
+            return {
+                "manager_cik": normalized_cik,
+                "manager_name": await self._get_manager_name(normalized_cik, use_cache=use_cache),
+                "current_filing": None,
+                "prior_filing": None,
+                "changes": None,
+            }
+
+        latest = filings[0]
+        prior = filings[1] if len(filings) > 1 else None
+
+        latest_holdings = await self._fetch_holdings_for_filing(latest)
+        prior_holdings = (
+            await self._fetch_holdings_for_filing(prior) if prior else []
+        )
+
+        diff = self.compute_quarter_changes(prior_holdings, latest_holdings)
+        for bucket_key in ("new_positions", "increased", "reduced", "sold_out"):
+            diff[bucket_key] = diff[bucket_key][:top_n]
+
+        return {
+            "manager_cik": normalized_cik,
+            "manager_name": await self._get_manager_name(normalized_cik, use_cache=use_cache),
+            "current_filing": latest,
+            "prior_filing": prior,
+            "changes": diff,
+        }
+
+    async def _fetch_holdings_for_filing(self, filing: Dict[str, Any]) -> List[Dict[str, Any]]:
+        documents = await self.document_handler.get_filing_documents_list(filing["accession_no"])
+        information_table_document = self.choose_information_table_document(documents or [])
+        if not information_table_document:
+            logging.warning(
+                "No 13F information table XML found for %s.", filing["accession_no"]
+            )
+            return []
+        raw_xml = await self.document_handler.download_form_document(
+            filing["accession_no"], information_table_document
+        )
+        if not raw_xml:
+            logging.warning(
+                "Could not download 13F information table %s.", information_table_document
+            )
+            return []
+        return self.parse_information_table_xml(raw_xml)
+
+    @staticmethod
     def _parse_xml_root(xml_content: str) -> ET.Element:
         try:
             return ET.fromstring(xml_content)
