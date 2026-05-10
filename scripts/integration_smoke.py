@@ -249,6 +249,15 @@ async def check_13f_changes(fetcher: SECDataFetcher, manager_cik: str) -> bool:
         f"turnover_pct={totals.get('turnover_pct')}"
     )
 
+    # Manager filings reliably have positive current_value; zero means the
+    # information-table fetch silently 404'd (wrong CIK in archive URL, etc.).
+    if (totals.get("current_value") or 0) == 0 and not any(
+        changes.get(bucket) for bucket in ("new_positions", "increased", "reduced", "sold_out")
+    ):
+        fail("13F payload has zero current_value and empty buckets — info table fetch likely failed silently")
+        save_artifact(f"13f_changes_{manager_cik}_empty", payload)
+        return False
+
     top_new = changes.get("new_positions", [])
     if top_new:
         info(f"top new: {top_new[0].get('issuer')!r} change={top_new[0].get('value_change')}")
@@ -266,8 +275,8 @@ async def main() -> int:
         help="Manager CIK for 13F (default: Berkshire Hathaway)",
     )
     parser.add_argument(
-        "--planned-sales-ticker", default="NVDA",
-        help="Ticker for Form 144 check (NVDA tends to have steady 144 flow)",
+        "--planned-sales-ticker", default="META",
+        help="Ticker for Form 144 check (META execs file Form 144 frequently)",
     )
     args = parser.parse_args()
 

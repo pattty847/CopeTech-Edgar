@@ -25,13 +25,15 @@ class SecCacheManager:
     data before making live API requests.
     """
 
-    # Define cache subdirectories
+    # Define cache subdirectories. `company_info` is stored under the `submissions`
+    # subdir but still needs an entry here so _get_cache_path's allow-list passes.
     SUBDIRS = {
         "mappings": "mappings",
         "submissions": "submissions",
         "forms": "forms",
         "facts": "facts",
-        "reports": "reports" # Kept for potential future use, even if deprecated
+        "reports": "reports", # Kept for potential future use, even if deprecated
+        "company_info": "submissions",
     }
 
     def __init__(self, cache_dir: str = "data/edgar"):

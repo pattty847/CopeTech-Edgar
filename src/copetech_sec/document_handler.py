@@ -26,29 +26,44 @@ class FilingDocumentHandler:
         self.http_client = http_client
         self.get_cik_for_ticker = cik_lookup_func # Function to get CIK from ticker
 
-    async def _get_cik_for_filing(self, accession_no: str, ticker: Optional[str] = None) -> Optional[str]:
+    async def _get_cik_for_filing(
+        self,
+        accession_no: str,
+        ticker: Optional[str] = None,
+        cik: Optional[str] = None,
+    ) -> Optional[str]:
         """
         Determines the CIK to use in the URL path for a specific filing's archive.
 
-        It first attempts to get the CIK using the provided `ticker` via the `cik_lookup_func`,
-        as this is generally more reliable. If the ticker is not provided or the lookup fails,
-        it falls back to extracting the first 10 digits from the `accession_no` if they are numeric.
-        The CIK is returned without leading zeros, as required for the SEC archive URL structure.
+        Precedence (highest → lowest):
+          1. Explicit `cik` — passed by callers that already know the filer's CIK
+             (e.g. 13F flows keyed on a manager CIK with no ticker).
+          2. CIK looked up from `ticker`.
+          3. The first 10 digits of `accession_no` (unsafe — when a filing is
+             submitted by a filer-agent like Donnelley Financial, this returns the
+             agent's CIK, not the filer's, and the archive URL will 404).
 
         Args:
             accession_no (str): The filing accession number (dashes optional).
-            ticker (Optional[str], optional): The stock ticker symbol associated with the filing,
-                used as a primary hint for CIK lookup. Defaults to None.
+            ticker (Optional[str]): Ticker hint for CIK lookup.
+            cik (Optional[str]): Explicit CIK (10 digits, with or without leading
+                zeros). Takes priority over `ticker`.
 
         Returns:
-            Optional[str]: The CIK string suitable for the URL path (no leading zeros),
-                or None if a CIK could not be reliably determined.
+            Optional[str]: CIK suitable for the URL path (no leading zeros), or None.
         """
         cik_for_url = None
         accession_no_clean = accession_no.replace('-', '')
 
-        # 1. Try CIK from ticker (most reliable)
-        if ticker:
+        # 1. Explicit CIK (most reliable when caller knows the filer)
+        if cik:
+            stripped = str(cik).lstrip('0')
+            if stripped.isdigit():
+                cik_for_url = stripped
+                logging.debug(f"Using explicit CIK {cik_for_url} for filing {accession_no}.")
+
+        # 2. CIK from ticker
+        if not cik_for_url and ticker:
             try:
                 cik_lookup = await self.get_cik_for_ticker(ticker)
                 if cik_lookup:
@@ -57,24 +72,32 @@ class FilingDocumentHandler:
             except Exception as e:
                 logging.warning(f"Error looking up CIK for ticker {ticker} for filing {accession_no}: {e}")
 
-        # 2. Fallback: Try to extract CIK-like part from accession number
+        # 3. Unsafe fallback: accession prefix. Wrong when the filing was submitted
+        # by a filer-agent (the prefix is the agent's CIK, not the filer's).
         if not cik_for_url:
-            # Accession number format: 0001193125-23-017489 -> CIK part is 0001193125
             cik_part_from_acc = accession_no_clean[:10]
             if cik_part_from_acc.isdigit():
                 cik_for_url = cik_part_from_acc.lstrip('0')
-                logging.debug(f"Using CIK {cik_for_url} extracted from accession {accession_no}.")
+                logging.warning(
+                    f"Falling back to accession-prefix CIK {cik_for_url} for {accession_no}; "
+                    "this is the submitter CIK and may not be the filer. Pass cik= explicitly."
+                )
             else:
                 logging.warning(f"Could not extract valid CIK part from accession number: {accession_no}")
 
         if not cik_for_url:
-            logging.error(f"Could not determine CIK for URL construction for filing {accession_no} (ticker: {ticker}).")
+            logging.error(f"Could not determine CIK for URL construction for filing {accession_no} (ticker: {ticker}, cik: {cik}).")
             return None
 
         return cik_for_url
 
 
-    async def get_filing_documents_list(self, accession_no: str, ticker: Optional[str] = None) -> Optional[List[Dict]]:
+    async def get_filing_documents_list(
+        self,
+        accession_no: str,
+        ticker: Optional[str] = None,
+        cik: Optional[str] = None,
+    ) -> Optional[List[Dict]]:
         """
         Fetches the list of documents contained within a specific SEC filing.
 
@@ -95,7 +118,7 @@ class FilingDocumentHandler:
                 fetched, parsed, or if an error occurs.
         """
         accession_no_clean = accession_no.replace('-', '')
-        cik_for_url = await self._get_cik_for_filing(accession_no, ticker)
+        cik_for_url = await self._get_cik_for_filing(accession_no, ticker, cik=cik)
         if not cik_for_url:
             return None
 
@@ -129,7 +152,13 @@ class FilingDocumentHandler:
             logging.error(f"Error fetching/parsing index.json for document list ({accession_no}): {e}", exc_info=True)
             return None
 
-    async def download_form_document(self, accession_number: str, document_name: str, ticker: Optional[str] = None) -> Optional[str]:
+    async def download_form_document(
+        self,
+        accession_number: str,
+        document_name: str,
+        ticker: Optional[str] = None,
+        cik: Optional[str] = None,
+    ) -> Optional[str]:
         """
         Downloads the raw content of a specific document file from a filing's archive.
 
@@ -153,7 +182,7 @@ class FilingDocumentHandler:
              return None
 
         accession_no_clean = accession_number.replace('-', '')
-        cik_for_url = await self._get_cik_for_filing(accession_number, ticker)
+        cik_for_url = await self._get_cik_for_filing(accession_number, ticker, cik=cik)
         if not cik_for_url:
             return None
 

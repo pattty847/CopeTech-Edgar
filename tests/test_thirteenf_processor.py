@@ -163,5 +163,133 @@ class QuarterChangesTests(unittest.TestCase):
         self.assertIsNone(diff["totals"]["top10_concentration"])
 
 
+class RecordingDocumentHandler:
+    """Captures get_filing_documents_list / download_form_document calls so we can
+    assert that ThirteenFProcessor threads the manager CIK through."""
+
+    def __init__(self, info_table_xml: str):
+        self.info_table_xml = info_table_xml
+        self.list_calls: list[dict] = []
+        self.download_calls: list[dict] = []
+
+    async def get_filing_documents_list(self, accession_no, ticker=None, cik=None):
+        self.list_calls.append({"accession_no": accession_no, "ticker": ticker, "cik": cik})
+        return [{"name": "form13fInfoTable.xml", "type": "INFORMATION TABLE", "size": "1000"}]
+
+    async def download_form_document(self, accession_no, document_name, ticker=None, cik=None):
+        self.download_calls.append({
+            "accession_no": accession_no, "document_name": document_name,
+            "ticker": ticker, "cik": cik,
+        })
+        return self.info_table_xml
+
+
+class CIKThreadingTests(unittest.IsolatedAsyncioTestCase):
+    """Regression: when 13F filings are submitted by a filer-agent (e.g. Donnelley),
+    the accession-prefix CIK is wrong. ThirteenFProcessor must thread the manager
+    CIK through the document handler so the archive URL points to the actual filer."""
+
+    async def _build_processor_with_recording_handler(self, info_table_xml: str):
+        from copetech_sec.thirteenf_processor import ThirteenFProcessor
+
+        recording = RecordingDocumentHandler(info_table_xml)
+        # http_client and cache_manager are only used for the submissions JSON path,
+        # which we sidestep by stubbing get_13f_filings on the processor instance.
+        processor = ThirteenFProcessor.__new__(ThirteenFProcessor)
+        processor.http_client = None
+        processor.cache_manager = None
+        processor.document_handler = recording
+
+        async def fake_get_filings(cik, *, days_back, use_cache):
+            return [
+                {
+                    "accession_no": "0001193125-26-054580",
+                    "filing_date": "2026-04-30",
+                    "form": "13F-HR",
+                    "report_date": "2026-03-31",
+                    "url": "x",
+                    "primary_document": None,
+                    "primary_document_description": None,
+                },
+                {
+                    "accession_no": "0001193125-26-001234",
+                    "filing_date": "2026-01-30",
+                    "form": "13F-HR",
+                    "report_date": "2025-12-31",
+                    "url": "x",
+                    "primary_document": None,
+                    "primary_document_description": None,
+                },
+            ]
+
+        async def fake_get_manager_name(cik, use_cache=True):
+            return "Test Manager"
+
+        processor.get_13f_filings = fake_get_filings
+        processor._get_manager_name = fake_get_manager_name
+        return processor, recording
+
+    async def test_get_latest_13f_holdings_passes_manager_cik(self):
+        processor, recording = await self._build_processor_with_recording_handler(SAMPLE_INFORMATION_TABLE)
+
+        await processor.get_latest_13f_holdings("0001067983")
+
+        # The manager CIK must be passed to the document handler — otherwise the
+        # accession prefix (1193125 = Donnelley) becomes the wrong archive root.
+        self.assertEqual(len(recording.list_calls), 1)
+        self.assertEqual(recording.list_calls[0]["cik"], "0001067983")
+        self.assertEqual(recording.download_calls[0]["cik"], "0001067983")
+
+    async def test_get_holdings_changes_passes_manager_cik_for_both_filings(self):
+        processor, recording = await self._build_processor_with_recording_handler(SAMPLE_INFORMATION_TABLE)
+
+        await processor.get_holdings_changes("0001067983")
+
+        # Both the current and prior filings need the explicit cik
+        self.assertEqual(len(recording.list_calls), 2)
+        for call in recording.list_calls:
+            self.assertEqual(call["cik"], "0001067983")
+        for call in recording.download_calls:
+            self.assertEqual(call["cik"], "0001067983")
+
+
+class CIKPrecedenceTests(unittest.IsolatedAsyncioTestCase):
+    """_get_cik_for_filing: explicit cik > ticker > accession prefix (unsafe)."""
+
+    async def _build_handler(self, ticker_to_cik: dict[str, str]):
+        from copetech_sec.document_handler import FilingDocumentHandler
+
+        async def fake_lookup(ticker: str):
+            return ticker_to_cik.get(ticker.upper())
+
+        handler = FilingDocumentHandler.__new__(FilingDocumentHandler)
+        handler.http_client = None
+        handler.get_cik_for_ticker = fake_lookup
+        return handler
+
+    async def test_explicit_cik_takes_priority_over_ticker(self):
+        handler = await self._build_handler({"AAPL": "0000320193"})
+        # Explicit cik for a 13F should win even if ticker would resolve to something else
+        result = await handler._get_cik_for_filing("0001193125-26-054580", ticker="AAPL", cik="0001067983")
+        self.assertEqual(result, "1067983")
+
+    async def test_ticker_used_when_no_explicit_cik(self):
+        handler = await self._build_handler({"AAPL": "0000320193"})
+        result = await handler._get_cik_for_filing("0001193125-26-054580", ticker="AAPL")
+        self.assertEqual(result, "320193")
+
+    async def test_accession_prefix_is_last_resort(self):
+        handler = await self._build_handler({})
+        result = await handler._get_cik_for_filing("0001193125-26-054580")
+        # Donnelley's CIK from the accession prefix — wrong for the actual filer,
+        # but we surface it as a last-resort fallback (with a logged warning).
+        self.assertEqual(result, "1193125")
+
+    async def test_returns_none_when_nothing_resolves(self):
+        handler = await self._build_handler({})
+        result = await handler._get_cik_for_filing("non-numeric-accession")
+        self.assertIsNone(result)
+
+
 if __name__ == "__main__":
     unittest.main()

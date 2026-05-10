@@ -132,7 +132,9 @@ class ThirteenFProcessor:
             }
 
         latest = filings[0]
-        documents = await self.document_handler.get_filing_documents_list(latest["accession_no"])
+        documents = await self.document_handler.get_filing_documents_list(
+            latest["accession_no"], cik=normalized_cik
+        )
         information_table_document = self.choose_information_table_document(documents or [])
         if not information_table_document:
             raise ValueError(f"No 13F information table XML found for {latest['accession_no']}.")
@@ -140,6 +142,7 @@ class ThirteenFProcessor:
         raw_xml = await self.document_handler.download_form_document(
             latest["accession_no"],
             information_table_document,
+            cik=normalized_cik,
         )
         if not raw_xml:
             raise ValueError(f"Could not download 13F information table {information_table_document}.")
@@ -359,9 +362,9 @@ class ThirteenFProcessor:
         latest = filings[0]
         prior = filings[1] if len(filings) > 1 else None
 
-        latest_holdings = await self._fetch_holdings_for_filing(latest)
+        latest_holdings = await self._fetch_holdings_for_filing(latest, cik=normalized_cik)
         prior_holdings = (
-            await self._fetch_holdings_for_filing(prior) if prior else []
+            await self._fetch_holdings_for_filing(prior, cik=normalized_cik) if prior else []
         )
 
         diff = self.compute_quarter_changes(prior_holdings, latest_holdings)
@@ -376,8 +379,12 @@ class ThirteenFProcessor:
             "changes": diff,
         }
 
-    async def _fetch_holdings_for_filing(self, filing: Dict[str, Any]) -> List[Dict[str, Any]]:
-        documents = await self.document_handler.get_filing_documents_list(filing["accession_no"])
+    async def _fetch_holdings_for_filing(
+        self, filing: Dict[str, Any], cik: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        documents = await self.document_handler.get_filing_documents_list(
+            filing["accession_no"], cik=cik
+        )
         information_table_document = self.choose_information_table_document(documents or [])
         if not information_table_document:
             logging.warning(
@@ -385,7 +392,7 @@ class ThirteenFProcessor:
             )
             return []
         raw_xml = await self.document_handler.download_form_document(
-            filing["accession_no"], information_table_document
+            filing["accession_no"], information_table_document, cik=cik
         )
         if not raw_xml:
             logging.warning(
