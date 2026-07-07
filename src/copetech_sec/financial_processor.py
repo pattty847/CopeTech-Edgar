@@ -26,19 +26,28 @@ class FinancialDataProcessor:
     # Define key metrics mapping for the financial summary required by the UI
     # Keys are snake_case matching the target flat dictionary output.
     # Values are the corresponding us-gaap or dei XBRL tags.
+    # Each metric maps to a taxonomy plus an ordered list of candidate XBRL tags.
+    # Older filers (pre ASC-606) and non-tech sectors (banks, consumer goods) tag
+    # revenue differently, so the first tag that returns data wins.
     KEY_FINANCIAL_SUMMARY_METRICS = {
         # Income Statement
-        "revenue": ("us-gaap", "RevenueFromContractWithCustomerExcludingAssessedTax"),
-        "net_income": ("us-gaap", "NetIncomeLoss"),
-        "eps": ("us-gaap", "EarningsPerShareBasic"), # Using Basic EPS for UI
+        "revenue": ("us-gaap", [
+            "RevenueFromContractWithCustomerExcludingAssessedTax",
+            "RevenueFromContractWithCustomerIncludingAssessedTax",
+            "Revenues",
+            "SalesRevenueGoodsNet",
+            "SalesRevenueNet",
+        ]),
+        "net_income": ("us-gaap", ["NetIncomeLoss"]),
+        "eps": ("us-gaap", ["EarningsPerShareBasic"]), # Using Basic EPS for UI
         # Balance Sheet
-        "assets": ("us-gaap", "Assets"),
-        "liabilities": ("us-gaap", "Liabilities"),
-        "equity": ("us-gaap", "StockholdersEquity"),
+        "assets": ("us-gaap", ["Assets"]),
+        "liabilities": ("us-gaap", ["Liabilities"]),
+        "equity": ("us-gaap", ["StockholdersEquity"]),
         # Cash Flow
-        "operating_cash_flow": ("us-gaap", "NetCashProvidedByUsedInOperatingActivities"),
-        "investing_cash_flow": ("us-gaap", "NetCashProvidedByUsedInInvestingActivities"),
-        "financing_cash_flow": ("us-gaap", "NetCashProvidedByUsedInFinancingActivities"),
+        "operating_cash_flow": ("us-gaap", ["NetCashProvidedByUsedInOperatingActivities"]),
+        "investing_cash_flow": ("us-gaap", ["NetCashProvidedByUsedInInvestingActivities"]),
+        "financing_cash_flow": ("us-gaap", ["NetCashProvidedByUsedInFinancingActivities"]),
         # Other potentially useful
         # "shares_outstanding": ("dei", "EntityCommonStockSharesOutstanding") # Example DEI tag
     }
@@ -509,8 +518,12 @@ class FinancialDataProcessor:
         has_data = False
 
         # Iterate through the required metrics defined in the mapping
-        for metric_key, (taxonomy, concept_tag) in self.KEY_FINANCIAL_SUMMARY_METRICS.items():
-            fact_history = self._get_fact_history(company_facts, taxonomy, concept_tag)
+        for metric_key, (taxonomy, concept_tags) in self.KEY_FINANCIAL_SUMMARY_METRICS.items():
+            fact_history = None
+            for concept_tag in concept_tags:
+                fact_history = self._get_fact_history(company_facts, taxonomy, concept_tag, metric_key=metric_key)
+                if fact_history:
+                    break
 
             if fact_history:
                 has_data = True
@@ -532,7 +545,7 @@ class FinancialDataProcessor:
                             latest_period_info["end_date"] = current_end_date
                             latest_period_info["form"] = entry_list[0].get("form")
             else:
-                 logging.debug(f"Metric '{metric_key}' (Tag: {concept_tag}, Tax: {taxonomy}) not found/no data for {ticker}.")
+                 logging.debug(f"Metric '{metric_key}' (Tags tried: {concept_tags}, Tax: {taxonomy}) not found/no data for {ticker}.")
                  summary_data[metric_key] = None
 
         summary_data["period_end"] = latest_period_info["end_date"] if latest_period_info["end_date"] != "0000-00-00" else None
