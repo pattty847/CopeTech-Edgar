@@ -61,6 +61,20 @@ def _to_int(value: Optional[str]) -> Optional[int]:
     return int(parsed) if parsed is not None else None
 
 
+def _normalize_date(value: Optional[str]) -> Optional[str]:
+    """EDGAR Form 144 dates come as MM/DD/YYYY — normalize to ISO YYYY-MM-DD so
+    downstream date parsing and lexicographic sorting both work."""
+    if not value:
+        return None
+    text = value.strip()
+    for fmt in ("%m/%d/%Y", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(text[:10], fmt).strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+    return text or None
+
+
 class Form144Processor:
     """Parses Form 144 XML filings into structured planned-sale records."""
 
@@ -81,8 +95,10 @@ class Form144Processor:
     def parse_form144_xml(self, xml_content: str) -> List[Dict]:
         """Parse a Form 144 XML payload into a list of planned-sale records.
 
-        Form 144 may declare multiple `secsToBeSold` blocks (one per security class).
-        Each block becomes its own record so callers can aggregate at any granularity.
+        Element names follow the real EDGAR electronic Form 144 schema (ownership
+        namespace, verified against live filings 2026-07): the plan numbers live in
+        `securitiesInformation` blocks (one per security class — each becomes its own
+        record), while `securitiesToBeSold` carries acquisition provenance.
 
         Returns an empty list if the XML cannot be parsed.
         """
@@ -96,22 +112,38 @@ class Form144Processor:
         issuer_cik = _child_text(issuer_info, "issuerCik")
         issuer_name = _child_text(issuer_info, "issuerName")
         issuer_symbol = _child_text(issuer_info, "issuerTradingSymbol")
-        account_name = _child_text(issuer_info, "nameOfPersonForWhoseAccount")
+        account_name = _child_text(issuer_info, "nameOfPersonForWhoseAccountTheSecuritiesAreToBeSold") or _child_text(
+            issuer_info, "nameOfPersonForWhoseAccount"
+        )
 
-        signature_block = _find_first(root, "signature")
-        signature_date = _child_text(signature_block, "signatureDate")
+        # Real filings sign via <noticeSignature><noticeDate>…<signature>…; keep the old
+        # signature/signatureDate lookups as a fallback for schema variants.
+        signature_block = _find_first(root, "noticeSignature") or _find_first(root, "signature")
+        signature_date = _normalize_date(
+            _child_text(signature_block, "noticeDate") or _child_text(signature_block, "signatureDate")
+        )
         signer = None
         if signature_block is not None:
-            for child in list(signature_block):
+            for child in signature_block.iter():
+                if child is signature_block:
+                    continue  # the legacy wrapper block is itself named <signature>
                 if _strip_namespace(child.tag) == "signature":
-                    signer = (child.text or "").strip() or None
-                    break
+                    text = (child.text or "").strip()
+                    if text:
+                        signer = text
+                        break
 
         relationship = self._extract_relationship(root)
         recent_sales = self._extract_recent_sales(root)
 
+        # Acquisition provenance (first securitiesToBeSold block; usually 1:1 with the plan).
+        provenance = _find_first(root, "securitiesToBeSold")
+        acquired_from = _child_text(provenance, "nameOfPersonfromWhomAcquired")
+        acquisition_nature = _child_text(provenance, "natureOfAcquisitionTransaction")
+
         records: List[Dict] = []
-        for block in _find_all(root, "secsToBeSold"):
+        plan_blocks = _find_all(root, "securitiesInformation") or _find_all(root, "secsToBeSold")
+        for block in plan_blocks:
             shares = _to_int(_child_text(block, "noOfUnitsSold"))
             aggregate_value = _to_float(_child_text(block, "aggregateMarketValue"))
             shares_outstanding = _to_int(_child_text(block, "noOfUnitsOutstanding"))
@@ -127,27 +159,44 @@ class Form144Processor:
                     "signer": signer,
                     "signature_date": signature_date,
                     "relationship": relationship,
-                    "security_class": _child_text(block, "securitiesClassTitleOfIssuer"),
-                    "broker_name": _child_text(block, "brokerName"),
+                    "security_class": _child_text(block, "securitiesClassTitle")
+                    or _child_text(block, "securitiesClassTitleOfIssuer"),
+                    "broker_name": _child_text(block, "name") or _child_text(block, "brokerName"),
                     "planned_shares": shares,
                     "aggregate_market_value": aggregate_value,
                     "implied_price_per_share": (
                         round(implied_price, 4) if implied_price is not None else None
                     ),
                     "shares_outstanding": shares_outstanding,
-                    "approx_sale_date": _child_text(block, "approxSaleDate"),
-                    "exchange": _child_text(block, "natOfSecuritiesExchange"),
-                    "acquired_from_issuer": self._yes_no(_child_text(block, "acquiredFromIssuer")),
+                    "approx_sale_date": _normalize_date(_child_text(block, "approxSaleDate")),
+                    "exchange": _child_text(block, "securitiesExchangeName")
+                    or _child_text(block, "natOfSecuritiesExchange"),
+                    "acquired_from_issuer": (
+                        ((acquired_from or "").strip().lower() == "issuer" or None)
+                        if acquired_from
+                        else self._yes_no(_child_text(block, "acquiredFromIssuer"))
+                    ),
+                    "acquisition_nature": acquisition_nature,
                     "recent_sales": recent_sales,
                 }
             )
 
         if not records:
-            logging.debug("Form 144 XML had no secsToBeSold blocks.")
+            logging.debug("Form 144 XML had no securitiesInformation/secsToBeSold blocks.")
         return records
 
     @staticmethod
     def _extract_relationship(root: ET.Element) -> Optional[str]:
+        # Real electronic filings: <relationshipsToIssuer><relationshipToIssuer>Officer</...>
+        real_block = _find_first(root, "relationshipsToIssuer")
+        if real_block is not None:
+            labels = [
+                (el.text or "").strip()
+                for el in real_block.iter()
+                if _strip_namespace(el.tag) == "relationshipToIssuer" and (el.text or "").strip()
+            ]
+            if labels:
+                return ", ".join(labels)
         relationship_block = _find_first(root, "relationshipWithIssuer")
         if relationship_block is None:
             return None
@@ -170,7 +219,7 @@ class Form144Processor:
         for block in _find_all(root, "securitiesSoldInPast3Months"):
             sales.append(
                 {
-                    "sale_date": _child_text(block, "saleDate"),
+                    "sale_date": _normalize_date(_child_text(block, "saleDate")),
                     "shares_sold": _to_int(_child_text(block, "amountOfSecuritiesSold")),
                     "gross_proceeds": _to_float(_child_text(block, "grossProceeds")),
                 }
