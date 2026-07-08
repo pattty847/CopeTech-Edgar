@@ -70,6 +70,7 @@ class Form8KProcessor:
     def __init__(
         self,
         fetch_filings_func: Callable[..., Awaitable[List[Dict]]],
+        cache_manager: object | None = None,
     ):
         """
         Args:
@@ -78,6 +79,7 @@ class Form8KProcessor:
                 Typically `SECDataFetcher.fetch_current_reports`.
         """
         self.fetch_filings_metadata = fetch_filings_func
+        self.cache_manager = cache_manager
 
     @staticmethod
     def parse_items_string(raw: Optional[str]) -> List[Dict[str, str]]:
@@ -137,11 +139,43 @@ class Form8KProcessor:
                 },
             }
         """
-        ticker = ticker.upper()
         filings_meta = await self.fetch_filings_metadata(ticker, days_back=days_back, use_cache=use_cache)
         if filing_limit > 0:
             filings_meta = filings_meta[:filing_limit]
+        return self._build_8k_payload(ticker, filings_meta, days_back, filing_limit, categories)
 
+    async def refresh_8k_events(
+        self,
+        ticker: str,
+        days_back: int = 180,
+        filing_limit: int = 50,
+        categories: Optional[List[str]] = None,
+    ) -> Dict:
+        cached_meta = await self.fetch_filings_metadata(ticker, days_back=days_back, use_cache=True)
+        fresh_meta = await self.fetch_filings_metadata(ticker, days_back=days_back, use_cache=False)
+        merged_by_accession: Dict[str, Dict] = {}
+        for filing_meta in cached_meta + fresh_meta:
+            accession_no = filing_meta.get("accession_no")
+            if accession_no:
+                merged_by_accession[accession_no] = filing_meta
+        filings_meta = sorted(
+            merged_by_accession.values(),
+            key=lambda filing: filing.get("filing_date") or "",
+            reverse=True,
+        )
+        if filing_limit > 0:
+            filings_meta = filings_meta[:filing_limit]
+        return self._build_8k_payload(ticker, filings_meta, days_back, filing_limit, categories)
+
+    def _build_8k_payload(
+        self,
+        ticker: str,
+        filings_meta: List[Dict],
+        days_back: int,
+        filing_limit: int,
+        categories: Optional[List[str]] = None,
+    ) -> Dict:
+        ticker = ticker.upper()
         category_filter = set(categories) if categories else None
 
         events: List[Dict] = []

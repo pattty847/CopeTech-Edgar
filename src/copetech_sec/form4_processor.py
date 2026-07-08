@@ -80,7 +80,8 @@ class Form4Processor:
 
     def __init__(self, 
                  document_handler: FilingDocumentHandler, 
-                 fetch_filings_func: Callable[..., Awaitable[List[Dict]]]):
+                 fetch_filings_func: Callable[..., Awaitable[List[Dict]]],
+                 cache_manager: Any | None = None):
         """
         Initializes the Form 4 Processor.
 
@@ -95,6 +96,7 @@ class Form4Processor:
         """
         self.document_handler = document_handler
         self.fetch_filings_metadata = fetch_filings_func # e.g., SECDataFetcher.fetch_insider_filings
+        self.cache_manager = cache_manager
 
     def parse_form4_xml(self, xml_content: str) -> List[Dict]:
         """
@@ -794,6 +796,16 @@ class Form4Processor:
                                          use_cache: bool = True, filing_limit: int = 40,
                                          anchor_type: str = 'filing_date') -> Dict[str, Any]:
         ticker = ticker.upper()
+        if use_cache and self.cache_manager is not None:
+            cached = await self.cache_manager.load_data(
+                ticker,
+                'insider_signals',
+                days_back=days_back,
+                filing_limit=filing_limit,
+                anchor_type=anchor_type,
+            )
+            if isinstance(cached, dict):
+                return cached
         filings_meta = await self.fetch_filings_metadata(ticker, days_back=days_back, use_cache=use_cache)
         if filing_limit > 0:
             filings_meta = filings_meta[:filing_limit]
@@ -807,6 +819,71 @@ class Form4Processor:
             for transaction in parsed_transactions:
                 normalized_events.append(self._normalize_signal_event(transaction, filing_meta, ticker))
 
+        payload = self._build_signal_payload(ticker, normalized_events, days_back, filing_limit, anchor_type)
+        if self.cache_manager is not None:
+            await self.cache_manager.save_data(
+                ticker,
+                'insider_signals',
+                payload,
+                days_back=days_back,
+                filing_limit=filing_limit,
+                anchor_type=anchor_type,
+            )
+        return payload
+
+    async def refresh_insider_signal_payload(self, ticker: str, days_back: int = 180,
+                                             filing_limit: int = 40,
+                                             anchor_type: str = 'filing_date') -> Dict[str, Any]:
+        ticker = ticker.upper()
+        cached_payload = None
+        if self.cache_manager is not None:
+            cached = await self.cache_manager.load_data(
+                ticker,
+                'insider_signals',
+                days_back=days_back,
+                filing_limit=filing_limit,
+                anchor_type=anchor_type,
+            )
+            if isinstance(cached, dict):
+                cached_payload = cached
+        if cached_payload is None:
+            cached_payload = await self.get_insider_signal_payload(
+                ticker,
+                days_back=days_back,
+                use_cache=True,
+                filing_limit=filing_limit,
+                anchor_type=anchor_type,
+            )
+
+        known_events = [event for event in cached_payload.get('events', []) if isinstance(event, dict)]
+        known_accessions = {event.get('accession_no') for event in known_events if event.get('accession_no')}
+        fresh_meta = await self.fetch_filings_metadata(ticker, days_back=days_back, use_cache=False)
+        if filing_limit > 0:
+            fresh_meta = fresh_meta[:filing_limit]
+
+        new_events: List[Dict[str, Any]] = []
+        for filing_meta in fresh_meta:
+            accession_no = filing_meta.get('accession_no')
+            if not accession_no or accession_no in known_accessions:
+                continue
+            parsed_transactions = await self.process_form4_filing(accession_no, ticker=ticker)
+            for transaction in parsed_transactions:
+                new_events.append(self._normalize_signal_event(transaction, filing_meta, ticker))
+
+        payload = self._build_signal_payload(ticker, known_events + new_events, days_back, filing_limit, anchor_type)
+        if self.cache_manager is not None:
+            await self.cache_manager.save_data(
+                ticker,
+                'insider_signals',
+                payload,
+                days_back=days_back,
+                filing_limit=filing_limit,
+                anchor_type=anchor_type,
+            )
+        return payload
+
+    def _build_signal_payload(self, ticker: str, normalized_events: List[Dict[str, Any]],
+                              days_back: int, filing_limit: int, anchor_type: str) -> Dict[str, Any]:
         effective_events = self._dedupe_and_apply_amendments(normalized_events)
         daily_aggregates = self._build_daily_aggregates(ticker, effective_events)
         clusters = self.detect_cluster_buys(effective_events)

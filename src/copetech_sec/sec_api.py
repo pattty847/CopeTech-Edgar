@@ -72,7 +72,8 @@ class SECDataFetcher:
         self.document_handler = FilingDocumentHandler(http_client=self.http_client, cik_lookup_func=self.get_cik_for_ticker)
         self.form4_processor = Form4Processor(
             document_handler=self.document_handler,
-            fetch_filings_func=self.fetch_insider_filings # Pass the method directly
+            fetch_filings_func=self.fetch_insider_filings, # Pass the method directly
+            cache_manager=self.cache_manager,
         )
         self.form144_processor = Form144Processor(
             document_handler=self.document_handler,
@@ -80,6 +81,7 @@ class SECDataFetcher:
         )
         self.form8k_processor = Form8KProcessor(
             fetch_filings_func=self.fetch_current_reports,
+            cache_manager=self.cache_manager,
         )
         self.financial_processor = FinancialDataProcessor(
             fetch_facts_func=self.get_company_facts # Pass the method directly
@@ -231,7 +233,7 @@ class SECDataFetcher:
         cache_form_key = ",".join(requested_forms)
         logging.debug(f"Getting {form_type} filings for {ticker} (days back: {days_back}, cache: {use_cache})")
         if use_cache:
-            cache_data = await self.cache_manager.load_data(ticker, 'forms', form_type=cache_form_key)
+            cache_data = await self.cache_manager.load_data(ticker, 'forms', form_type=cache_form_key, days_back=days_back)
             if cache_data:
                 cutoff_date = (datetime.now() - timedelta(days=days_back)).strftime('%Y-%m-%d')
                 if isinstance(cache_data, list):
@@ -306,7 +308,7 @@ class SECDataFetcher:
 
             logging.info(f"Extracted {len(filings)} {cache_form_key} filings for {ticker} within {days_back} days.")
             if filings:
-                 await self.cache_manager.save_data(ticker, 'forms', filings, form_type=cache_form_key)
+                 await self.cache_manager.save_data(ticker, 'forms', filings, form_type=cache_form_key, days_back=days_back)
             return filings
         except Exception as e:
              logging.error(f"Error processing filings for {ticker}: {e}", exc_info=True)
@@ -388,6 +390,17 @@ class SECDataFetcher:
             anchor_type=anchor_type,
         )
 
+    async def refresh_insider_signal_payload(self, ticker: str, days_back: int = 180,
+                                             filing_limit: int = 40,
+                                             anchor_type: str = 'filing_date') -> Dict:
+        """Force a live Form 4 metadata check and merge only new accessions into the cached payload."""
+        return await self.form4_processor.refresh_insider_signal_payload(
+            ticker=ticker,
+            days_back=days_back,
+            filing_limit=filing_limit,
+            anchor_type=anchor_type,
+        )
+
     async def get_financial_summary(self, ticker: str, use_cache: bool = True) -> Optional[Dict]:
         """Generates a flattened summary of key financial metrics for the UI (Delegated)."""
         summary = await self.financial_processor.get_financial_summary(ticker=ticker, use_cache=use_cache)
@@ -418,6 +431,21 @@ class SECDataFetcher:
             ticker=ticker,
             days_back=days_back,
             use_cache=use_cache,
+            filing_limit=filing_limit,
+            categories=categories,
+        )
+
+    async def refresh_8k_events(
+        self,
+        ticker: str,
+        days_back: int = 180,
+        filing_limit: int = 50,
+        categories: Optional[List[str]] = None,
+    ) -> Dict:
+        """Force a live 8-K metadata check and merge new accessions with cached events."""
+        return await self.form8k_processor.refresh_8k_events(
+            ticker=ticker,
+            days_back=days_back,
             filing_limit=filing_limit,
             categories=categories,
         )

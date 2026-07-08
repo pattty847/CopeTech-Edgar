@@ -46,6 +46,38 @@ class CompanyInfoCachePathTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.manager._get_cache_path("not_a_real_type", ticker="AAPL")
 
+    def test_forms_cache_path_includes_days_back_when_provided(self):
+        path_1d = self.manager._get_cache_path("forms", ticker="AAPL", form_type="4,4/A", days_back=1)
+        path_180d = self.manager._get_cache_path("forms", ticker="AAPL", form_type="4,4/A", days_back=180)
+        self.assertIn("AAPL_4_4A_1d_", path_1d)
+        self.assertIn("AAPL_4_4A_180d_", path_180d)
+        self.assertNotEqual(path_1d, path_180d)
+
+    def test_forms_load_prefers_window_cache_but_falls_back_to_legacy_cache(self):
+        import asyncio
+        from pathlib import Path
+
+        async def run():
+            legacy_path = Path(self.manager._get_cache_path("forms", ticker="AAPL", form_type="4,4/A"))
+            self.manager._write_cache_file(str(legacy_path), [{"accession_no": "legacy"}])
+            legacy_loaded = await self.manager.load_data("AAPL", "forms", form_type="4,4/A", days_back=180)
+
+            await self.manager.save_data(
+                "AAPL",
+                "forms",
+                [{"accession_no": "window"}],
+                form_type="4,4/A",
+                days_back=180,
+            )
+            window_loaded = await self.manager.load_data("AAPL", "forms", form_type="4,4/A", days_back=180)
+            one_day_loaded = await self.manager.load_data("AAPL", "forms", form_type="4,4/A", days_back=1)
+            return legacy_loaded, window_loaded, one_day_loaded
+
+        legacy_loaded, window_loaded, one_day_loaded = asyncio.run(run())
+        self.assertEqual(legacy_loaded, [{"accession_no": "legacy"}])
+        self.assertEqual(window_loaded, [{"accession_no": "window"}])
+        self.assertEqual(one_day_loaded, [{"accession_no": "legacy"}])
+
 
 if __name__ == "__main__":
     unittest.main()

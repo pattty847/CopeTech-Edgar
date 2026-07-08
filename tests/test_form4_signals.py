@@ -16,6 +16,71 @@ class DummyDocumentHandler:
     pass
 
 
+class CountingDocumentHandler:
+    def __init__(self, *, same_transaction_date: bool = False):
+        self.downloads = []
+        self.same_transaction_date = same_transaction_date
+
+    async def download_form_xml(self, accession_no: str, ticker: str | None = None):
+        self.downloads.append(accession_no)
+        day = "01" if self.same_transaction_date else f"{int(accession_no[-2:]) or 1:02d}"
+        return f"""
+        <ownershipDocument>
+          <issuer>
+            <issuerCik>0000000001</issuerCik>
+            <issuerName>Acme Corp</issuerName>
+          </issuer>
+          <reportingOwner>
+            <reportingOwnerId>
+              <rptOwnerCik>0000001000</rptOwnerCik>
+              <rptOwnerName>Owner One</rptOwnerName>
+            </reportingOwnerId>
+            <reportingOwnerRelationship>
+              <isDirector>1</isDirector>
+            </reportingOwnerRelationship>
+          </reportingOwner>
+          <nonDerivativeTable>
+            <nonDerivativeTransaction>
+              <securityTitle><value>Common Stock</value></securityTitle>
+              <transactionDate><value>2026-03-{day}</value></transactionDate>
+              <transactionCoding>
+                <transactionCode>P</transactionCode>
+                <transactionAcquiredDisposedCode><value>A</value></transactionAcquiredDisposedCode>
+              </transactionCoding>
+              <transactionAmounts>
+                <transactionShares><value>100</value></transactionShares>
+                <transactionPricePerShare><value>10</value></transactionPricePerShare>
+              </transactionAmounts>
+              <postTransactionAmounts>
+                <sharesOwnedFollowingTransaction><value>1000</value></sharesOwnedFollowingTransaction>
+              </postTransactionAmounts>
+            </nonDerivativeTransaction>
+          </nonDerivativeTable>
+        </ownershipDocument>
+        """
+
+
+class MemoryCache:
+    def __init__(self):
+        self.data = {}
+
+    async def load_data(self, ticker, data_type, **kwargs):
+        return self.data.get(self._key(ticker, data_type, kwargs))
+
+    async def save_data(self, ticker, data_type, payload, **kwargs):
+        self.data[self._key(ticker, data_type, kwargs)] = payload
+
+    def _key(self, ticker, data_type, kwargs):
+        return (
+            ticker.upper(),
+            data_type,
+            kwargs.get("form_type"),
+            kwargs.get("days_back"),
+            kwargs.get("filing_limit"),
+            kwargs.get("anchor_type"),
+        )
+
+
 class Form4SignalTests(unittest.TestCase):
     def setUp(self):
         self.processor = Form4Processor(DummyDocumentHandler(), _unused_fetch)
@@ -218,6 +283,77 @@ class Form4SignalTests(unittest.TestCase):
         # Sorted by total_value desc → the June cluster should come first
         self.assertEqual(clusters[0]['window_start'], '2026-06-01')
         self.assertEqual(clusters[1]['window_start'], '2026-01-01')
+
+
+class Form4SignalPayloadCacheTests(unittest.IsolatedAsyncioTestCase):
+    def _meta(self, accession: str, filing_date: str = "2026-03-01", form: str = "4"):
+        return {
+            "accession_no": accession,
+            "filing_date": filing_date,
+            "form": form,
+            "url": f"https://example.com/{accession}",
+            "primary_document": "form4.xml",
+            "primary_document_description": "Form 4",
+        }
+
+    async def test_signal_payload_uses_cached_payload_without_reparsing_filings(self):
+        cache = MemoryCache()
+        handler = CountingDocumentHandler()
+
+        async def fetch_filings(ticker: str, *, days_back: int, use_cache: bool):
+            return [self._meta("0000000000-26-000001")]
+
+        processor = Form4Processor(handler, fetch_filings, cache_manager=cache)
+        first = await processor.get_insider_signal_payload("ACME", days_back=180, filing_limit=40)
+        second = await processor.get_insider_signal_payload("ACME", days_back=180, filing_limit=40)
+
+        self.assertEqual(first["events"], second["events"])
+        self.assertEqual(handler.downloads, ["0000000000-26-000001"])
+
+    async def test_refresh_signal_payload_parses_only_new_accessions_and_keeps_old_events(self):
+        cache = MemoryCache()
+        handler = CountingDocumentHandler()
+        calls = 0
+
+        async def fetch_filings(ticker: str, *, days_back: int, use_cache: bool):
+            nonlocal calls
+            calls += 1
+            if use_cache:
+                return [self._meta("0000000000-26-000001", "2026-03-01")]
+            return [
+                self._meta("0000000000-26-000002", "2026-03-02"),
+                self._meta("0000000000-26-000001", "2026-03-01"),
+            ]
+
+        processor = Form4Processor(handler, fetch_filings, cache_manager=cache)
+        await processor.get_insider_signal_payload("ACME", days_back=180, filing_limit=40)
+        handler.downloads.clear()
+
+        refreshed = await processor.refresh_insider_signal_payload("ACME", days_back=180, filing_limit=40)
+
+        self.assertEqual({event["accession_no"] for event in refreshed["events"]}, {"0000000000-26-000001", "0000000000-26-000002"})
+        self.assertEqual(handler.downloads, ["0000000000-26-000002"])
+        self.assertEqual(calls, 2)
+
+    async def test_refresh_signal_payload_applies_new_amendment_to_cached_event(self):
+        cache = MemoryCache()
+        handler = CountingDocumentHandler(same_transaction_date=True)
+
+        async def fetch_filings(ticker: str, *, days_back: int, use_cache: bool):
+            if use_cache:
+                return [self._meta("0000000000-26-000001", "2026-03-01")]
+            return [
+                self._meta("0000000000-26-000002", "2026-03-02", form="4/A"),
+                self._meta("0000000000-26-000001", "2026-03-01"),
+            ]
+
+        processor = Form4Processor(handler, fetch_filings, cache_manager=cache)
+        await processor.get_insider_signal_payload("ACME", days_back=180, filing_limit=40)
+        refreshed = await processor.refresh_insider_signal_payload("ACME", days_back=180, filing_limit=40)
+
+        self.assertEqual(len(refreshed["events"]), 1)
+        self.assertEqual(refreshed["events"][0]["accession_no"], "0000000000-26-000002")
+        self.assertTrue(refreshed["events"][0]["is_amendment"])
 
 
 if __name__ == '__main__':

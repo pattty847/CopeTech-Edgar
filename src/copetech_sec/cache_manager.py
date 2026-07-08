@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import glob
+import re
 from datetime import datetime
 from typing import Optional, Dict, List, Any
 
@@ -34,6 +35,7 @@ class SecCacheManager:
         "facts": "facts",
         "reports": "reports", # Kept for potential future use, even if deprecated
         "company_info": "submissions",
+        "insider_signals": "forms",
     }
 
     def __init__(self, cache_dir: str = "data/edgar"):
@@ -108,7 +110,10 @@ class SecCacheManager:
         elif data_type == "forms":
             form_type = kwargs.get("form_type")
             if not form_type: raise ValueError("form_type is required for 'forms' data_type")
-            filename = f"{ticker_upper}_{form_type}_{timestamp}.json"
+            safe_form_type = self._safe_cache_segment(str(form_type))
+            days_back = kwargs.get("days_back")
+            window = f"_{int(days_back)}d" if days_back is not None else ""
+            filename = f"{ticker_upper}_{safe_form_type}{window}_{timestamp}.json"
         elif data_type == "facts":
             # Facts can update more often, add time to timestamp
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -117,11 +122,23 @@ class SecCacheManager:
             # Treat company info like submissions (daily cache)
              subdir = self.SUBDIRS["submissions"]
              filename = f"{ticker_upper}_info_{timestamp}.json"
+        elif data_type == "insider_signals":
+            days_back = int(kwargs.get("days_back") or 180)
+            filing_limit = int(kwargs.get("filing_limit") or 40)
+            anchor_type = self._safe_cache_segment(str(kwargs.get("anchor_type") or "filing_date"))
+            filename = f"{ticker_upper}_insider_signals_{days_back}d_{filing_limit}_{anchor_type}_{timestamp}.json"
         else:
             # Default pattern if needed, though specific types are preferred
             filename = f"{ticker_upper}_{data_type}_{timestamp}.json"
 
         return os.path.join(self.cache_dir, subdir, filename)
+
+    @staticmethod
+    def _safe_cache_segment(value: str) -> str:
+        value = value.replace("/", "")
+        segment = re.sub(r"[^A-Za-z0-9_-]+", "_", value).strip("_")
+        segment = re.sub(r"_+", "_", segment)
+        return segment or "default"
 
     def _find_latest_cache_file(self, data_type: str, ticker: str, **kwargs) -> Optional[str]:
         """
@@ -149,18 +166,31 @@ class SecCacheManager:
         elif data_type == "forms":
             form_type = kwargs.get("form_type")
             if not form_type: return None
-            pattern = f"{ticker_upper}_{form_type}_*.json"
+            safe_form_type = self._safe_cache_segment(str(form_type))
+            days_back = kwargs.get("days_back")
+            if days_back is not None:
+                pattern = f"{ticker_upper}_{safe_form_type}_{int(days_back)}d_*.json"
+            else:
+                pattern = f"{ticker_upper}_{safe_form_type}_*.json"
         elif data_type == "facts":
             pattern = f"{ticker_upper}_facts_*.json"
         elif data_type == "company_info": # Using submissions subdir for info
             subdir = self.SUBDIRS["submissions"]
             pattern = f"{ticker_upper}_info_*.json"
+        elif data_type == "insider_signals":
+            days_back = int(kwargs.get("days_back") or 180)
+            filing_limit = int(kwargs.get("filing_limit") or 40)
+            anchor_type = self._safe_cache_segment(str(kwargs.get("anchor_type") or "filing_date"))
+            pattern = f"{ticker_upper}_insider_signals_{days_back}d_{filing_limit}_{anchor_type}_*.json"
         else:
             return None # Pattern not defined for this type
 
         search_path = os.path.join(self.cache_dir, subdir, pattern)
         try:
             cache_files = sorted(glob.glob(search_path), key=os.path.getmtime, reverse=True)
+            if data_type == "forms" and kwargs.get("days_back") is None:
+                window_re = re.compile(rf"^{re.escape(ticker_upper)}_{re.escape(self._safe_cache_segment(str(kwargs.get('form_type'))))}_\d+d_")
+                cache_files = [path for path in cache_files if not window_re.match(os.path.basename(path))]
             if cache_files:
                 logging.debug(f"Found latest cache file for {ticker} ({data_type}): {cache_files[0]}")
                 return cache_files[0]
@@ -317,6 +347,12 @@ class SecCacheManager:
         latest_file = self._find_latest_cache_file(data_type, ticker, **kwargs)
         if latest_file and self._is_cache_fresh(latest_file, data_type):
             return self._read_cache_file(latest_file)
+        if data_type == "forms" and kwargs.get("days_back") is not None:
+            legacy_kwargs = dict(kwargs)
+            legacy_kwargs.pop("days_back", None)
+            legacy_file = self._find_latest_cache_file(data_type, ticker, **legacy_kwargs)
+            if legacy_file and self._is_cache_fresh(legacy_file, data_type):
+                return self._read_cache_file(legacy_file)
         else:
             if latest_file:
                  logging.debug(f"Cache file found ({latest_file}) but considered stale.")

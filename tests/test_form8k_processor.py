@@ -150,6 +150,37 @@ class Get8KEventsTests(unittest.IsolatedAsyncioTestCase):
         payload = await processor.get_8k_events("AAPL", filing_limit=3)
         self.assertEqual(len(payload["events"]), 3)
 
+    async def test_refresh_8k_events_merges_new_accessions_with_cached_events(self):
+        async def fetch_filings(ticker: str, *, days_back: int, use_cache: bool) -> list[dict]:
+            if use_cache:
+                return [self._filing("ACC-1", "2026-05-10", "8.01")]
+            return [
+                self._filing("ACC-2", "2026-05-11", "5.02"),
+                self._filing("ACC-1", "2026-05-10", "8.01"),
+            ]
+
+        processor = Form8KProcessor(fetch_filings_func=fetch_filings)
+        await processor.get_8k_events("AAPL", filing_limit=50)
+        refreshed = await processor.refresh_8k_events("AAPL", filing_limit=50)
+
+        self.assertEqual([event["accession_no"] for event in refreshed["events"]], ["ACC-2", "ACC-1"])
+        self.assertEqual(refreshed["totals"]["event_count"], 2)
+
+    async def test_refresh_8k_events_preserves_category_filter(self):
+        async def fetch_filings(ticker: str, *, days_back: int, use_cache: bool) -> list[dict]:
+            if use_cache:
+                return [self._filing("ACC-1", "2026-05-10", "8.01")]
+            return [
+                self._filing("ACC-2", "2026-05-11", "5.02"),
+                self._filing("ACC-1", "2026-05-10", "8.01"),
+            ]
+
+        processor = Form8KProcessor(fetch_filings_func=fetch_filings)
+        await processor.get_8k_events("AAPL", filing_limit=50)
+        refreshed = await processor.refresh_8k_events("AAPL", filing_limit=50, categories=["exec_change"])
+
+        self.assertEqual([event["accession_no"] for event in refreshed["events"]], ["ACC-2"])
+
 
 if __name__ == "__main__":
     unittest.main()
