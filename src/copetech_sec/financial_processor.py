@@ -23,33 +23,56 @@ class FinancialDataProcessor:
     company facts JSON data for a given ticker.
     """
 
-    # Define key metrics mapping for the financial summary required by the UI
+    # Define key metrics mapping for the financial summary required by the UI.
     # Keys are snake_case matching the target flat dictionary output.
-    # Values are the corresponding us-gaap or dei XBRL tags.
-    # Each metric maps to a taxonomy plus an ordered list of candidate XBRL tags.
-    # Older filers (pre ASC-606) and non-tech sectors (banks, consumer goods) tag
-    # revenue differently, so the first tag that returns data wins.
+    # Each metric maps to an ordered list of (taxonomy, tag) candidates; the first
+    # pair that returns data wins. Older filers (pre ASC-606) and non-tech sectors
+    # tag revenue differently, and foreign private issuers (20-F/6-K filers like
+    # ASE Technology) report under ifrs-full with NO us-gaap facts at all — hence
+    # the IFRS fallbacks at the end of each chain.
     KEY_FINANCIAL_SUMMARY_METRICS = {
         # Income Statement
-        "revenue": ("us-gaap", [
-            "RevenueFromContractWithCustomerExcludingAssessedTax",
-            "RevenueFromContractWithCustomerIncludingAssessedTax",
-            "Revenues",
-            "SalesRevenueGoodsNet",
-            "SalesRevenueNet",
-        ]),
-        "net_income": ("us-gaap", ["NetIncomeLoss"]),
-        "eps": ("us-gaap", ["EarningsPerShareBasic"]), # Using Basic EPS for UI
+        "revenue": [
+            ("us-gaap", "RevenueFromContractWithCustomerExcludingAssessedTax"),
+            ("us-gaap", "RevenueFromContractWithCustomerIncludingAssessedTax"),
+            ("us-gaap", "Revenues"),
+            ("us-gaap", "SalesRevenueGoodsNet"),
+            ("us-gaap", "SalesRevenueNet"),
+            ("ifrs-full", "Revenue"),
+            ("ifrs-full", "RevenueFromContractsWithCustomers"),
+        ],
+        "net_income": [
+            ("us-gaap", "NetIncomeLoss"),
+            ("ifrs-full", "ProfitLossAttributableToOwnersOfParent"),
+            ("ifrs-full", "ProfitLoss"),
+        ],
+        "eps": [
+            ("us-gaap", "EarningsPerShareBasic"),  # Using Basic EPS for UI
+            ("ifrs-full", "BasicEarningsLossPerShare"),
+        ],
         # Balance Sheet
-        "assets": ("us-gaap", ["Assets"]),
-        "liabilities": ("us-gaap", ["Liabilities"]),
-        "equity": ("us-gaap", ["StockholdersEquity"]),
+        "assets": [("us-gaap", "Assets"), ("ifrs-full", "Assets")],
+        "liabilities": [("us-gaap", "Liabilities"), ("ifrs-full", "Liabilities")],
+        "equity": [
+            ("us-gaap", "StockholdersEquity"),
+            ("ifrs-full", "EquityAttributableToOwnersOfParent"),
+            ("ifrs-full", "Equity"),
+        ],
         # Cash Flow
-        "operating_cash_flow": ("us-gaap", ["NetCashProvidedByUsedInOperatingActivities"]),
-        "investing_cash_flow": ("us-gaap", ["NetCashProvidedByUsedInInvestingActivities"]),
-        "financing_cash_flow": ("us-gaap", ["NetCashProvidedByUsedInFinancingActivities"]),
+        "operating_cash_flow": [
+            ("us-gaap", "NetCashProvidedByUsedInOperatingActivities"),
+            ("ifrs-full", "CashFlowsFromUsedInOperatingActivities"),
+        ],
+        "investing_cash_flow": [
+            ("us-gaap", "NetCashProvidedByUsedInInvestingActivities"),
+            ("ifrs-full", "CashFlowsFromUsedInInvestingActivities"),
+        ],
+        "financing_cash_flow": [
+            ("us-gaap", "NetCashProvidedByUsedInFinancingActivities"),
+            ("ifrs-full", "CashFlowsFromUsedInFinancingActivities"),
+        ],
         # Other potentially useful
-        # "shares_outstanding": ("dei", "EntityCommonStockSharesOutstanding") # Example DEI tag
+        # "shares_outstanding": [("dei", "EntityCommonStockSharesOutstanding")] # Example DEI tag
     }
 
     def __init__(self, fetch_facts_func: Callable[[str, bool], Awaitable[Optional[Dict]]]):
@@ -518,9 +541,9 @@ class FinancialDataProcessor:
         has_data = False
 
         # Iterate through the required metrics defined in the mapping
-        for metric_key, (taxonomy, concept_tags) in self.KEY_FINANCIAL_SUMMARY_METRICS.items():
+        for metric_key, candidates in self.KEY_FINANCIAL_SUMMARY_METRICS.items():
             fact_history = None
-            for concept_tag in concept_tags:
+            for taxonomy, concept_tag in candidates:
                 fact_history = self._get_fact_history(company_facts, taxonomy, concept_tag, metric_key=metric_key)
                 if fact_history:
                     break
@@ -545,7 +568,7 @@ class FinancialDataProcessor:
                             latest_period_info["end_date"] = current_end_date
                             latest_period_info["form"] = entry_list[0].get("form")
             else:
-                 logging.debug(f"Metric '{metric_key}' (Tags tried: {concept_tags}, Tax: {taxonomy}) not found/no data for {ticker}.")
+                 logging.debug(f"Metric '{metric_key}' (candidates tried: {candidates}) not found/no data for {ticker}.")
                  summary_data[metric_key] = None
 
         summary_data["period_end"] = latest_period_info["end_date"] if latest_period_info["end_date"] != "0000-00-00" else None
