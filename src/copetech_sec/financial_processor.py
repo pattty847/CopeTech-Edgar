@@ -333,6 +333,16 @@ class FinancialDataProcessor:
         
         return deduplicated
 
+    @staticmethod
+    def _newest_fact_end(history: Dict) -> str:
+        """Newest period-end date (ISO) across a fact history's quarterly + annual rows.
+        Used to rank candidate tags by freshness when a company migrated tags."""
+        dates = [
+            str(row.get("date") or "")
+            for row in (history.get("quarterly") or []) + (history.get("annual") or [])
+        ]
+        return max(dates) if dates else ""
+
     def _get_fact_history(self, facts_data: Dict, taxonomy: str, concept_tag: str, metric_key: Optional[str] = None) -> Optional[Dict]:
         """
         Extracts historical time-series data for a specific XBRL concept from raw facts data.
@@ -540,13 +550,22 @@ class FinancialDataProcessor:
         latest_period_info = {"end_date": "0000-00-00", "form": None}
         has_data = False
 
-        # Iterate through the required metrics defined in the mapping
+        # Iterate through the required metrics defined in the mapping.
+        # Freshest candidate wins, not first non-empty: companies migrate tags over time
+        # (e.g. NVDA reported RevenueFromContractWithCustomerExcludingAssessedTax only
+        # 2018-2020, then switched back to Revenues), so first-match can strand a metric
+        # years in the past while a later candidate holds the current facts.
         for metric_key, candidates in self.KEY_FINANCIAL_SUMMARY_METRICS.items():
             fact_history = None
+            best_end = ""
             for taxonomy, concept_tag in candidates:
-                fact_history = self._get_fact_history(company_facts, taxonomy, concept_tag, metric_key=metric_key)
-                if fact_history:
-                    break
+                candidate = self._get_fact_history(company_facts, taxonomy, concept_tag, metric_key=metric_key)
+                if not candidate:
+                    continue
+                newest_end = self._newest_fact_end(candidate)
+                if fact_history is None or newest_end > best_end:
+                    fact_history = candidate
+                    best_end = newest_end
 
             if fact_history:
                 has_data = True
