@@ -285,6 +285,22 @@ class Form4SignalTests(unittest.TestCase):
         self.assertEqual(clusters[1]['window_start'], '2026-01-01')
 
 
+class StaleMemoryCache(MemoryCache):
+    """Simulates the day rollover: load_data (fresh) misses, load_stale_data still hits."""
+
+    def __init__(self):
+        super().__init__()
+        self.stale = {}
+
+    def roll_over(self):
+        self.stale.update(self.data)
+        self.data.clear()
+
+    async def load_stale_data(self, ticker, data_type, **kwargs):
+        key = self._key(ticker, data_type, kwargs)
+        return self.data.get(key) or self.stale.get(key)
+
+
 class Form4SignalPayloadCacheTests(unittest.IsolatedAsyncioTestCase):
     def _meta(self, accession: str, filing_date: str = "2026-03-01", form: str = "4"):
         return {
@@ -354,6 +370,65 @@ class Form4SignalPayloadCacheTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(refreshed["events"]), 1)
         self.assertEqual(refreshed["events"][0]["accession_no"], "0000000000-26-000002")
         self.assertTrue(refreshed["events"][0]["is_amendment"])
+
+
+class Form4DailyRebuildDeltaTests(unittest.IsolatedAsyncioTestCase):
+    def _meta(self, accession: str, filing_date: str = "2026-03-01", form: str = "4"):
+        return {
+            "accession_no": accession,
+            "filing_date": filing_date,
+            "form": form,
+            "url": f"https://example.com/{accession}",
+            "primary_document": "form4.xml",
+            "primary_document_description": "Form 4",
+        }
+
+    async def test_daily_rebuild_seeds_from_stale_payload_and_parses_only_new_accessions(self):
+        cache = StaleMemoryCache()
+        handler = CountingDocumentHandler()
+        metadata = [[self._meta("0000000000-26-000001")]]
+
+        async def fetch_filings(ticker: str, *, days_back: int, use_cache: bool):
+            return metadata[0]
+
+        processor = Form4Processor(handler, fetch_filings, cache_manager=cache)
+        await processor.get_insider_signal_payload("ACME", days_back=180, filing_limit=40)
+        self.assertEqual(handler.downloads, ["0000000000-26-000001"])
+
+        # Next calendar day: fresh cache misses, a new filing has landed.
+        cache.roll_over()
+        handler.downloads.clear()
+        metadata[0] = [
+            self._meta("0000000000-26-000002", "2026-03-02"),
+            self._meta("0000000000-26-000001", "2026-03-01"),
+        ]
+
+        rebuilt = await processor.get_insider_signal_payload("ACME", days_back=180, filing_limit=40)
+
+        self.assertEqual(handler.downloads, ["0000000000-26-000002"])  # only the delta re-parsed
+        self.assertEqual(
+            {event["accession_no"] for event in rebuilt["events"]},
+            {"0000000000-26-000001", "0000000000-26-000002"},
+        )
+
+    async def test_daily_rebuild_ignores_seed_from_older_payload_version(self):
+        cache = StaleMemoryCache()
+        handler = CountingDocumentHandler()
+
+        async def fetch_filings(ticker: str, *, days_back: int, use_cache: bool):
+            return [self._meta("0000000000-26-000001")]
+
+        processor = Form4Processor(handler, fetch_filings, cache_manager=cache)
+        await processor.get_insider_signal_payload("ACME", days_back=180, filing_limit=40)
+        cache.roll_over()
+        handler.downloads.clear()
+        # Simulate a payload written before the current parser version (e.g. a parser fix).
+        for key, payload in cache.stale.items():
+            cache.stale[key] = {**payload, "payload_version": -1}
+
+        await processor.get_insider_signal_payload("ACME", days_back=180, filing_limit=40)
+
+        self.assertEqual(handler.downloads, ["0000000000-26-000001"])  # full re-parse, no seeding
 
 
 if __name__ == '__main__':

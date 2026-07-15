@@ -360,6 +360,21 @@ class SecCacheManager:
                  logging.debug(f"No cache file found for {ticker} ({data_type} {' '.join(f'{k}={v}' for k,v in kwargs.items())})")
         return None
 
+    async def load_stale_data(self, ticker: str, data_type: str, **kwargs) -> Optional[Any]:
+        """
+        Loads the most recent cached data REGARDLESS of freshness.
+
+        Companion to `load_data` for delta-style rebuilds: when today's cache is missing,
+        yesterday's payload is still a valid seed of already-parsed filings — the caller
+        merges only new accessions on top instead of re-downloading everything.
+
+        Returns None only when no cache file exists at all for the given parameters.
+        """
+        latest_file = self._find_latest_cache_file(data_type, ticker, **kwargs)
+        if latest_file:
+            return self._read_cache_file(latest_file)
+        return None
+
     async def save_data(self, ticker: str, data_type: str, data: Any, **kwargs) -> None:
         """
         Saves data to a new, timestamped cache file for a specific ticker and data type.

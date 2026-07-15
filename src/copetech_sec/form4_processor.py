@@ -12,6 +12,12 @@ except ImportError:  # pragma: no cover - optional dependency in lightweight env
 # Import FilingDocumentHandler for dependency injection
 from .document_handler import FilingDocumentHandler
 
+# Version stamp for cached insider_signals payloads. Daily rebuilds delta-seed from the
+# newest stale payload (re-parsing only unknown accessions), which means a parser fix would
+# otherwise never re-touch already-parsed filings — bump this constant when the parser or
+# payload shape changes to force a full re-parse instead of inheriting old parses forever.
+SIGNAL_PAYLOAD_VERSION = 1
+
 # Use TYPE_CHECKING block to avoid circular imports at runtime
 # SECDataFetcher is needed for fetching filing metadata (get_filings_by_form)
 if TYPE_CHECKING:
@@ -810,10 +816,36 @@ class Form4Processor:
         if filing_limit > 0:
             filings_meta = filings_meta[:filing_limit]
 
-        normalized_events: List[Dict[str, Any]] = []
+        # Delta-seed from the newest STALE payload (typically yesterday's): re-parse only
+        # accessions we haven't seen, instead of re-downloading every XML in the window on
+        # the first pull of each calendar day. Seeds are trusted only when their
+        # payload_version matches — a parser fix bumps the version and forces a full re-parse.
+        seed_events: List[Dict[str, Any]] = []
+        seed_accessions: set = set()
+        stale_loader = getattr(self.cache_manager, 'load_stale_data', None) if self.cache_manager is not None else None
+        if use_cache and stale_loader is not None:
+            stale = await stale_loader(
+                ticker,
+                'insider_signals',
+                days_back=days_back,
+                filing_limit=filing_limit,
+                anchor_type=anchor_type,
+            )
+            if isinstance(stale, dict) and stale.get('payload_version') == SIGNAL_PAYLOAD_VERSION:
+                window_cutoff = (datetime.now(timezone.utc) - timedelta(days=days_back)).strftime('%Y-%m-%d')
+                for event in stale.get('events', []):
+                    if not isinstance(event, dict) or not event.get('accession_no'):
+                        continue
+                    event_date = str(event.get('transaction_date') or event.get('filing_date') or '')
+                    if event_date and event_date < window_cutoff:
+                        continue  # aged out of the window since the seed was built
+                    seed_events.append(event)
+                    seed_accessions.add(event.get('accession_no'))
+
+        normalized_events: List[Dict[str, Any]] = list(seed_events)
         for filing_meta in filings_meta:
             accession_no = filing_meta.get('accession_no')
-            if not accession_no:
+            if not accession_no or accession_no in seed_accessions:
                 continue
             parsed_transactions = await self.process_form4_filing(accession_no, ticker=ticker)
             for transaction in parsed_transactions:
@@ -893,6 +925,7 @@ class Form4Processor:
 
         return {
             'symbol': ticker,
+            'payload_version': SIGNAL_PAYLOAD_VERSION,
             'window': {
                 'days_back': days_back,
                 'filing_limit': filing_limit,
