@@ -81,3 +81,55 @@ class CompanyInfoCachePathTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RawFilingStoreTests(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.manager = SecCacheManager(cache_dir=self.tmpdir)
+
+    def test_round_trip_and_dash_normalization(self):
+        xml = "<ownershipDocument><issuer/></ownershipDocument>"
+        self.assertTrue(self.manager.save_raw_filing("0000320193-26-000042", xml))
+        # Dashed and dashless forms resolve to the same immutable file.
+        self.assertEqual(self.manager.load_raw_filing("000032019326000042"), xml)
+
+    def test_rejects_non_xml_content(self):
+        # An SEC throttle/error page must never be cached as a filing.
+        html = "<html><body>Request Rate Threshold Exceeded"
+        self.assertFalse(self.manager.save_raw_filing("0000320193-26-000043", html))
+        self.assertIsNone(self.manager.load_raw_filing("0000320193-26-000043"))
+
+    def test_rejects_bogus_accession(self):
+        self.assertIsNone(self.manager.raw_filing_path("../../etc/passwd"))
+
+
+class InsiderSignalsPayloadFileTests(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.manager = SecCacheManager(cache_dir=self.tmpdir)
+
+    def test_fixed_filename_and_legacy_snapshot_pruning(self):
+        import asyncio
+        import os
+
+        async def run():
+            forms_dir = os.path.join(self.tmpdir, "forms")
+            # Legacy date-stamped snapshots from the old scheme (the disk leak).
+            for day in ("20260708", "20260709"):
+                with open(os.path.join(forms_dir, f"ACME_insider_signals_180d_40_filing_date_{day}.json"), "w") as f:
+                    f.write("{}")
+            await self.manager.save_data(
+                "ACME", "insider_signals", {"fingerprint": "abc"},
+                days_back=180, filing_limit=40, anchor_type="filing_date",
+            )
+            files = sorted(os.listdir(forms_dir))
+            loaded = await self.manager.load_data(
+                "ACME", "insider_signals", days_back=180, filing_limit=40, anchor_type="filing_date",
+            )
+            return files, loaded
+
+        files, loaded = asyncio.get_event_loop().run_until_complete(run()) if False else asyncio.run(run())
+        # One fixed file per key; the dated leftovers are gone.
+        self.assertEqual(files, ["ACME_insider_signals_180d_40_filing_date.json"])
+        self.assertEqual(loaded, {"fingerprint": "abc"})

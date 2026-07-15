@@ -63,12 +63,20 @@ class CountingDocumentHandler:
 class MemoryCache:
     def __init__(self):
         self.data = {}
+        self.raw = {}
 
     async def load_data(self, ticker, data_type, **kwargs):
         return self.data.get(self._key(ticker, data_type, kwargs))
 
     async def save_data(self, ticker, data_type, payload, **kwargs):
         self.data[self._key(ticker, data_type, kwargs)] = payload
+
+    def load_raw_filing(self, accession_no):
+        return self.raw.get(accession_no)
+
+    def save_raw_filing(self, accession_no, content):
+        self.raw[accession_no] = content
+        return True
 
     def _key(self, ticker, data_type, kwargs):
         return (
@@ -285,22 +293,6 @@ class Form4SignalTests(unittest.TestCase):
         self.assertEqual(clusters[1]['window_start'], '2026-01-01')
 
 
-class StaleMemoryCache(MemoryCache):
-    """Simulates the day rollover: load_data (fresh) misses, load_stale_data still hits."""
-
-    def __init__(self):
-        super().__init__()
-        self.stale = {}
-
-    def roll_over(self):
-        self.stale.update(self.data)
-        self.data.clear()
-
-    async def load_stale_data(self, ticker, data_type, **kwargs):
-        key = self._key(ticker, data_type, kwargs)
-        return self.data.get(key) or self.stale.get(key)
-
-
 class Form4SignalPayloadCacheTests(unittest.IsolatedAsyncioTestCase):
     def _meta(self, accession: str, filing_date: str = "2026-03-01", form: str = "4"):
         return {
@@ -372,7 +364,10 @@ class Form4SignalPayloadCacheTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(refreshed["events"][0]["is_amendment"])
 
 
-class Form4DailyRebuildDeltaTests(unittest.IsolatedAsyncioTestCase):
+class Form4RawStoreAndFingerprintTests(unittest.IsolatedAsyncioTestCase):
+    """The clean model: delta the accession index, download each immutable filing once,
+    re-derive payloads locally, validate them by input fingerprint — never by age."""
+
     def _meta(self, accession: str, filing_date: str = "2026-03-01", form: str = "4"):
         return {
             "accession_no": accession,
@@ -383,8 +378,8 @@ class Form4DailyRebuildDeltaTests(unittest.IsolatedAsyncioTestCase):
             "primary_document_description": "Form 4",
         }
 
-    async def test_daily_rebuild_seeds_from_stale_payload_and_parses_only_new_accessions(self):
-        cache = StaleMemoryCache()
+    async def test_new_accession_downloads_only_the_new_filing(self):
+        cache = MemoryCache()
         handler = CountingDocumentHandler()
         metadata = [[self._meta("0000000000-26-000001")]]
 
@@ -395,8 +390,7 @@ class Form4DailyRebuildDeltaTests(unittest.IsolatedAsyncioTestCase):
         await processor.get_insider_signal_payload("ACME", days_back=180, filing_limit=40)
         self.assertEqual(handler.downloads, ["0000000000-26-000001"])
 
-        # Next calendar day: fresh cache misses, a new filing has landed.
-        cache.roll_over()
+        # A new filing lands: fingerprint changes, but the old filing is in the raw store.
         handler.downloads.clear()
         metadata[0] = [
             self._meta("0000000000-26-000002", "2026-03-02"),
@@ -405,14 +399,32 @@ class Form4DailyRebuildDeltaTests(unittest.IsolatedAsyncioTestCase):
 
         rebuilt = await processor.get_insider_signal_payload("ACME", days_back=180, filing_limit=40)
 
-        self.assertEqual(handler.downloads, ["0000000000-26-000002"])  # only the delta re-parsed
+        self.assertEqual(handler.downloads, ["0000000000-26-000002"])  # index delta only
         self.assertEqual(
             {event["accession_no"] for event in rebuilt["events"]},
             {"0000000000-26-000001", "0000000000-26-000002"},
         )
 
-    async def test_daily_rebuild_ignores_seed_from_older_payload_version(self):
-        cache = StaleMemoryCache()
+    async def test_fingerprint_match_serves_cached_payload_regardless_of_age(self):
+        cache = MemoryCache()
+        handler = CountingDocumentHandler()
+
+        async def fetch_filings(ticker: str, *, days_back: int, use_cache: bool):
+            return [self._meta("0000000000-26-000001")]
+
+        processor = Form4Processor(handler, fetch_filings, cache_manager=cache)
+        first = await processor.get_insider_signal_payload("ACME", days_back=180, filing_limit=40)
+        handler.downloads.clear()
+
+        # Same accession set + same config ⇒ the cached payload IS what a rebuild
+        # would produce — no downloads, no re-parse, no date-stamp involved.
+        second = await processor.get_insider_signal_payload("ACME", days_back=180, filing_limit=40)
+        self.assertEqual(handler.downloads, [])
+        self.assertEqual(first["events"], second["events"])
+        self.assertEqual(first["fingerprint"], second["fingerprint"])
+
+    async def test_stale_fingerprint_reparses_locally_with_zero_downloads(self):
+        cache = MemoryCache()
         handler = CountingDocumentHandler()
 
         async def fetch_filings(ticker: str, *, days_back: int, use_cache: bool):
@@ -420,15 +432,32 @@ class Form4DailyRebuildDeltaTests(unittest.IsolatedAsyncioTestCase):
 
         processor = Form4Processor(handler, fetch_filings, cache_manager=cache)
         await processor.get_insider_signal_payload("ACME", days_back=180, filing_limit=40)
-        cache.roll_over()
         handler.downloads.clear()
-        # Simulate a payload written before the current parser version (e.g. a parser fix).
-        for key, payload in cache.stale.items():
-            cache.stale[key] = {**payload, "payload_version": -1}
+        # Simulate a parser-version bump: the payload's fingerprint no longer matches.
+        for key, payload in cache.data.items():
+            cache.data[key] = {**payload, "fingerprint": "outdated"}
 
-        await processor.get_insider_signal_payload("ACME", days_back=180, filing_limit=40)
+        rebuilt = await processor.get_insider_signal_payload("ACME", days_back=180, filing_limit=40)
 
-        self.assertEqual(handler.downloads, ["0000000000-26-000001"])  # full re-parse, no seeding
+        # Re-derived from the raw store: correct payload, zero SEC traffic.
+        self.assertEqual(handler.downloads, [])
+        self.assertEqual({event["accession_no"] for event in rebuilt["events"]}, {"0000000000-26-000001"})
+
+    async def test_concurrent_requests_for_same_accession_download_once(self):
+        import asyncio
+
+        cache = MemoryCache()
+        handler = CountingDocumentHandler()
+
+        async def fetch_filings(ticker: str, *, days_back: int, use_cache: bool):
+            return [self._meta("0000000000-26-000001")]
+
+        processor = Form4Processor(handler, fetch_filings, cache_manager=cache)
+        await asyncio.gather(
+            processor.get_insider_signal_payload("ACME", days_back=180, filing_limit=40),
+            processor.get_insider_signal_payload("ACME", days_back=180, filing_limit=40),
+        )
+        self.assertEqual(handler.downloads, ["0000000000-26-000001"])  # in-flight dedup
 
 
 if __name__ == '__main__':

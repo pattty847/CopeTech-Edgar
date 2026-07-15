@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import xml.etree.ElementTree as ET
 from collections import defaultdict
@@ -10,13 +11,23 @@ except ImportError:  # pragma: no cover - optional dependency in lightweight env
     pd = None
 
 # Import FilingDocumentHandler for dependency injection
-from .document_handler import FilingDocumentHandler
+from .document_handler import FilingDocumentHandler, RawFilingResolver
 
-# Version stamp for cached insider_signals payloads. Daily rebuilds delta-seed from the
-# newest stale payload (re-parsing only unknown accessions), which means a parser fix would
-# otherwise never re-touch already-parsed filings — bump this constant when the parser or
-# payload shape changes to force a full re-parse instead of inheriting old parses forever.
-SIGNAL_PAYLOAD_VERSION = 1
+# Parser/payload version, part of the payload fingerprint. Derived payloads are valid
+# only while (parser version, source accession set, window config) all match — bump this
+# when the parser or payload shape changes and payloads re-derive from the local raw
+# filing store (zero SEC traffic).
+SIGNAL_PAYLOAD_VERSION = 2
+
+
+def _payload_fingerprint(accessions: List[str], days_back: int, filing_limit: int, anchor_type: str) -> str:
+    """Deterministic identity of a derived payload's inputs. If this matches, the cached
+    payload is byte-for-byte what a rebuild would produce — regardless of its age."""
+    material = "|".join(
+        [str(SIGNAL_PAYLOAD_VERSION), f"{int(days_back)}d", str(int(filing_limit)), str(anchor_type)]
+        + sorted(str(a) for a in accessions)
+    )
+    return hashlib.sha256(material.encode("utf-8")).hexdigest()
 
 # Use TYPE_CHECKING block to avoid circular imports at runtime
 # SECDataFetcher is needed for fetching filing metadata (get_filings_by_form)
@@ -103,6 +114,7 @@ class Form4Processor:
         self.document_handler = document_handler
         self.fetch_filings_metadata = fetch_filings_func # e.g., SECDataFetcher.fetch_insider_filings
         self.cache_manager = cache_manager
+        self.raw_filings = RawFilingResolver(document_handler, cache_manager)
 
     def parse_form4_xml(self, xml_content: str) -> List[Dict]:
         """
@@ -287,7 +299,7 @@ class Form4Processor:
                 Returns an empty list if the XML download or parsing fails.
         """
         # Use document_handler to download the XML
-        xml_content = await self.document_handler.download_form_xml(accession_no, ticker=ticker)
+        xml_content = await self.raw_filings.get_xml(accession_no, ticker=ticker)
 
         if not xml_content:
             logging.warning(f"Could not download Form 4 XML for {accession_no} (ticker: {ticker})")
@@ -801,8 +813,19 @@ class Form4Processor:
     async def get_insider_signal_payload(self, ticker: str, days_back: int = 180,
                                          use_cache: bool = True, filing_limit: int = 40,
                                          anchor_type: str = 'filing_date') -> Dict[str, Any]:
+        """Canonical insider payload. Delta lives at the accession-index layer only:
+        the (day-cached) filing metadata names the source accessions; if the cached
+        payload's fingerprint matches (parser version + accession set + config) it is
+        served regardless of age, otherwise the payload is re-derived — parsing local
+        raw filings and downloading only accessions the raw store has never seen."""
         ticker = ticker.upper()
-        if use_cache and self.cache_manager is not None:
+        filings_meta = await self.fetch_filings_metadata(ticker, days_back=days_back, use_cache=use_cache)
+        if filing_limit > 0:
+            filings_meta = filings_meta[:filing_limit]
+        accessions = [meta.get('accession_no') for meta in filings_meta if meta.get('accession_no')]
+        fingerprint = _payload_fingerprint(accessions, days_back, filing_limit, anchor_type)
+
+        if self.cache_manager is not None:
             cached = await self.cache_manager.load_data(
                 ticker,
                 'insider_signals',
@@ -810,48 +833,20 @@ class Form4Processor:
                 filing_limit=filing_limit,
                 anchor_type=anchor_type,
             )
-            if isinstance(cached, dict):
+            if isinstance(cached, dict) and cached.get('fingerprint') == fingerprint:
                 return cached
-        filings_meta = await self.fetch_filings_metadata(ticker, days_back=days_back, use_cache=use_cache)
-        if filing_limit > 0:
-            filings_meta = filings_meta[:filing_limit]
 
-        # Delta-seed from the newest STALE payload (typically yesterday's): re-parse only
-        # accessions we haven't seen, instead of re-downloading every XML in the window on
-        # the first pull of each calendar day. Seeds are trusted only when their
-        # payload_version matches — a parser fix bumps the version and forces a full re-parse.
-        seed_events: List[Dict[str, Any]] = []
-        seed_accessions: set = set()
-        stale_loader = getattr(self.cache_manager, 'load_stale_data', None) if self.cache_manager is not None else None
-        if use_cache and stale_loader is not None:
-            stale = await stale_loader(
-                ticker,
-                'insider_signals',
-                days_back=days_back,
-                filing_limit=filing_limit,
-                anchor_type=anchor_type,
-            )
-            if isinstance(stale, dict) and stale.get('payload_version') == SIGNAL_PAYLOAD_VERSION:
-                window_cutoff = (datetime.now(timezone.utc) - timedelta(days=days_back)).strftime('%Y-%m-%d')
-                for event in stale.get('events', []):
-                    if not isinstance(event, dict) or not event.get('accession_no'):
-                        continue
-                    event_date = str(event.get('transaction_date') or event.get('filing_date') or '')
-                    if event_date and event_date < window_cutoff:
-                        continue  # aged out of the window since the seed was built
-                    seed_events.append(event)
-                    seed_accessions.add(event.get('accession_no'))
-
-        normalized_events: List[Dict[str, Any]] = list(seed_events)
+        normalized_events: List[Dict[str, Any]] = []
         for filing_meta in filings_meta:
             accession_no = filing_meta.get('accession_no')
-            if not accession_no or accession_no in seed_accessions:
+            if not accession_no:
                 continue
             parsed_transactions = await self.process_form4_filing(accession_no, ticker=ticker)
             for transaction in parsed_transactions:
                 normalized_events.append(self._normalize_signal_event(transaction, filing_meta, ticker))
 
         payload = self._build_signal_payload(ticker, normalized_events, days_back, filing_limit, anchor_type)
+        payload['fingerprint'] = fingerprint
         if self.cache_manager is not None:
             await self.cache_manager.save_data(
                 ticker,
@@ -866,53 +861,16 @@ class Form4Processor:
     async def refresh_insider_signal_payload(self, ticker: str, days_back: int = 180,
                                              filing_limit: int = 40,
                                              anchor_type: str = 'filing_date') -> Dict[str, Any]:
-        ticker = ticker.upper()
-        cached_payload = None
-        if self.cache_manager is not None:
-            cached = await self.cache_manager.load_data(
-                ticker,
-                'insider_signals',
-                days_back=days_back,
-                filing_limit=filing_limit,
-                anchor_type=anchor_type,
-            )
-            if isinstance(cached, dict):
-                cached_payload = cached
-        if cached_payload is None:
-            cached_payload = await self.get_insider_signal_payload(
-                ticker,
-                days_back=days_back,
-                use_cache=True,
-                filing_limit=filing_limit,
-                anchor_type=anchor_type,
-            )
-
-        known_events = [event for event in cached_payload.get('events', []) if isinstance(event, dict)]
-        known_accessions = {event.get('accession_no') for event in known_events if event.get('accession_no')}
-        fresh_meta = await self.fetch_filings_metadata(ticker, days_back=days_back, use_cache=False)
-        if filing_limit > 0:
-            fresh_meta = fresh_meta[:filing_limit]
-
-        new_events: List[Dict[str, Any]] = []
-        for filing_meta in fresh_meta:
-            accession_no = filing_meta.get('accession_no')
-            if not accession_no or accession_no in known_accessions:
-                continue
-            parsed_transactions = await self.process_form4_filing(accession_no, ticker=ticker)
-            for transaction in parsed_transactions:
-                new_events.append(self._normalize_signal_event(transaction, filing_meta, ticker))
-
-        payload = self._build_signal_payload(ticker, known_events + new_events, days_back, filing_limit, anchor_type)
-        if self.cache_manager is not None:
-            await self.cache_manager.save_data(
-                ticker,
-                'insider_signals',
-                payload,
-                days_back=days_back,
-                filing_limit=filing_limit,
-                anchor_type=anchor_type,
-            )
-        return payload
+        """Live accession-index check ("Check SEC now"). The raw filing store makes the
+        rebuild local except for genuinely new filings, so this no longer needs its own
+        merge logic — it's the normal path with a fresh index."""
+        return await self.get_insider_signal_payload(
+            ticker,
+            days_back=days_back,
+            use_cache=False,
+            filing_limit=filing_limit,
+            anchor_type=anchor_type,
+        )
 
     def _build_signal_payload(self, ticker: str, normalized_events: List[Dict[str, Any]],
                               days_back: int, filing_limit: int, anchor_type: str) -> Dict[str, Any]:

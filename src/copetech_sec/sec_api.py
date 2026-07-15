@@ -78,6 +78,7 @@ class SECDataFetcher:
         self.form144_processor = Form144Processor(
             document_handler=self.document_handler,
             fetch_filings_func=self.fetch_planned_sale_filings,
+            cache_manager=self.cache_manager,
         )
         self.form8k_processor = Form8KProcessor(
             fetch_filings_func=self.fetch_current_reports,

@@ -8,6 +8,44 @@ from typing import List, Dict, Optional, Callable, Awaitable
 # Assuming http_client defines SecHttpClient with make_request method
 from .http_client import SecHttpClient
 
+
+class RawFilingResolver:
+    """Download-once resolver for immutable filing documents.
+
+    A filed document never changes (amendments are new filings with new accession
+    numbers), so the resolution order is: local raw store → SEC, with in-flight
+    de-duplication so two callers discovering the same missing accession await one
+    request instead of issuing two. Works without a cache manager (or with one that
+    lacks the raw-store API) by degrading to plain downloads.
+    """
+
+    def __init__(self, document_handler: "FilingDocumentHandler", cache_manager=None):
+        self._handler = document_handler
+        self._cache = cache_manager
+        self._inflight: Dict[str, "asyncio.Task[Optional[str]]"] = {}
+
+    async def get_xml(self, accession_no: str, ticker: Optional[str] = None) -> Optional[str]:
+        loader = getattr(self._cache, "load_raw_filing", None) if self._cache is not None else None
+        if loader is not None:
+            cached = loader(accession_no)
+            if cached:
+                return cached
+        task = self._inflight.get(accession_no)
+        if task is None:
+            task = asyncio.ensure_future(self._download_and_store(accession_no, ticker))
+            self._inflight[accession_no] = task
+            task.add_done_callback(lambda _t: self._inflight.pop(accession_no, None))
+        return await task
+
+    async def _download_and_store(self, accession_no: str, ticker: Optional[str]) -> Optional[str]:
+        content = await self._handler.download_form_xml(accession_no, ticker=ticker)
+        if content and self._cache is not None:
+            saver = getattr(self._cache, "save_raw_filing", None)
+            if saver is not None:
+                saver(accession_no, content)
+        return content
+
+
 class FilingDocumentHandler:
     """Handles fetching specific documents and document lists from SEC filings."""
 

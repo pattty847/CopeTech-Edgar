@@ -3,6 +3,7 @@ import json
 import logging
 import glob
 import re
+import xml.etree.ElementTree as ET
 from datetime import datetime
 from typing import Optional, Dict, List, Any
 
@@ -38,6 +39,13 @@ class SecCacheManager:
         "insider_signals": "forms",
     }
 
+    # Raw filings are immutable: a filed document never changes (amendments are NEW
+    # filings with their own accession numbers), so each is downloaded from the SEC at
+    # most once, kept forever, and keyed by its globally unique accession number —
+    # ticker mappings can change, accessions can't. Flat layout is fine at this scale;
+    # shard by CIK/year if this ever holds hundreds of thousands of files.
+    RAW_FILINGS_SUBDIR = os.path.join("raw", "filings")
+
     def __init__(self, cache_dir: str = "data/edgar"):
         """
         Initializes the SEC Cache Manager.
@@ -66,6 +74,7 @@ class SecCacheManager:
             path = os.path.join(self.cache_dir, subdir)
             logging.debug(f"Ensuring cache subdirectory exists: {path}")
             os.makedirs(path, exist_ok=True)
+        os.makedirs(os.path.join(self.cache_dir, self.RAW_FILINGS_SUBDIR), exist_ok=True)
 
     def _get_cache_path(self, data_type: str, ticker: Optional[str] = None, **kwargs) -> str:
         """
@@ -123,10 +132,14 @@ class SecCacheManager:
              subdir = self.SUBDIRS["submissions"]
              filename = f"{ticker_upper}_info_{timestamp}.json"
         elif data_type == "insider_signals":
+            # Deliberately NOT date-stamped: validity is decided by the fingerprint
+            # stored inside the payload (parser version + source accessions + config),
+            # so there is exactly one file per key, replaced atomically. Date-stamped
+            # payload files were an unbounded disk leak.
             days_back = int(kwargs.get("days_back") or 180)
             filing_limit = int(kwargs.get("filing_limit") or 40)
             anchor_type = self._safe_cache_segment(str(kwargs.get("anchor_type") or "filing_date"))
-            filename = f"{ticker_upper}_insider_signals_{days_back}d_{filing_limit}_{anchor_type}_{timestamp}.json"
+            filename = f"{ticker_upper}_insider_signals_{days_back}d_{filing_limit}_{anchor_type}.json"
         else:
             # Default pattern if needed, though specific types are preferred
             filename = f"{ticker_upper}_{data_type}_{timestamp}.json"
@@ -140,32 +153,20 @@ class SecCacheManager:
         segment = re.sub(r"_+", "_", segment)
         return segment or "default"
 
-    def _find_latest_cache_file(self, data_type: str, ticker: str, **kwargs) -> Optional[str]:
+    def _matching_cache_files(self, data_type: str, ticker: str, **kwargs) -> List[str]:
         """
-        Finds the most recently modified cache file matching a pattern for a ticker.
-
-        Uses `glob` to find files matching the naming convention for the specified
-        `data_type` and `ticker` within the appropriate subdirectory. It then sorts
-        these files by modification time (most recent first).
-
-        Args:
-            data_type (str): The category of data (e.g., 'submissions', 'forms', 'facts').
-            ticker (str): The stock ticker symbol.
-            **kwargs: Additional keyword arguments used for specific data types:
-                - form_type (str): Required when `data_type` is 'forms'.
-
-        Returns:
-            Optional[str]: The path to the most recent cache file if found, otherwise None.
+        All cache files matching the naming convention for (data_type, ticker, params),
+        sorted by modification time, most recent first. Shared by lookup and pruning.
         """
         subdir = self.SUBDIRS.get(data_type)
-        if not subdir: return None
+        if not subdir: return []
         ticker_upper = ticker.upper()
 
         if data_type == "submissions":
             pattern = f"{ticker_upper}_submissions_*.json"
         elif data_type == "forms":
             form_type = kwargs.get("form_type")
-            if not form_type: return None
+            if not form_type: return []
             safe_form_type = self._safe_cache_segment(str(form_type))
             days_back = kwargs.get("days_back")
             if days_back is not None:
@@ -181,9 +182,11 @@ class SecCacheManager:
             days_back = int(kwargs.get("days_back") or 180)
             filing_limit = int(kwargs.get("filing_limit") or 40)
             anchor_type = self._safe_cache_segment(str(kwargs.get("anchor_type") or "filing_date"))
-            pattern = f"{ticker_upper}_insider_signals_{days_back}d_{filing_limit}_{anchor_type}_*.json"
+            # No trailing underscore: matches both the current fixed filename and the
+            # legacy date-stamped ones (so old files are found once, then pruned).
+            pattern = f"{ticker_upper}_insider_signals_{days_back}d_{filing_limit}_{anchor_type}*.json"
         else:
-            return None # Pattern not defined for this type
+            return [] # Pattern not defined for this type
 
         search_path = os.path.join(self.cache_dir, subdir, pattern)
         try:
@@ -191,15 +194,34 @@ class SecCacheManager:
             if data_type == "forms" and kwargs.get("days_back") is None:
                 window_re = re.compile(rf"^{re.escape(ticker_upper)}_{re.escape(self._safe_cache_segment(str(kwargs.get('form_type'))))}_\d+d_")
                 cache_files = [path for path in cache_files if not window_re.match(os.path.basename(path))]
-            if cache_files:
-                logging.debug(f"Found latest cache file for {ticker} ({data_type}): {cache_files[0]}")
-                return cache_files[0]
-            else:
-                logging.debug(f"No cache files found for pattern: {search_path}")
-                return None
+            return cache_files
         except Exception as e:
             logging.warning(f"Error searching for cache files ({search_path}): {e}")
-            return None
+            return []
+
+    def _find_latest_cache_file(self, data_type: str, ticker: str, **kwargs) -> Optional[str]:
+        """The most recently modified cache file for (data_type, ticker, params), or None."""
+        cache_files = self._matching_cache_files(data_type, ticker, **kwargs)
+        if cache_files:
+            logging.debug(f"Found latest cache file for {ticker} ({data_type}): {cache_files[0]}")
+            return cache_files[0]
+        logging.debug(f"No cache files found for {ticker} ({data_type})")
+        return None
+
+    def _prune_superseded_files(self, keep_path: str, data_type: str, ticker: str, **kwargs) -> None:
+        """
+        Deletes every cache file for this key except `keep_path`. Raw filings are never
+        touched (they live outside SUBDIRS); this only reaps superseded derived
+        snapshots — the date-stamped payload files that used to accumulate forever.
+        """
+        for path in self._matching_cache_files(data_type, ticker, **kwargs):
+            if os.path.abspath(path) == os.path.abspath(keep_path):
+                continue
+            try:
+                os.remove(path)
+                logging.debug(f"Pruned superseded cache file: {path}")
+            except OSError as e:
+                logging.warning(f"Could not prune cache file {path}: {e}")
 
     def _is_cache_fresh(self, cache_file: str, data_type: str) -> bool:
         """
@@ -273,8 +295,12 @@ class SecCacheManager:
         try:
             # Ensure the directory exists before writing
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            with open(file_path, 'w', encoding='utf-8') as f:
+            # Atomic write: an interrupted dump must never leave a truncated file that
+            # then reads as a valid (empty/partial) cache forever.
+            tmp_path = f"{file_path}.tmp"
+            with open(tmp_path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2)
+            os.replace(tmp_path, file_path)
             logging.info(f"Successfully wrote cache file: {file_path}")
             return True
         except Exception as e:
@@ -360,20 +386,56 @@ class SecCacheManager:
                  logging.debug(f"No cache file found for {ticker} ({data_type} {' '.join(f'{k}={v}' for k,v in kwargs.items())})")
         return None
 
-    async def load_stale_data(self, ticker: str, data_type: str, **kwargs) -> Optional[Any]:
-        """
-        Loads the most recent cached data REGARDLESS of freshness.
+    # ---- immutable raw filing store ----
+    # Discovery is delta'd at the accession-index layer; documents themselves are
+    # download-once. Derived payloads re-parse these local files, so parser fixes
+    # cost zero SEC traffic.
 
-        Companion to `load_data` for delta-style rebuilds: when today's cache is missing,
-        yesterday's payload is still a valid seed of already-parsed filings — the caller
-        merges only new accessions on top instead of re-downloading everything.
+    def raw_filing_path(self, accession_no: str) -> Optional[str]:
+        """Canonical on-disk path for a filing document. Accession numbers are globally
+        unique; dashes are stripped so both '0000000000-26-000001' and its dashless form
+        map to the same file."""
+        accession = str(accession_no).strip().replace("-", "")
+        if not accession.isdigit():
+            return None
+        return os.path.join(self.cache_dir, self.RAW_FILINGS_SUBDIR, f"{accession}.xml")
 
-        Returns None only when no cache file exists at all for the given parameters.
-        """
-        latest_file = self._find_latest_cache_file(data_type, ticker, **kwargs)
-        if latest_file:
-            return self._read_cache_file(latest_file)
+    def load_raw_filing(self, accession_no: str) -> Optional[str]:
+        """Returns the stored document content, or None if this accession was never cached."""
+        path = self.raw_filing_path(accession_no)
+        if not path:
+            return None
+        try:
+            if os.path.exists(path):
+                with open(path, encoding="utf-8") as f:
+                    return f.read()
+        except Exception as e:
+            logging.warning(f"Error reading raw filing {accession_no}: {e}")
         return None
+
+    def save_raw_filing(self, accession_no: str, content: str) -> bool:
+        """Stores a filing document permanently. Validates that the body parses as XML
+        first — an SEC throttle/error page must never be cached as a filing — and writes
+        atomically so an interrupted download can't leave a truncated file that looks
+        cached forever."""
+        path = self.raw_filing_path(accession_no)
+        if not path or not content:
+            return False
+        try:
+            ET.fromstring(content)
+        except ET.ParseError:
+            logging.warning(f"Refusing to cache non-XML content for accession {accession_no}")
+            return False
+        try:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            tmp_path = f"{path}.tmp"
+            with open(tmp_path, "w", encoding="utf-8") as f:
+                f.write(content)
+            os.replace(tmp_path, path)
+            return True
+        except Exception as e:
+            logging.error(f"Error writing raw filing {accession_no}: {e}")
+            return False
 
     async def save_data(self, ticker: str, data_type: str, data: Any, **kwargs) -> None:
         """
@@ -398,6 +460,13 @@ class SecCacheManager:
         success = self._write_cache_file(cache_file, data)
         if not success:
             logging.error(f"Failed to save {data_type} data for {ticker} to cache.")
+            return
+        # Superseded snapshots are dead weight: fingerprint-validated payloads use one
+        # fixed filename per key, and day-stamped metadata/index files only ever need
+        # their newest copy (freshness reads the newest file's date). Without this the
+        # dated files accumulate forever — one per ticker per window per day.
+        if data_type in ("insider_signals", "forms", "submissions", "company_info"):
+            self._prune_superseded_files(cache_file, data_type, ticker, **kwargs)
 
     # Specific Load/Save methods (kept for compatibility during refactor, but delegate)
     async def _load_company_info_from_cache(self, ticker: str) -> Optional[Dict]:

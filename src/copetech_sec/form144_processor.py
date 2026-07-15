@@ -16,7 +16,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from typing import Awaitable, Callable, Dict, List, Optional
 
-from .document_handler import FilingDocumentHandler
+from .document_handler import FilingDocumentHandler, RawFilingResolver
 
 
 def _strip_namespace(tag: str) -> str:
@@ -82,15 +82,21 @@ class Form144Processor:
         self,
         document_handler: FilingDocumentHandler,
         fetch_filings_func: Callable[..., Awaitable[List[Dict]]],
+        cache_manager=None,
     ):
         """
         Args:
             document_handler: For downloading the form XML.
             fetch_filings_func: Returns Form 144 filing metadata for a ticker.
                 Typically `SECDataFetcher.fetch_planned_sale_filings`.
+            cache_manager: Optional; enables the immutable raw filing store so each
+                144 XML is downloaded from the SEC at most once, ever. (Previously
+                every payload build re-downloaded every XML in the window.)
         """
         self.document_handler = document_handler
         self.fetch_filings_metadata = fetch_filings_func
+        self.cache_manager = cache_manager
+        self.raw_filings = RawFilingResolver(document_handler, cache_manager)
 
     def parse_form144_xml(self, xml_content: str) -> List[Dict]:
         """Parse a Form 144 XML payload into a list of planned-sale records.
@@ -239,7 +245,7 @@ class Form144Processor:
 
     async def process_form144_filing(self, accession_no: str, ticker: Optional[str] = None) -> List[Dict]:
         """Download and parse a single Form 144 filing."""
-        xml_content = await self.document_handler.download_form_xml(accession_no, ticker=ticker)
+        xml_content = await self.raw_filings.get_xml(accession_no, ticker=ticker)
         if not xml_content:
             logging.warning("Could not download Form 144 XML for %s (ticker: %s)", accession_no, ticker)
             return []
