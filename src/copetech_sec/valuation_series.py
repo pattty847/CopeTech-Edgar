@@ -71,13 +71,15 @@ def derive_trailing_pe_series(
             default=None,
         )
         if eps is None:
-            observations.append(
-                _empty_valuation_observation(
-                    price,
-                    price_source=price_source,
-                    quality_flags=["no_point_in_time_ttm_eps"],
-                )
+            empty = _empty_valuation_observation(
+                price,
+                price_source=price_source,
+                quality_flags=["no_point_in_time_ttm_eps"],
             )
+            if not include_provenance:
+                empty.pop("sources")
+                empty.pop("priceSource")
+            observations.append(empty)
             continue
 
         flags = set(eps.get("qualityFlags") or [])
