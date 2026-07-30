@@ -130,6 +130,15 @@ This work is targeted for `0.2.0`.
 
 ### Added
 
+- Typed SEC acquisition errors distinguish absence, access denial, exhausted throttling,
+  transport failures, malformed JSON, and oversized bodies.
+- Canonical `Cik`, `Accession`, and `Ticker` identifier types.
+- Complete submissions-history traversal through `filings.files[]`, exposed through
+  `get_filings_page` with source-file, warning, truncation, and cursor metadata.
+- CIK-keyed issuer caches and a metadata-bearing 24-hour ticker-map TTL.
+- Entity-safe XML parsing through `defusedxml`.
+- A recorded public SEC ownership fixture with accession and transformation provenance.
+- Public security and contribution policies.
 - Bounded response reads (256 MiB cap, `Content-Length` pre-check) so a large or
   hostile-encoded body cannot exhaust memory.
 - Explicit `aiohttp.ClientTimeout` with separate connect and socket-read budgets, replacing

@@ -33,12 +33,6 @@ semantics), **Beta** (works, actively changing), or
 
 ### Known limitations
 
-- **Filing history is capped.** Only SEC's submissions `recent` block is read, which holds
-  roughly one year or 1,000 filings, whichever is more. Paging into older filings via
-  `filings.files[]` is not yet implemented, so long lookbacks silently return truncated
-  results.
-- **The ticker → CIK map is cached indefinitely** once written, so newly listed or renamed
-  tickers may not resolve; multiple share classes of one issuer collapse to a single entry.
 - **`get_financial_summary` / `get_financial_trend` can return duplicated and mislabeled
   periods**, because they derive period labels from `fy`/`fp`, which describe the *filing*
   rather than the fact. Prefer `get_financial_series`.
@@ -147,6 +141,14 @@ transactions = await fetcher.get_recent_insider_transactions("MSFT", days_back=9
 
 # Filing metadata by form
 filings_10k = await fetcher.fetch_annual_reports("MSFT")
+
+# Complete filing history with source and cursor metadata
+filings_page = await fetcher.get_filings_page(
+    "MSFT",
+    "10-K",
+    days_back=3650,
+    limit=50,
+)
 
 # Latest institutional holdings for one manager CIK, e.g. SIG
 holdings = await fetcher.get_latest_13f_holdings("0001446194", row_limit=25)
