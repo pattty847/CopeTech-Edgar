@@ -12,7 +12,8 @@ unlocks historical valuation plots.
   canonical Q4/TTM behavior, and CopeNet migration off legacy EPS trends.
 - Complete: split-consistent, point-in-time trailing P/E plus the CopeNet chart overlay.
 - Complete: ownership parser, normalization, signal-classification, and acquisition
-  namespaces with `Form4Processor` retained as the compatibility facade.
+  namespaces with `Form4Processor` retained as a thin compatibility facade and the
+  superseded in-class parser removed.
 - Complete: namespaced `EdgarClient` and `SECDataFetcher` compatibility path.
 - Pending release evidence: recorded Company Facts fixtures for every issuer pattern below.
   The implementation has deterministic synthetic coverage; the 2026-07-30 recording attempt
