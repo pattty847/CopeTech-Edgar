@@ -60,9 +60,21 @@ Primary domain areas:
 From repo root:
 
 ```bash
-uv pip install -e .
-python -m unittest tests/test_form4_signals.py
+uv pip install -e '.[dev]'
+uv run pytest tests/ -q
 ```
+
+The suite is pytest-based and fully hermetic (no network); it should stay that way.
+`python -m unittest tests/test_form4_signals.py` does not work — `unittest` needs a module
+path, not a file path, and several test modules use pytest fixtures.
+
+Guardrail modules for the highest-risk code:
+
+- `tests/test_form4_parser.py` — ownership XML parsing (multiple reporting owners, holdings
+  rows, acquisition/disposition direction, numeric coercion, footnotes).
+- `tests/test_http_client.py` — SEC fair-access rate limiting under concurrency, bounded
+  response reads, retry/backoff.
+- `tests/test_form4_signals.py` — signal classification, amendment dedupe, aggregation.
 
 If you change package import surfaces, also run:
 
@@ -70,22 +82,15 @@ If you change package import surfaces, also run:
 python -c "from copetech_sec import SECDataFetcher; print(SECDataFetcher.__name__)"
 ```
 
-## Current EC2 demo deployment
+## Deployment boundaries
 
-- AWS region: `us-east-1`.
-- EC2 public IP: `54.162.23.10`.
-- SSH user/host: `ubuntu@54.162.23.10`.
-- Local SSH key path on Patrick's Mac: `/Users/copeharder/Downloads/copeharder-key.pem` (never commit this; `*.pem` is ignored).
-- Remote checkout path: `/home/ubuntu/CopeTech-Edgar`.
-- Runtime: Docker Compose service `sec-api`, mapping host `80` to container `8000`.
-- IAM instance role: `copeharder-ec2-backend-role`.
-- Public healthcheck: `curl http://54.162.23.10/health`.
-- Protected SEC test: `curl -H "x-backend-secret: $BACKEND_API_SECRET" -H "x-demo-key: friend-demo-key-1" "http://54.162.23.10/api/sec/insiders?symbol=AAPL&days_back=1&filing_limit=1"`.
-- Restart command: `ssh -i /Users/copeharder/Downloads/copeharder-key.pem ubuntu@54.162.23.10 'cd ~/CopeTech-Edgar && git pull --ff-only && docker compose up -d --build'`.
-- Current `.env` lives only on EC2 and should not be committed.
-- Friend/demo invite keys are configured with `DEMO_ACCESS_KEYS` on EC2 and in Vercel; backend fails closed when no keys are configured.
-- DynamoDB rate limiting keys by `demo_key + IP + YYYY-MM-DD`; without credentials, the app falls back to in-memory rate limiting and local file cache.
-- Existing DynamoDB partition keys are `rate_limits.ip`, `demo_jobs.job_id`, and `sec_cache_index.cache_key`.
+- Keep hostnames, public IPs, account-specific IAM names, local key paths, invite keys, and
+  remote checkout paths in private operator documentation—not in this public repository.
+- `.env` files and private keys must never be committed.
+- The service must fail closed when backend or demo authentication is not configured.
+- DynamoDB rate limiting keys by `demo_key + IP + YYYY-MM-DD`; without credentials, the
+  app falls back to in-memory rate limiting and local file cache.
+- Public deployment examples must use placeholders such as `<host>` and `<table-name>`.
 
 ## Style expectations
 

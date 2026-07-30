@@ -8,17 +8,44 @@ Reusable SEC EDGAR backend extracted from Sentinel.
 It wraps SEC API fetches, filing document retrieval, and parser/processor logic into a
 consistent interface for downstream services.
 
-Core capabilities today:
-- SEC ticker → CIK resolution and submissions/company facts retrieval.
-- Filing discovery by form type (`4`, `4/A`, `10-K`, `10-Q`, `8-K`, etc.).
-- Form 4 XML parsing into normalized insider transactions.
-- Insider signal payload generation (`events`, `daily_aggregates`, `llm_digest`).
-- Protected insider chart payloads with cached daily OHLC candles for demo overlays.
-- Form 13F-HR institutional holdings parsing for a single manager CIK.
-- Financial summary extraction from XBRL company facts.
-- Point-in-time SEC financial series with provenance, concept stitching, derived Q4,
+Core capabilities today, labelled **Stable** (fixture-backed contract and mature error
+semantics), **Beta** (works, actively changing), or
+**Experimental** (heuristic output; don't build on the shape):
+
+- **Beta** — Ownership-form parsing (Forms 3/4/5): non-derivative and derivative
+  transactions *and* holdings, all reporting owners on joint filings, footnotes, the
+  `aff10b5One` Rule 10b5-1 flag, and acquisition/disposition direction taken from the
+  filing's own `transactionAcquiredDisposedCode`.
+- **Beta** — Form 13F-HR institutional holdings for a manager CIK, plus quarter-over-quarter
+  changes. Values are whole US dollars as reported (Form 13F since 2023-01-03); a security
+  reported across several `otherManager` rows is rolled up to one position.
+- **Beta** — Raw filing/document access backed by an immutable, download-once local store.
+- **Beta** — SEC ticker → CIK resolution and submissions/company facts retrieval.
+- **Beta** — Filing discovery by form type (`4`, `4/A`, `10-K`, `10-Q`, `8-K`, `144`, etc.).
+- **Beta** — Point-in-time SEC financial series with provenance, concept stitching, derived Q4,
   and quarterly/annual/TTM views (revenue is the first registered metric).
-- Optional file cache and SQLite persistence helpers.
+- **Beta** — Form 144 planned-sale records; Form 8-K item-code events.
+- **Beta** — Optional file cache and SQLite persistence helpers.
+- **Experimental** — Insider signal payloads (`events`, `daily_aggregates`, `clusters`,
+  `llm_digest`) and protected insider chart payloads with cached daily OHLC candles.
+- **Experimental** — `get_financial_summary` / `get_financial_trend`, and 10-K supply-chain
+  relationship extraction.
+
+### Known limitations
+
+- **Filing history is capped.** Only SEC's submissions `recent` block is read, which holds
+  roughly one year or 1,000 filings, whichever is more. Paging into older filings via
+  `filings.files[]` is not yet implemented, so long lookbacks silently return truncated
+  results.
+- **The ticker → CIK map is cached indefinitely** once written, so newly listed or renamed
+  tickers may not resolve; multiple share classes of one issuer collapse to a single entry.
+- **`get_financial_summary` / `get_financial_trend` can return duplicated and mislabeled
+  periods**, because they derive period labels from `fy`/`fp`, which describe the *filing*
+  rather than the fact. Prefer `get_financial_series`.
+- **Insider signal scores are heuristics for triage**, not investment advice.
+
+See [the architecture and capability audit](docs/audit-2026-07.md) for the full capability
+matrix, the evidence behind each status label, and the roadmap.
 
 This package preserves Sentinel's existing SEC backend behavior as closely as possible while making it reusable across projects.
 
@@ -38,8 +65,18 @@ This package preserves Sentinel's existing SEC backend behavior as closely as po
 
 ## Install
 
+The core install is deliberately small—an async HTTP client plus the SQLite cache helper:
+
 ```bash
 uv pip install -e .
+```
+
+Optional extras, so parsing a Form 4 doesn't pull a web framework and an AWS SDK:
+
+```bash
+uv pip install -e '.[dataframes]'   # pandas: analyze_insider_transactions, market data
+uv pip install -e '.[service]'      # the FastAPI demo service + AWS + yfinance
+uv pip install -e '.[dev]'          # test suite
 ```
 
 Python 3.12+ is required.
@@ -148,8 +185,16 @@ Local endpoints:
 - `GET /api/sec/insiders?symbol=AAPL`
 - `GET /api/sec/chart?symbol=AAPL&days_back=180&filing_limit=40`
 - `GET /api/sec/13f/{cik}?row_limit=5000`
+- `GET /api/sec/13f/{cik}/changes?days_back=1095&top_n=25`
 - `GET /api/sec/debug/13f/sig?row_limit=25`
 - `GET /api/sec/insider-signals/{ticker}?days_back=180&filing_limit=40&anchor_type=filing_date`
+- `GET /api/sec/insider-signals/{ticker}/clusters?window_days=14&min_unique_insiders=3`
+- `GET /api/sec/events/{ticker}?days_back=180&filing_limit=50&categories=exec_change,financial_results`
+- `GET /api/sec/planned-sales/{ticker}?days_back=90&filing_limit=25`
+- `GET /api/sec/financials/{ticker}/trend?periods=8`
+
+Note: `anchor_type` is accepted and validated but not yet honoured — events are always
+anchored on `filing_date`. `get_financial_series` has no HTTP endpoint yet.
 
 Protected demo endpoints require:
 
@@ -160,19 +205,19 @@ Required SEC setting:
 
 - `SEC_API_USER_AGENT` should identify the app and contact email for SEC requests.
 
-AWS deployment settings:
+Example deployment settings:
 
 - `AWS_REGION=us-east-1`
-- `S3_BUCKET=copeharder-artifacts`
-- `DYNAMODB_RATE_LIMITS_TABLE=rate_limits`
-- `DYNAMODB_DEMO_JOBS_TABLE=demo_jobs`
-- `DYNAMODB_SEC_CACHE_INDEX_TABLE=sec_cache_index`
+- `S3_BUCKET=<artifact-bucket>`
+- `DYNAMODB_RATE_LIMITS_TABLE=<rate-limit-table>`
+- `DYNAMODB_DEMO_JOBS_TABLE=<demo-jobs-table>`
+- `DYNAMODB_SEC_CACHE_INDEX_TABLE=<sec-cache-table>`
 - `DYNAMODB_RATE_LIMITS_PK=ip`
 - `DYNAMODB_DEMO_JOBS_PK=job_id`
 - `DYNAMODB_SEC_CACHE_INDEX_PK=cache_key`
 - `BACKEND_API_SECRET=<long random secret for the Vercel proxy>`
 - `DEMO_ACCESS_KEYS=<comma-separated friend invite keys>`
-- `CORS_ALLOW_ORIGINS=https://lolcopeharder.com,https://www.lolcopeharder.com,http://localhost:5173`
+- `CORS_ALLOW_ORIGINS=https://<frontend-host>,http://localhost:5173`
 - `MARKET_CACHE_TTL_SECONDS=21600`
 
 The service never hardcodes AWS credentials. On EC2, attach an instance profile/IAM role with scoped DynamoDB and S3 permissions. For local testing, use your normal AWS CLI profile if you want DynamoDB writes to work.
