@@ -236,12 +236,24 @@ class MakeRequestTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("User-Agent", session.calls[0]["headers"])
         self.assertIn("@example.com", session.calls[0]["headers"]["User-Agent"])
 
-    async def test_custom_headers_replace_defaults(self):
+    async def test_custom_headers_merge_with_defaults(self):
         client, session = await self._make_client([FakeResponse(200, "{}")])
         custom = {"User-Agent": "Custom UA", "Host": "www.sec.gov"}
         await client.make_request("https://www.sec.gov/x", headers=custom)
         self.assertEqual(session.calls[0]["headers"]["User-Agent"], "Custom UA")
         self.assertEqual(session.calls[0]["headers"]["Host"], "www.sec.gov")
+        self.assertIn("Accept-Encoding", session.calls[0]["headers"])
+
+    async def test_host_is_derived_from_each_request_url(self):
+        client, session = await self._make_client(
+            [FakeResponse(200, "{}"), FakeResponse(200, "{}")]
+        )
+
+        await client.make_request("https://data.sec.gov/x")
+        await client.make_request("https://www.sec.gov/files/company_tickers_mf.json")
+
+        self.assertEqual(session.calls[0]["headers"]["Host"], "data.sec.gov")
+        self.assertEqual(session.calls[1]["headers"]["Host"], "www.sec.gov")
 
 
 class RateLimitSleepTests(unittest.IsolatedAsyncioTestCase):

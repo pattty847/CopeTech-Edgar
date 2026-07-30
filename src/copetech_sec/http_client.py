@@ -5,6 +5,7 @@ import time
 import asyncio
 import email.utils
 import aiohttp
+from urllib.parse import urlsplit
 from typing import Dict, Optional, Union
 
 from .errors import (
@@ -109,7 +110,6 @@ class SecHttpClient:
         self.default_headers = {
             "User-Agent": self.user_agent or UNCONFIGURED_USER_AGENT,
             "Accept-Encoding": "gzip, deflate",
-            "Host": "data.sec.gov" # Default host, may need overrides
         }
         self.request_interval = rate_limit_sleep
         self.last_request_time = 0
@@ -285,15 +285,19 @@ class SecHttpClient:
         """
         session = await self._get_session()
 
-        # Determine which headers to use - prioritize provided headers, fallback to default
-        request_headers = headers if headers is not None else self.default_headers
+        # Merge caller additions onto the required defaults, then derive Host from the
+        # request URL. A static data.sec.gov Host silently breaks www.sec.gov resources
+        # such as the issuer/fund ticker maps.
+        request_headers = dict(self.default_headers)
+        if headers is not None:
+            request_headers.update(headers)
+        request_headers["Host"] = urlsplit(url).netloc
         # Ensure User-Agent is present, warn if missing entirely
         if not request_headers.get('User-Agent'):
              logging.warning(f"User-Agent not found in request headers for {url}. Using default if possible.")
-             # Fallback explicitly if custom headers were provided but lacked User-Agent
-             if headers is not None and not headers.get('User-Agent') and self.default_headers.get('User-Agent'):
-                   request_headers = self.default_headers
-             elif not self.default_headers.get('User-Agent'):
+             if self.default_headers.get('User-Agent'):
+                  request_headers["User-Agent"] = self.default_headers["User-Agent"]
+             else:
                   logging.error(f"CRITICAL: No User-Agent available in default or custom headers for {url}. Request likely to fail.")
                   # Assign empty dict if absolutely no User-Agent is set anywhere, though request will likely fail
                   request_headers = request_headers or {}
@@ -437,7 +441,7 @@ class SecHttpClient:
             # package; without it a Brotli-encoded response is undecodable. SEC's own
             # documented sample headers ask for "gzip, deflate".
             "Accept-Encoding": _SUPPORTED_ACCEPT_ENCODING,
-            "Host": "www.sec.gov",
+            "Host": urlsplit(url).netloc,
             "Connection": "keep-alive",
             "Upgrade-Insecure-Requests": "1",
             "Sec-Fetch-Dest": "document",
