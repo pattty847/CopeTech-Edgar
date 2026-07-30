@@ -1,5 +1,6 @@
 import logging
 import re
+from datetime import date
 from defusedxml import ElementTree as ET
 from defusedxml.common import DefusedXmlException
 from xml.etree.ElementTree import Element
@@ -14,6 +15,7 @@ from .submissions import SubmissionsResource
 
 THIRTEENF_FORMS = {"13F-HR", "13F-HR/A"}
 SIG_CIK = "0001446194"
+THIRTEENF_DOLLAR_EFFECTIVE_DATE = date(2023, 1, 3)
 
 
 def normalize_cik(cik: str) -> str:
@@ -132,7 +134,10 @@ class ThirteenFProcessor:
         if not raw_xml:
             raise ValueError(f"Could not download 13F information table {information_table_document}.")
 
-        holdings = self.parse_information_table_xml(raw_xml)
+        holdings = self.parse_information_table_xml(
+            raw_xml,
+            filing_date=latest.get("filing_date"),
+        )
         limited_holdings = holdings[:row_limit] if row_limit else holdings
         total_value = sum(row.get("value") or 0 for row in holdings)
 
@@ -197,7 +202,18 @@ class ThirteenFProcessor:
         return best.get("name")
 
     @staticmethod
-    def parse_information_table_xml(xml_content: str) -> List[Dict[str, Any]]:
+    def parse_information_table_xml(
+        xml_content: str,
+        *,
+        filing_date: str | None = None,
+    ) -> List[Dict[str, Any]]:
+        """Parse a 13F information table and normalize reported values to dollars.
+
+        SEC changed the value column from thousands of dollars to whole dollars for
+        filings submitted on or after 2023-01-03. Filing date—not report period—is the
+        discriminator: an amendment for an older quarter filed after the transition uses
+        the new whole-dollar form.
+        """
         root = ThirteenFProcessor._parse_xml_root(xml_content)
         info_tables = [
             element for element in root.iter()
@@ -205,19 +221,27 @@ class ThirteenFProcessor:
         ]
 
         holdings: List[Dict[str, Any]] = []
+        value_scale, reported_unit, scale_basis = (
+            ThirteenFProcessor._value_scale(filing_date)
+        )
         for position, info_table in enumerate(info_tables):
             reported_value = _to_int(ThirteenFProcessor._child_text(info_table, "value"))
+            value_usd = (
+                reported_value * value_scale
+                if reported_value is not None
+                else None
+            )
             holding = {
                 "issuer": _clean_text(ThirteenFProcessor._child_text(info_table, "nameOfIssuer")),
                 "title_of_class": _clean_text(ThirteenFProcessor._child_text(info_table, "titleOfClass")),
                 "cusip": _clean_text(ThirteenFProcessor._child_text(info_table, "cusip")),
-                # `value` is the reported column verbatim, in whole US dollars. Before
-                # 2023-01-03 Form 13F reported it in thousands; SEC's amendments to Form 13F
-                # (Release 34-96492) changed the column to whole dollars, so scaling by 1000
-                # inflated every modern filing by 1000x (Berkshire's ~$263B portfolio was
-                # being reported as ~$263T).
-                "value": reported_value,
-                "value_usd": reported_value,
+                "figi": _clean_text(ThirteenFProcessor._child_text(info_table, "figi")),
+                "reported_value": reported_value,
+                "reported_value_unit": reported_unit,
+                "value_scale": value_scale,
+                "value_scale_basis": scale_basis,
+                "value": value_usd,
+                "value_usd": value_usd,
                 "shares": _to_int(ThirteenFProcessor._nested_child_text(info_table, "shrsOrPrnAmt", "sshPrnamt")),
                 "share_type": _clean_text(ThirteenFProcessor._nested_child_text(info_table, "shrsOrPrnAmt", "sshPrnamtType")),
                 "put_call": _clean_text(ThirteenFProcessor._child_text(info_table, "putCall")),
@@ -236,6 +260,18 @@ class ThirteenFProcessor:
             holdings.append(holding)
 
         return holdings
+
+    @staticmethod
+    def _value_scale(filing_date: str | None) -> tuple[int, str, str]:
+        if filing_date is None:
+            return 1, "unknown", "filing_date_missing_assumed_current"
+        try:
+            submitted = date.fromisoformat(str(filing_date))
+        except ValueError as exc:
+            raise ValueError("filing_date must be an ISO date (YYYY-MM-DD).") from exc
+        if submitted < THIRTEENF_DOLLAR_EFFECTIVE_DATE:
+            return 1000, "USD_thousands", "filing_date"
+        return 1, "USD", "filing_date"
 
     @staticmethod
     def _holding_key(row: Dict[str, Any]) -> tuple:
@@ -445,7 +481,10 @@ class ThirteenFProcessor:
                 "Could not download 13F information table %s.", information_table_document
             )
             return []
-        return self.parse_information_table_xml(raw_xml)
+        return self.parse_information_table_xml(
+            raw_xml,
+            filing_date=filing.get("filing_date"),
+        )
 
     @staticmethod
     def _parse_xml_root(xml_content: str) -> Element:

@@ -11,6 +11,7 @@ SAMPLE_INFORMATION_TABLE = """<?xml version="1.0" encoding="UTF-8"?>
     <nameOfIssuer>APPLE INC</nameOfIssuer>
     <titleOfClass>COM</titleOfClass>
     <cusip>037833100</cusip>
+    <figi>BBG000B9XRY4</figi>
     <value>1450000000</value>
     <shrsOrPrnAmt>
       <sshPrnamt>8123456</sshPrnamt>
@@ -97,6 +98,7 @@ class ThirteenFProcessorTests(unittest.TestCase):
         self.assertEqual(len(holdings), 2)
         self.assertEqual(holdings[0]["issuer"], "APPLE INC")
         self.assertEqual(holdings[0]["cusip"], "037833100")
+        self.assertEqual(holdings[0]["figi"], "BBG000B9XRY4")
         self.assertEqual(holdings[0]["value"], 1450000000)
         self.assertEqual(holdings[0]["shares"], 8123456)
         self.assertEqual(holdings[0]["share_type"], "SH")
@@ -116,6 +118,45 @@ class ThirteenFProcessorTests(unittest.TestCase):
         # behavior implied $178,000/share.
         implied_price = holdings[0]["value"] / holdings[0]["shares"]
         self.assertLess(implied_price, 10_000, f"implied price/share of {implied_price:,.0f} is not plausible")
+
+    def test_pre_transition_filing_values_are_scaled_from_thousands(self):
+        holdings = ThirteenFProcessor.parse_information_table_xml(
+            SAMPLE_INFORMATION_TABLE,
+            filing_date="2022-11-14",
+        )
+
+        self.assertEqual(holdings[0]["reported_value"], 1450000000)
+        self.assertEqual(holdings[0]["reported_value_unit"], "USD_thousands")
+        self.assertEqual(holdings[0]["value_scale"], 1000)
+        self.assertEqual(holdings[0]["value_usd"], 1_450_000_000_000)
+
+    def test_transition_uses_filing_date_not_report_period(self):
+        holdings = ThirteenFProcessor.parse_information_table_xml(
+            SAMPLE_INFORMATION_TABLE,
+            filing_date="2023-01-03",
+        )
+
+        self.assertEqual(holdings[0]["reported_value_unit"], "USD")
+        self.assertEqual(holdings[0]["value_scale"], 1)
+        self.assertEqual(holdings[0]["value_usd"], 1_450_000_000)
+
+    def test_missing_filing_date_does_not_guess_old_scale(self):
+        holdings = ThirteenFProcessor.parse_information_table_xml(
+            SAMPLE_INFORMATION_TABLE,
+        )
+
+        self.assertEqual(holdings[0]["reported_value_unit"], "unknown")
+        self.assertEqual(
+            holdings[0]["value_scale_basis"],
+            "filing_date_missing_assumed_current",
+        )
+
+    def test_rejects_invalid_filing_date(self):
+        with self.assertRaises(ValueError):
+            ThirteenFProcessor.parse_information_table_xml(
+                SAMPLE_INFORMATION_TABLE,
+                filing_date="01/03/2023",
+            )
 
     def test_integer_parser_preserves_large_values_without_float_rounding(self):
         self.assertEqual(_to_int("9,999,999,999,999,999"), 9_999_999_999_999_999)
