@@ -19,6 +19,10 @@ Primary domain areas:
 - `src/copetech_sec/document_handler.py` – SEC archive document lookup/download.
 - `src/copetech_sec/http_client.py` – async SEC HTTP client, retry/rate-limit behavior.
 - `src/copetech_sec/financial_processor.py` – company facts metric extraction.
+- `src/copetech_sec/financial_metrics.py` / `financial_series.py` – canonical metric
+  registry and point-in-time series resolution.
+- `src/copetech_sec/financial_series_store.py` / `financial_series_service.py` –
+  provenance-preserving fact persistence and query orchestration.
 - `src/copetech_sec/cache_manager.py` – filesystem cache.
 - `src/copetech_sec/sql_cache_manager.py` – SQLite persistence.
 - `tests/test_form4_signals.py` – critical behavior tests for insider signal modeling.

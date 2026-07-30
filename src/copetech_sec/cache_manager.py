@@ -227,10 +227,9 @@ class SecCacheManager:
         """
         Determines if a given cache file is considered fresh based on its type and timestamp.
 
-        The current logic considers cache files for 'submissions', 'forms', and
-        'company_info' fresh if their filename contains today's date (YYYYMMDD format).
-        Other types (like 'facts' which include time in the timestamp, or 'mappings')
-        are currently considered fresh whenever found by `_find_latest_cache_file`.
+        Daily-changing SEC metadata and Company Facts snapshots are fresh only when
+        their filename contains today's date (YYYYMMDD format). Immutable filing
+        documents and mappings use their own refresh rules.
         This logic could be expanded for more sophisticated TTL strategies.
 
         Args:
@@ -241,7 +240,7 @@ class SecCacheManager:
             bool: True if the cache file is considered fresh, False otherwise.
         """
         # Simple check: if cache is from today for submissions/forms/info
-        if data_type in ["submissions", "forms", "company_info"]:
+        if data_type in ["submissions", "forms", "company_info", "facts"]:
             today = datetime.now().strftime("%Y%m%d")
             is_fresh = today in os.path.basename(cache_file)
             logging.debug(f"Checking freshness for {cache_file} ({data_type}): {'Fresh' if is_fresh else 'Stale'}")
@@ -465,7 +464,7 @@ class SecCacheManager:
         # fixed filename per key, and day-stamped metadata/index files only ever need
         # their newest copy (freshness reads the newest file's date). Without this the
         # dated files accumulate forever — one per ticker per window per day.
-        if data_type in ("insider_signals", "forms", "submissions", "company_info"):
+        if data_type in ("insider_signals", "forms", "submissions", "company_info", "facts"):
             self._prune_superseded_files(cache_file, data_type, ticker, **kwargs)
 
     # Specific Load/Save methods (kept for compatibility during refactor, but delegate)

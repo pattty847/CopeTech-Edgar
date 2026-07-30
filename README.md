@@ -16,6 +16,8 @@ Core capabilities today:
 - Protected insider chart payloads with cached daily OHLC candles for demo overlays.
 - Form 13F-HR institutional holdings parsing for a single manager CIK.
 - Financial summary extraction from XBRL company facts.
+- Point-in-time SEC financial series with provenance, concept stitching, derived Q4,
+  and quarterly/annual/TTM views (revenue is the first registered metric).
 - Optional file cache and SQLite persistence helpers.
 
 This package preserves Sentinel's existing SEC backend behavior as closely as possible while making it reusable across projects.
@@ -27,6 +29,10 @@ This package preserves Sentinel's existing SEC backend behavior as closely as po
 - `src/copetech_sec/document_handler.py` – SEC archive document discovery/download.
 - `src/copetech_sec/http_client.py` – async SEC HTTP client (rate limiting + retries).
 - `src/copetech_sec/financial_processor.py` – company facts normalization and summary shaping.
+- `src/copetech_sec/financial_metrics.py` / `financial_series.py` – metric registry and
+  canonical point-in-time series normalization.
+- `src/copetech_sec/financial_series_store.py` / `financial_series_service.py` –
+  accession-keyed persistence and the acquisition/query boundary.
 - `src/copetech_sec/cache_manager.py` / `sql_cache_manager.py` – filesystem/SQLite persistence.
 - `tests/test_form4_signals.py` – unit tests for signal event and aggregation logic.
 
@@ -110,7 +116,18 @@ holdings = await fetcher.get_latest_13f_holdings("0001446194", row_limit=25)
 
 # Company facts summary
 financials = await fetcher.get_financial_summary("MSFT")
+
+# Canonical revenue history with filing-date availability and SEC provenance
+revenue = await fetcher.get_financial_series(
+    "NVDA",
+    metric="revenue",
+    frequency="quarterly",  # quarterly | annual | ttm
+    alignment="availability",
+)
 ```
+
+See [Financial series](docs/financial-series.md) for the data contract,
+point-in-time semantics, source tradeoffs, and metric roadmap.
 
 ## HTTP API
 

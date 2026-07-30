@@ -15,6 +15,7 @@ from .form4_processor import Form4Processor
 from .form8k_processor import Form8KProcessor
 from .form144_processor import Form144Processor
 from .financial_processor import FinancialDataProcessor
+from .financial_series_service import FinancialSeriesService
 from .supply_chain_parser import SupplyChainParser
 from .sql_cache_manager import SqlCacheManager
 from .thirteenf_processor import ThirteenFProcessor
@@ -86,6 +87,10 @@ class SECDataFetcher:
         )
         self.financial_processor = FinancialDataProcessor(
             fetch_facts_func=self.get_company_facts # Pass the method directly
+        )
+        self.financial_series = FinancialSeriesService(
+            fetch_facts=self.get_company_facts,
+            store_path=os.path.join(cache_dir, "financial_series.sqlite3"),
         )
         self.thirteenf_processor = ThirteenFProcessor(
             http_client=self.http_client,
@@ -418,6 +423,37 @@ class SECDataFetcher:
         return await self.financial_processor.get_financial_trend(
             ticker=ticker, periods=periods, use_cache=use_cache
         )
+
+    async def get_financial_series(
+        self,
+        ticker: str,
+        *,
+        metric: str = "revenue",
+        frequency: str = "quarterly",
+        basis: str = "canonical",
+        alignment: str = "availability",
+        as_of: str | None = None,
+        start: str | None = None,
+        end: str | None = None,
+        refresh: bool = False,
+        include_provenance: bool = True,
+    ) -> Optional[Dict]:
+        """Return a persisted, point-in-time-safe canonical financial series."""
+        return await self.financial_series.get_series(
+            ticker,
+            metric=metric,
+            frequency=frequency,
+            basis=basis,
+            alignment=alignment,
+            as_of=as_of,
+            start=start,
+            end=end,
+            refresh=refresh,
+            include_provenance=include_provenance,
+        )
+
+    def list_supported_financial_metrics(self) -> List[Dict]:
+        return self.financial_series.supported_metrics()
 
     async def get_8k_events(
         self,
