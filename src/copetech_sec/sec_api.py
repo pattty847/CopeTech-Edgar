@@ -5,6 +5,7 @@ import asyncio
 import re
 
 from datetime import datetime, timedelta, timezone
+from itertools import zip_longest
 from typing import List, Dict, Optional, Union, Tuple, Any, Callable, Awaitable, Iterable
 from .http_client import SecHttpClient
 from .errors import SecNotFoundError
@@ -172,7 +173,11 @@ class SECDataFetcher:
         cache_key = f"CIK{cik}"
         if use_cache:
             cache_data = await self.cache_manager.load_data(cache_key, 'company_info')
-            if isinstance(cache_data, dict):
+            if (
+                isinstance(cache_data, dict)
+                and "tickers" in cache_data
+                and "former_names" in cache_data
+            ):
                 return {**cache_data, "ticker": str(ticker)}
 
         submissions_url = self.SUBMISSIONS_ENDPOINT.format(cik=cik)
@@ -192,6 +197,16 @@ class SECDataFetcher:
             'address': response.get('addresses', {}).get('mailing'),
             'phone': response.get('phone'),
             'exchange': response.get('exchanges'),
+            'tickers': list(response.get('tickers') or [str(ticker)]),
+            'exchanges': list(response.get('exchanges') or []),
+            'share_classes': [
+                {'ticker': class_ticker, 'exchange': exchange}
+                for class_ticker, exchange in zip_longest(
+                    response.get('tickers') or [str(ticker)],
+                    response.get('exchanges') or [],
+                )
+            ],
+            'former_names': list(response.get('formerNames') or []),
         }
         await self.cache_manager.save_data(cache_key, 'company_info', company_info)
         return company_info

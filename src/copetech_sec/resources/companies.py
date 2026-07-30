@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from .funds import FundsResource
+
 if TYPE_CHECKING:
     from ..sec_api import SECDataFetcher
 
@@ -11,6 +13,7 @@ if TYPE_CHECKING:
 class CompaniesResource:
     def __init__(self, fetcher: SECDataFetcher):
         self._fetcher = fetcher
+        self.funds = FundsResource(fetcher)
 
     async def get(self, ticker: str, *, use_cache: bool = True) -> dict[str, Any] | None:
         return await self._fetcher.get_company_info(ticker, use_cache=use_cache)

@@ -113,8 +113,13 @@ class SecCacheManager:
             raise ValueError(f"Invalid data_type for caching: {data_type}")
 
         # --- CIK Mapping --- 
-        if data_type == "mappings" and kwargs.get("map_type") == "ticker_cik":
-             return os.path.join(self.cache_dir, subdir, "ticker_cik_map.json")
+        if data_type == "mappings":
+            map_type = kwargs.get("map_type")
+            if map_type == "ticker_cik":
+                return os.path.join(self.cache_dir, subdir, "ticker_cik_map.json")
+            if map_type == "fund_ticker":
+                return os.path.join(self.cache_dir, subdir, "fund_ticker_map.json")
+            raise ValueError("map_type must be ticker_cik or fund_ticker.")
 
         # --- Ticker-specific data --- 
         if not ticker:
@@ -421,6 +426,28 @@ class SecCacheManager:
         success = self._write_cache_file(map_file, payload)
         if not success:
              logging.error("Failed to save Ticker-CIK map to cache.")
+
+    async def load_fund_map(self) -> Optional[Dict[str, Any]]:
+        """Load the SEC mutual-fund class map while it is inside the mapping TTL."""
+        map_file = self._get_cache_path("mappings", map_type="fund_ticker")
+        if not os.path.exists(map_file):
+            return None
+        age_seconds = max(0.0, datetime.now().timestamp() - os.path.getmtime(map_file))
+        if age_seconds > self.ticker_map_ttl_seconds:
+            return None
+        payload = self._read_cache_file(map_file)
+        return payload if isinstance(payload, dict) else None
+
+    async def save_fund_map(self, records: List[Dict[str, Any]]) -> None:
+        """Atomically replace the SEC mutual-fund class map."""
+        map_file = self._get_cache_path("mappings", map_type="fund_ticker")
+        payload = {
+            "schemaVersion": 1,
+            "retrievedAt": datetime.now(timezone.utc).isoformat(),
+            "records": records,
+        }
+        if not self._write_cache_file(map_file, payload):
+            logging.error("Failed to save mutual-fund ticker map to cache.")
 
     # Generic Load/Save for Ticker-Specific Data
     async def load_data(self, ticker: str, data_type: str, **kwargs) -> Optional[Any]:
