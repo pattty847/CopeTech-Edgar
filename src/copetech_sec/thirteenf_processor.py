@@ -2,6 +2,7 @@ import logging
 import re
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
+from decimal import Decimal, InvalidOperation
 from typing import Any, Dict, List, Optional
 
 from .cache_manager import SecCacheManager
@@ -36,9 +37,12 @@ def _to_int(value: Optional[str]) -> Optional[int]:
     if not cleaned:
         return None
     try:
-        return int(float(cleaned.replace(",", "")))
-    except ValueError:
+        parsed = Decimal(cleaned.replace(",", ""))
+    except InvalidOperation:
         return None
+    if not parsed.is_finite() or parsed != parsed.to_integral_value():
+        return None
+    return int(parsed)
 
 
 class ThirteenFProcessor:
@@ -186,16 +190,30 @@ class ThirteenFProcessor:
             name = str(document.get("name", "")).lower()
             doc_type = str(document.get("type", "")).lower()
             value = 0
+            # SEC's index.json usually reports an icon filename ("text.gif") in `type`, so
+            # this tier rarely fires; keep it for indexes that carry a real EDGAR type.
             if "information" in doc_type and "table" in doc_type:
                 value += 100
             if "infotable" in name or "informationtable" in name or "form13f" in name:
                 value += 50
-            if "xsl" in name or "primary" in name:
-                value -= 20
+            # Many filers name the information table opaquely (Berkshire files "50240.xml"),
+            # so the real discriminator is excluding the cover page and the XSL-rendered
+            # view rather than recognising the table by name.
+            if name.startswith("xsl") or "/xsl" in name:
+                value -= 100
+            if "primary_doc" in name:
+                value -= 50
             return value
 
-        chosen = max(xml_documents, key=score)
-        return chosen.get("name")
+        best = max(xml_documents, key=score)
+        if score(best) < 0:
+            logging.warning(
+                "No 13F information table candidate scored above the cover page/XSL "
+                "exclusions; documents were: %s",
+                [document.get("name") for document in xml_documents],
+            )
+            return None
+        return best.get("name")
 
     @staticmethod
     def parse_information_table_xml(xml_content: str) -> List[Dict[str, Any]]:
@@ -206,18 +224,28 @@ class ThirteenFProcessor:
         ]
 
         holdings: List[Dict[str, Any]] = []
-        for info_table in info_tables:
-            value_thousands = _to_int(ThirteenFProcessor._child_text(info_table, "value"))
+        for position, info_table in enumerate(info_tables):
+            reported_value = _to_int(ThirteenFProcessor._child_text(info_table, "value"))
             holding = {
                 "issuer": _clean_text(ThirteenFProcessor._child_text(info_table, "nameOfIssuer")),
                 "title_of_class": _clean_text(ThirteenFProcessor._child_text(info_table, "titleOfClass")),
                 "cusip": _clean_text(ThirteenFProcessor._child_text(info_table, "cusip")),
-                "value_thousands": value_thousands,
-                "value": value_thousands * 1000 if value_thousands is not None else None,
+                # `value` is the reported column verbatim, in whole US dollars. Before
+                # 2023-01-03 Form 13F reported it in thousands; SEC's amendments to Form 13F
+                # (Release 34-96492) changed the column to whole dollars, so scaling by 1000
+                # inflated every modern filing by 1000x (Berkshire's ~$263B portfolio was
+                # being reported as ~$263T).
+                "value": reported_value,
+                "value_usd": reported_value,
                 "shares": _to_int(ThirteenFProcessor._nested_child_text(info_table, "shrsOrPrnAmt", "sshPrnamt")),
                 "share_type": _clean_text(ThirteenFProcessor._nested_child_text(info_table, "shrsOrPrnAmt", "sshPrnamtType")),
                 "put_call": _clean_text(ThirteenFProcessor._child_text(info_table, "putCall")),
                 "discretion": _clean_text(ThirteenFProcessor._child_text(info_table, "investmentDiscretion")),
+                # A manager may report the same security on several rows, one per
+                # sub-portfolio / other-manager attribution. These fields keep those rows
+                # distinguishable so they are not collapsed during diffing.
+                "other_manager": _clean_text(ThirteenFProcessor._child_text(info_table, "otherManager")),
+                "row_index": position,
                 "voting_authority": {
                     "sole": _to_int(ThirteenFProcessor._nested_child_text(info_table, "votingAuthority", "Sole")),
                     "shared": _to_int(ThirteenFProcessor._nested_child_text(info_table, "votingAuthority", "Shared")),
@@ -237,6 +265,37 @@ class ThirteenFProcessor:
         )
 
     @staticmethod
+    def _aggregate_by_security(holdings: List[Dict[str, Any]]) -> Dict[tuple, Dict[str, Any]]:
+        """Roll a filing's rows up to one economic position per security.
+
+        13F filers routinely report a single security across many rows — Berkshire's Q1-2026
+        filing carries 90 rows covering 29 distinct securities, split by `otherManager`
+        attribution. Keying a dict directly on `_holding_key` kept only the last row per
+        security and silently discarded the other 61, so quarter-over-quarter diffs
+        understated positions by roughly two thirds. Summing value and shares preserves the
+        real position while keeping the diff keyed on the security.
+        """
+        aggregated: Dict[tuple, Dict[str, Any]] = {}
+        for row in holdings:
+            key = ThirteenFProcessor._holding_key(row)
+            existing = aggregated.get(key)
+            if existing is None:
+                aggregated[key] = {
+                    "issuer": row.get("issuer"),
+                    "title_of_class": row.get("title_of_class"),
+                    "cusip": row.get("cusip"),
+                    "put_call": row.get("put_call"),
+                    "value": int(row.get("value") or 0),
+                    "shares": int(row.get("shares") or 0),
+                    "row_count": 1,
+                }
+                continue
+            existing["value"] += int(row.get("value") or 0)
+            existing["shares"] += int(row.get("shares") or 0)
+            existing["row_count"] += 1
+        return aggregated
+
+    @staticmethod
     def compute_quarter_changes(
         prior_holdings: List[Dict[str, Any]],
         current_holdings: List[Dict[str, Any]],
@@ -244,7 +303,12 @@ class ThirteenFProcessor:
         """Compute QoQ deltas between two parsed 13F-HR information tables.
 
         Both inputs are lists shaped like `parse_information_table_xml` output:
-          {issuer, title_of_class, cusip, value, value_thousands, shares, put_call, ...}
+          {issuer, title_of_class, cusip, value, shares, put_call, other_manager, ...}
+
+        Rows are first rolled up to one position per (cusip, put/call, class) — a filer may
+        report the same security on many rows, one per other-manager attribution — so
+        `value`/`shares` in the output are the manager's full economic position. All values
+        are whole US dollars, matching the reported 13F column.
 
         Returns a dict with categorized change lists (each ranked by abs value change)
         plus aggregate stats:
@@ -261,8 +325,8 @@ class ThirteenFProcessor:
             },
           }
         """
-        prior_by_key = {ThirteenFProcessor._holding_key(row): row for row in prior_holdings}
-        current_by_key = {ThirteenFProcessor._holding_key(row): row for row in current_holdings}
+        prior_by_key = ThirteenFProcessor._aggregate_by_security(prior_holdings)
+        current_by_key = ThirteenFProcessor._aggregate_by_security(current_holdings)
 
         new_positions: List[Dict[str, Any]] = []
         increased: List[Dict[str, Any]] = []
@@ -315,7 +379,8 @@ class ThirteenFProcessor:
             + sum(row["prior_value"] for row in sold_out)
         )
         sorted_current = sorted(
-            (int(row.get("value") or 0) for row in current_holdings), reverse=True
+            (int(row.get("value") or 0) for row in current_by_key.values()),
+            reverse=True,
         )
         top10_concentration = (
             sum(sorted_current[:10]) / current_total if current_total else None

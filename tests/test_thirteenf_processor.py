@@ -1,15 +1,17 @@
 import unittest
 
-from copetech_sec.thirteenf_processor import ThirteenFProcessor, normalize_cik
+from copetech_sec.thirteenf_processor import ThirteenFProcessor, _to_int, normalize_cik
 
 
+# Values are whole US dollars, matching Form 13F as amended effective 2023-01-03
+# (SEC Release 34-96492). 8,123,456 AAPL shares at ~$178 = ~$1.45B.
 SAMPLE_INFORMATION_TABLE = """<?xml version="1.0" encoding="UTF-8"?>
 <informationTable xmlns="http://www.sec.gov/edgar/document/thirteenf/informationtable">
   <infoTable>
     <nameOfIssuer>APPLE INC</nameOfIssuer>
     <titleOfClass>COM</titleOfClass>
     <cusip>037833100</cusip>
-    <value>1450000</value>
+    <value>1450000000</value>
     <shrsOrPrnAmt>
       <sshPrnamt>8123456</sshPrnamt>
       <sshPrnamtType>SH</sshPrnamtType>
@@ -25,7 +27,7 @@ SAMPLE_INFORMATION_TABLE = """<?xml version="1.0" encoding="UTF-8"?>
     <nameOfIssuer>TESLA INC</nameOfIssuer>
     <titleOfClass>CALL</titleOfClass>
     <cusip>88160R101</cusip>
-    <value>198700</value>
+    <value>198700000</value>
     <shrsOrPrnAmt>
       <sshPrnamt>250000</sshPrnamt>
       <sshPrnamtType>SH</sshPrnamtType>
@@ -37,6 +39,45 @@ SAMPLE_INFORMATION_TABLE = """<?xml version="1.0" encoding="UTF-8"?>
       <Shared>250000</Shared>
       <None>0</None>
     </votingAuthority>
+  </infoTable>
+</informationTable>
+"""
+
+
+# Shape taken from Berkshire Hathaway's Q1-2026 13F-HR: one security reported across
+# several rows, split by `otherManager` attribution. The real filing has 90 rows covering
+# 29 securities.
+MULTI_ROW_INFORMATION_TABLE = """<?xml version="1.0" encoding="UTF-8"?>
+<informationTable xmlns="http://www.sec.gov/edgar/document/thirteenf/informationtable">
+  <infoTable>
+    <nameOfIssuer>ALLY FINL INC</nameOfIssuer>
+    <titleOfClass>COM</titleOfClass>
+    <cusip>02005N100</cusip>
+    <value>498992850</value>
+    <shrsOrPrnAmt><sshPrnamt>12719675</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt>
+    <investmentDiscretion>DFND</investmentDiscretion>
+    <otherManager>4</otherManager>
+    <votingAuthority><Sole>12719675</Sole><Shared>0</Shared><None>0</None></votingAuthority>
+  </infoTable>
+  <infoTable>
+    <nameOfIssuer>ALLY FINL INC</nameOfIssuer>
+    <titleOfClass>COM</titleOfClass>
+    <cusip>02005N100</cusip>
+    <value>109996016</value>
+    <shrsOrPrnAmt><sshPrnamt>2803875</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt>
+    <investmentDiscretion>DFND</investmentDiscretion>
+    <otherManager>8</otherManager>
+    <votingAuthority><Sole>2803875</Sole><Shared>0</Shared><None>0</None></votingAuthority>
+  </infoTable>
+  <infoTable>
+    <nameOfIssuer>ALLY FINL INC</nameOfIssuer>
+    <titleOfClass>COM</titleOfClass>
+    <cusip>02005N100</cusip>
+    <value>165872286</value>
+    <shrsOrPrnAmt><sshPrnamt>4228200</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt>
+    <investmentDiscretion>DFND</investmentDiscretion>
+    <otherManager>11</otherManager>
+    <votingAuthority><Sole>4228200</Sole><Shared>0</Shared><None>0</None></votingAuthority>
   </infoTable>
 </informationTable>
 """
@@ -56,12 +97,29 @@ class ThirteenFProcessorTests(unittest.TestCase):
         self.assertEqual(len(holdings), 2)
         self.assertEqual(holdings[0]["issuer"], "APPLE INC")
         self.assertEqual(holdings[0]["cusip"], "037833100")
-        self.assertEqual(holdings[0]["value_thousands"], 1450000)
         self.assertEqual(holdings[0]["value"], 1450000000)
         self.assertEqual(holdings[0]["shares"], 8123456)
         self.assertEqual(holdings[0]["share_type"], "SH")
         self.assertEqual(holdings[0]["voting_authority"]["sole"], 8123456)
         self.assertEqual(holdings[1]["put_call"], "Call")
+
+    def test_reported_value_is_not_rescaled(self):
+        """Regression: `value` was multiplied by 1000 on the assumption Form 13F still
+        reports thousands. SEC's Form 13F amendments (Release 34-96492, effective
+        2023-01-03) made the column whole US dollars, so the scaling inflated every
+        modern filing 1000x — Berkshire's ~$263B portfolio reported as ~$263T."""
+        holdings = ThirteenFProcessor.parse_information_table_xml(SAMPLE_INFORMATION_TABLE)
+
+        self.assertEqual(holdings[0]["value"], 1450000000, "reported dollars must pass through unscaled")
+        self.assertEqual(holdings[0]["value_usd"], 1450000000)
+        # 8.12M AAPL shares valued at $1.45B implies ~$178/share, a sane price. The old
+        # behavior implied $178,000/share.
+        implied_price = holdings[0]["value"] / holdings[0]["shares"]
+        self.assertLess(implied_price, 10_000, f"implied price/share of {implied_price:,.0f} is not plausible")
+
+    def test_integer_parser_preserves_large_values_without_float_rounding(self):
+        self.assertEqual(_to_int("9,999,999,999,999,999"), 9_999_999_999_999_999)
+        self.assertIsNone(_to_int("12.5"))
 
     def test_choose_information_table_document_prefers_info_xml(self):
         document = ThirteenFProcessor.choose_information_table_document(
@@ -87,6 +145,64 @@ def _holding(issuer: str, cusip: str, value: int, shares: int = 0,
         "share_type": "SH",
         "put_call": put_call,
     }
+
+
+class MultiRowPositionTests(unittest.TestCase):
+    """Regression: a filer may report one security across many rows (one per
+    `otherManager` attribution). `compute_quarter_changes` built its lookup with
+    `{_holding_key(row): row for row in holdings}`, so only the last row per security
+    survived — Berkshire's 90-row filing collapsed to 29 positions and the diff dropped
+    61 rows (~68% of the portfolio) with no warning."""
+
+    def test_parse_preserves_every_reported_row(self):
+        holdings = ThirteenFProcessor.parse_information_table_xml(MULTI_ROW_INFORMATION_TABLE)
+        self.assertEqual(len(holdings), 3)
+        self.assertEqual([h["other_manager"] for h in holdings], ["4", "8", "11"])
+
+    def test_diff_sums_all_rows_for_one_security(self):
+        holdings = ThirteenFProcessor.parse_information_table_xml(MULTI_ROW_INFORMATION_TABLE)
+        expected_value = 498992850 + 109996016 + 165872286
+        expected_shares = 12719675 + 2803875 + 4228200
+
+        changes = ThirteenFProcessor.compute_quarter_changes([], holdings)
+
+        self.assertEqual(len(changes["new_positions"]), 1, "three rows are one economic position")
+        position = changes["new_positions"][0]
+        self.assertEqual(position["current_value"], expected_value)
+        self.assertEqual(position["current_shares"], expected_shares)
+        self.assertEqual(changes["totals"]["current_value"], expected_value)
+
+    def test_bucket_values_reconcile_with_totals(self):
+        holdings = ThirteenFProcessor.parse_information_table_xml(MULTI_ROW_INFORMATION_TABLE)
+        changes = ThirteenFProcessor.compute_quarter_changes([], holdings)
+
+        # `totals` sums the raw rows while buckets sum aggregated positions; with the
+        # collapse bug these two disagreed by the value of every dropped row.
+        bucket_total = sum(row["current_value"] for row in changes["new_positions"])
+        self.assertEqual(bucket_total, changes["totals"]["current_value"])
+
+    def test_reduction_detected_across_multi_row_positions(self):
+        prior = ThirteenFProcessor.parse_information_table_xml(MULTI_ROW_INFORMATION_TABLE)
+        # Next quarter the manager consolidates into a single smaller row.
+        current = [
+            {"cusip": "02005N100", "put_call": None, "title_of_class": "COM",
+             "issuer": "ALLY FINL INC", "value": 300_000_000, "shares": 7_000_000},
+        ]
+        changes = ThirteenFProcessor.compute_quarter_changes(prior, current)
+
+        self.assertEqual(len(changes["reduced"]), 1)
+        self.assertEqual(changes["reduced"][0]["prior_value"], 774_861_152)
+        self.assertEqual(changes["reduced"][0]["value_change"], 300_000_000 - 774_861_152)
+
+    def test_top10_concentration_uses_aggregated_economic_positions(self):
+        one_security = [
+            _holding("ALLY FINL INC", "02005N100", 10_000_000)
+            for _ in range(11)
+        ]
+
+        changes = ThirteenFProcessor.compute_quarter_changes([], one_security)
+
+        self.assertEqual(changes["totals"]["top10_concentration"], 1.0)
 
 
 class QuarterChangesTests(unittest.TestCase):
@@ -285,10 +401,10 @@ class CIKPrecedenceTests(unittest.IsolatedAsyncioTestCase):
         # but we surface it as a last-resort fallback (with a logged warning).
         self.assertEqual(result, "1193125")
 
-    async def test_returns_none_when_nothing_resolves(self):
+    async def test_rejects_malformed_accession(self):
         handler = await self._build_handler({})
-        result = await handler._get_cik_for_filing("non-numeric-accession")
-        self.assertIsNone(result)
+        with self.assertRaises(ValueError):
+            await handler._get_cik_for_filing("non-numeric-accession")
 
 
 if __name__ == "__main__":

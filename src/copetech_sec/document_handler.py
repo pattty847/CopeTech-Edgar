@@ -4,9 +4,11 @@ import re
 import json
 import asyncio
 from typing import List, Dict, Optional, Callable, Awaitable
+from urllib.parse import quote, unquote
 
 # Assuming http_client defines SecHttpClient with make_request method
 from .http_client import SecHttpClient
+from .identifiers import Accession, Cik
 
 
 class RawFilingResolver:
@@ -46,10 +48,45 @@ class RawFilingResolver:
         return content
 
 
+def _is_safe_document_name(name: str) -> bool:
+    """Reject document names that would escape the filing's archive directory.
+
+    Names come from SEC's `index.json`, which is remote data. A name containing `..` or a
+    leading `/` would build a URL outside the accession path, and `download_all_form_documents`
+    joins the same name onto a local output directory — path traversal in both directions.
+    Legitimate names include a subdirectory form (`xslF345X03/form4.xml`), so a plain
+    basename check is too strict.
+    """
+    if (
+        not name
+        or name.startswith(("/", "\\"))
+        or ":" in name
+        or any(character in name for character in ("?", "#", "\x00", "\r", "\n"))
+    ):
+        return False
+    decoded = unquote(name)
+    if decoded != name and not _is_safe_document_name(decoded):
+        return False
+    parts = decoded.replace("\\", "/").split("/")
+    return all(part not in ("", ".", "..") for part in parts)
+
+
 class FilingDocumentHandler:
     """Handles fetching specific documents and document lists from SEC filings."""
 
     BASE_ARCHIVE_URL = "https://www.sec.gov/Archives/edgar/data"
+
+    # SEC's `index.json` reports `type` as the *directory-listing icon* for the entry
+    # ("text.gif", "compressed.gif", "image2.gif"), not the EDGAR document type. Verified
+    # against live Form 4, 10-K and 13F-HR indexes. Every branch that keyed on `type`
+    # containing "XML" / "10-K" / "INFORMATION TABLE" was therefore dead code, so
+    # selection has to rely on filename conventions.
+    _ICON_TYPE_SUFFIXES = (".gif", ".png", ".jpg", ".svg")
+
+    @classmethod
+    def _document_type_is_meaningful(cls, doc_type: Optional[str]) -> bool:
+        value = (doc_type or "").strip().lower()
+        return bool(value) and not value.endswith(cls._ICON_TYPE_SUFFIXES)
 
     def __init__(self, http_client: SecHttpClient, cik_lookup_func: Callable[[str], Awaitable[Optional[str]]]):
         """
@@ -90,38 +127,32 @@ class FilingDocumentHandler:
         Returns:
             Optional[str]: CIK suitable for the URL path (no leading zeros), or None.
         """
+        accession = Accession(accession_no)
         cik_for_url = None
-        accession_no_clean = accession_no.replace('-', '')
 
         # 1. Explicit CIK (most reliable when caller knows the filer)
         if cik:
-            stripped = str(cik).lstrip('0')
-            if stripped.isdigit():
-                cik_for_url = stripped
-                logging.debug(f"Using explicit CIK {cik_for_url} for filing {accession_no}.")
+            cik_for_url = Cik(cik).archive_path
+            logging.debug(f"Using explicit CIK {cik_for_url} for filing {accession}.")
 
         # 2. CIK from ticker
         if not cik_for_url and ticker:
             try:
                 cik_lookup = await self.get_cik_for_ticker(ticker)
                 if cik_lookup:
-                    cik_for_url = cik_lookup.lstrip('0')
-                    logging.debug(f"Using CIK {cik_for_url} from ticker {ticker} for filing {accession_no}.")
+                    cik_for_url = Cik(cik_lookup).archive_path
+                    logging.debug(f"Using CIK {cik_for_url} from ticker {ticker} for filing {accession}.")
             except Exception as e:
                 logging.warning(f"Error looking up CIK for ticker {ticker} for filing {accession_no}: {e}")
 
         # 3. Unsafe fallback: accession prefix. Wrong when the filing was submitted
         # by a filer-agent (the prefix is the agent's CIK, not the filer's).
         if not cik_for_url:
-            cik_part_from_acc = accession_no_clean[:10]
-            if cik_part_from_acc.isdigit():
-                cik_for_url = cik_part_from_acc.lstrip('0')
-                logging.warning(
-                    f"Falling back to accession-prefix CIK {cik_for_url} for {accession_no}; "
-                    "this is the submitter CIK and may not be the filer. Pass cik= explicitly."
-                )
-            else:
-                logging.warning(f"Could not extract valid CIK part from accession number: {accession_no}")
+            cik_for_url = accession.submitter_cik.archive_path
+            logging.warning(
+                f"Falling back to accession-prefix CIK {cik_for_url} for {accession}; "
+                "this is the submitter CIK and may not be the filer. Pass cik= explicitly."
+            )
 
         if not cik_for_url:
             logging.error(f"Could not determine CIK for URL construction for filing {accession_no} (ticker: {ticker}, cik: {cik}).")
@@ -155,12 +186,12 @@ class FilingDocumentHandler:
                 'type', 'size', and 'last_modified'. Returns None if the index cannot be
                 fetched, parsed, or if an error occurs.
         """
-        accession_no_clean = accession_no.replace('-', '')
-        cik_for_url = await self._get_cik_for_filing(accession_no, ticker, cik=cik)
+        accession = Accession(accession_no)
+        cik_for_url = await self._get_cik_for_filing(accession, ticker, cik=cik)
         if not cik_for_url:
             return None
 
-        index_json_url = f"{self.BASE_ARCHIVE_URL}/{cik_for_url}/{accession_no_clean}/index.json"
+        index_json_url = f"{self.BASE_ARCHIVE_URL}/{cik_for_url}/{accession.compact}/index.json"
         logging.info(f"Fetching document list via index.json: {index_json_url}")
 
         try:
@@ -174,14 +205,20 @@ class FilingDocumentHandler:
 
             documents = []
             for item in index_data.get('directory', {}).get('item', []):
-                doc_info = {
-                    'name': item.get('name'),
+                name = item.get('name')
+                if not name:
+                    continue
+                if not _is_safe_document_name(str(name)):
+                    logging.warning(f"Skipping unsafe document name in {accession_no} index: {name!r}")
+                    continue
+                documents.append({
+                    'name': name,
+                    # Retained verbatim for callers, but see `_document_type_is_meaningful`:
+                    # SEC populates this with an icon filename, not a document type.
                     'type': item.get('type'),
                     'size': item.get('size'),
-                    'last_modified': item.get('last_modified')
-                }
-                if doc_info['name']:
-                    documents.append(doc_info)
+                    'last_modified': item.get('last_modified'),
+                })
 
             logging.info(f"Found {len(documents)} documents in index.json for {accession_no}")
             return documents
@@ -215,17 +252,20 @@ class FilingDocumentHandler:
                 as a string, or None if the document cannot be found, the download fails,
                 or an error occurs.
         """
-        if not accession_number or not document_name:
-             logging.error("Accession number and document name are required.")
-             return None
+        accession = Accession(accession_number)
+        if not _is_safe_document_name(document_name):
+            raise ValueError(f"Unsafe filing document name: {document_name!r}")
 
-        accession_no_clean = accession_number.replace('-', '')
-        cik_for_url = await self._get_cik_for_filing(accession_number, ticker, cik=cik)
+        cik_for_url = await self._get_cik_for_filing(accession, ticker, cik=cik)
         if not cik_for_url:
             return None
 
         # Construct the URL
-        url = f"{self.BASE_ARCHIVE_URL}/{cik_for_url}/{accession_no_clean}/{document_name}"
+        encoded_document_name = quote(document_name, safe="/._-")
+        url = (
+            f"{self.BASE_ARCHIVE_URL}/{cik_for_url}/{accession.compact}/"
+            f"{encoded_document_name}"
+        )
         logging.info(f"Attempting to download document from: {url}")
 
         try:
@@ -270,11 +310,11 @@ class FilingDocumentHandler:
             Optional[str]: The determined filename of the likely primary document, or None
                 if no suitable candidate could be identified.
         """
-        accession_no_clean = accession_no.replace('-', '')
+        accession = Accession(accession_no)
         primary_doc = None
 
         # 1. Try index.json
-        index_json_url = f"{self.BASE_ARCHIVE_URL}/{cik_for_url}/{accession_no_clean}/index.json"
+        index_json_url = f"{self.BASE_ARCHIVE_URL}/{cik_for_url}/{accession.compact}/index.json"
         logging.debug(f"Looking for primary document via index.json: {index_json_url}")
         try:
             # Use archive-safe request for index.json
@@ -284,12 +324,20 @@ class FilingDocumentHandler:
                 for item in index_data.get('directory', {}).get('item', []):
                     name = item.get('name', '')
                     doc_type = item.get('type', '')  # e.g., '10-K', 'XML', 'GRAPHIC'
+                    if not _is_safe_document_name(name):
+                        continue
                     if name.lower().endswith(('.xml', '.htm', '.html')) and not name.lower().endswith('-index.html'):
                         # Prioritize based on common patterns or type
-                        if 'form4' in name.lower() or 'f345' in name.lower() or (doc_type and 'XML' in doc_type.upper()):
+                        meaningful_type = self._document_type_is_meaningful(doc_type)
+                        if (
+                            'form4' in name.lower()
+                            or 'f345' in name.lower()
+                            or (meaningful_type and 'XML' in doc_type.upper())
+                        ):
                             potential_docs.insert(0, name)  # High priority
                         elif any(ft in name.lower() for ft in ['10k', '10q', '8k']) or (
-                            doc_type and any(ft in doc_type for ft in ['10-K', '10-Q', '8-K'])
+                            meaningful_type
+                            and any(ft in doc_type for ft in ['10-K', '10-Q', '8-K'])
                         ):
                             potential_docs.insert(0, name)  # Medium priority
                         else:
@@ -304,7 +352,7 @@ class FilingDocumentHandler:
 
         # 2. Fallback to index.htm if no candidate from index.json
         if not primary_doc:
-            index_html_url = f"{self.BASE_ARCHIVE_URL}/{cik_for_url}/{accession_no_clean}/index.htm"
+            index_html_url = f"{self.BASE_ARCHIVE_URL}/{cik_for_url}/{accession.compact}/index.htm"
             logging.debug(f"Falling back to HTML index page: {index_html_url}")
             try:
                 # Use archive-safe request for index.htm
@@ -312,12 +360,15 @@ class FilingDocumentHandler:
                 if index_html and isinstance(index_html, str):  # Check if we got valid HTML
                     # Simple regex patterns for common primary docs - capturing filename part
                     # Filter out known bad patterns like index-headers or xsl styling
+                    # NB: these are raw strings, so `\d` is the digit class. Two of these
+                    # patterns previously used `\\d`, which matches a literal backslash
+                    # followed by 'd' and therefore never matched any filename.
                     patterns = [
-                        r'''href=["'][^"']*(form4\.xml)["']''',           # Form 4 XML
-                        r'''href=["'][^"']*(d\\d+k\.htm)["']''',          # 8-K patterns like d123456k.htm
+                        r'''href=["'][^"']*(form4\.xml)["']''',          # Form 4 XML
+                        r'''href=["'][^"']*(d\d+k\.htm)["']''',          # 8-K patterns like d123456k.htm
                         r'''href=["'][^"']*(dq\.htm)["']''',             # 10-Q patterns like dq.htm
-                        r'''href=["'][^"']*(\w+-\\d{8}\.htm)["']''',   # Common pattern like msft-20230630.htm
-                        r'''href=["'][^"']*(10-?[kq]\.htm)["']''',        # 10-K / 10-Q htm
+                        r'''href=["'][^"']*(\w+-\d{8}\.htm)["']''',      # Common pattern like msft-20230630.htm
+                        r'''href=["'][^"']*(10-?[kq]\.htm)["']''',       # 10-K / 10-Q htm
                         r'''href=["'][^"']*(primary_doc\.xml)["']''',    # Explicit primary_doc.xml
                         r'''href=["'][^"']*(primary_doc\.htm)["']'''     # Explicit primary_doc.htm
                     ]
@@ -362,7 +413,7 @@ class FilingDocumentHandler:
     async def fetch_primary_html(self, accession_no: str, ticker: Optional[str] = None) -> Optional[str]:
         """
         Fetches the primary HTML document for a filing, ensuring we get the .htm version.
-        
+
         IMPROVED STRATEGY:
         1. Prioritize files where 'type' is explicitly 10-K/10-Q in the index.
         2. Prioritize files that start with the [ticker] (e.g., 'aapl-2024.htm').
@@ -370,53 +421,58 @@ class FilingDocumentHandler:
         """
         cik_for_url = await self._get_cik_for_filing(accession_no, ticker)
         if not cik_for_url: return None
-        
+
         # 1. Get document list
         documents = await self.get_filing_documents_list(accession_no, ticker)
         if not documents: return None
-        
+
         html_doc_name = None
-        
+
         # Lists to sort candidates by quality
         priority_high = []   # Type matches 10-K/10-Q
         priority_med = []    # Filename starts with ticker
         priority_low = []    # Generic HTML files
         garbage_bin = []     # index-headers, exhibits
-        
+
         ticker_lower = ticker.lower() if ticker else ""
 
         for doc in documents:
             name = doc.get('name', '').lower()
             doc_type = doc.get('type', '').upper()
-            
+
             # Must be HTML
             if not name.endswith(('.htm', '.html')):
                 continue
-            
+
             # Identify Garbage
             if 'index-headers' in name or 'xsl' in name or 'primary_doc.xml' in name:
                 garbage_bin.append(name)
                 continue
-            
-            # Identify Exhibits (Low Value)
-            if 'exhibit' in name or 'ex-' in name:
+
+            # Identify Exhibits (Low Value). Matched on path segment boundaries: a bare
+            # 'ex-' substring test also rejected legitimate primary documents whose ticker
+            # contains it (e.g. 'flex-20240101.htm') and every 'index-headers' entry.
+            base = name.rsplit('/', 1)[-1]
+            if base.startswith(('ex-', 'exhibit')) or '-ex-' in base or 'exhibit' in base:
                 garbage_bin.append(name) # Treat exhibits as garbage for "Primary Doc" purposes
                 continue
 
             # --- SORTING HAT ---
-            
-            # Tier 1: Explicit SEC Type (The most reliable)
-            if doc_type in ['10-K', '10-Q', '10-K/A', '10-Q/A']:
+
+            # Tier 1: Explicit EDGAR document type, when the index actually supplies one.
+            # SEC's index.json normally reports an icon filename here, so this tier is
+            # usually empty; the guard keeps it from matching an icon name by accident.
+            if self._document_type_is_meaningful(doc_type) and doc_type in ['10-K', '10-Q', '10-K/A', '10-Q/A']:
                 priority_high.append(name)
-                
+
             # Tier 2: Filename is "[ticker]-[date].htm" (Standard convention)
             elif ticker_lower and name.startswith(ticker_lower + '-'):
                 priority_med.append(name)
-                
+
             # Tier 3: Filename contains form type
             elif '10-k' in name or '10k' in name or '10-q' in name or '10q' in name:
                 priority_med.append(name)
-                
+
             # Tier 4: Anything else
             else:
                 priority_low.append(name)
@@ -439,11 +495,11 @@ class FilingDocumentHandler:
             fallback = await self._find_primary_document_name(accession_no, cik_for_url)
             if fallback and fallback.lower().endswith(('.htm', '.html')):
                 html_doc_name = fallback
-                
+
         if not html_doc_name:
             logging.warning(f"Could not find explicit HTML document for {accession_no}")
             return None
-            
+
         logging.info(f"Identified primary HTML document: {html_doc_name}")
         return await self.download_form_document(accession_no, html_doc_name, ticker)
 
@@ -521,18 +577,27 @@ class FilingDocumentHandler:
         xml_file_name = None
         documents = await self.get_filing_documents_list(accession_no, ticker)
         if documents:
-            # Look for likely XML candidates
-            xml_candidates = []
+            # Look for likely XML candidates.
+            high_priority: List[str] = []
+            low_priority: List[str] = []
             for doc in documents:
                 name = doc.get('name', '')
-                doc_type = doc.get('type', '')
-                if name.lower().endswith('.xml'):
-                    if 'form4' in name.lower() or 'f345' in name.lower() or (doc_type and 'XML' in doc_type.upper()):
-                         xml_candidates.insert(0, name) # High priority
-                    else:
-                         xml_candidates.append(name)
-            if xml_candidates:
-                 xml_file_name = xml_candidates[0]
+                lowered = name.lower()
+                if not lowered.endswith('.xml'):
+                    continue
+                # `xslF345X0N/…` paths are SEC's XSL-rendered *HTML* view of the form served
+                # under a .xml name. Downloading one yields a styled document, not the
+                # machine-readable filing, so it must never outrank the real XML — and the
+                # old 'form4' substring test matched both.
+                if lowered.startswith('xsl') or '/xsl' in lowered:
+                    continue
+                if 'form4' in lowered or 'f345' in lowered or lowered.endswith('/primary_doc.xml') or lowered == 'primary_doc.xml':
+                    high_priority.append(name)
+                else:
+                    low_priority.append(name)
+            candidates = high_priority + low_priority
+            if candidates:
+                 xml_file_name = candidates[0]
                  logging.info(f"Found XML document candidate via index.json: {xml_file_name}")
 
         if not xml_file_name:
@@ -572,14 +637,15 @@ class FilingDocumentHandler:
                 If a specific document download fails, its value will be None.
                 Returns an empty dictionary if the initial document list cannot be fetched.
         """
-        document_list = await self.get_filing_documents_list(accession_no, ticker)
+        accession = Accession(accession_no)
+        document_list = await self.get_filing_documents_list(accession, ticker)
         if not document_list:
             logging.error(f"Cannot download all documents for {accession_no}, failed to get document list.")
             return {}
 
         if output_dir:
             # Ensure output directory exists
-            target_dir = os.path.join(output_dir, accession_no.replace('-',''))
+            target_dir = os.path.join(output_dir, accession.compact)
             os.makedirs(target_dir, exist_ok=True)
             logging.info(f"Will save downloaded files to: {target_dir}")
 
@@ -588,11 +654,14 @@ class FilingDocumentHandler:
             if not doc_name:
                 return doc_name, None # Skip if name is missing
 
-            content = await self.download_form_document(accession_no, doc_name, ticker)
+            content = await self.download_form_document(accession, doc_name, ticker)
 
             if content is not None and output_dir and target_dir:
-                file_path = os.path.join(target_dir, doc_name)
+                file_path = os.path.realpath(os.path.join(target_dir, doc_name))
+                if os.path.commonpath((os.path.realpath(target_dir), file_path)) != os.path.realpath(target_dir):
+                    raise ValueError(f"Document path escapes output directory: {doc_name!r}")
                 try:
+                    os.makedirs(os.path.dirname(file_path), exist_ok=True)
                     with open(file_path, 'w', encoding='utf-8') as f:
                         f.write(content)
                     logging.debug(f"Saved document {doc_name} to {file_path}")
@@ -614,4 +683,4 @@ class FilingDocumentHandler:
 
         # Convert list of tuples [(name, content), ...] to dict {name: content, ...}
         downloaded_docs = {name: content for name, content in results if name}
-        return downloaded_docs 
+        return downloaded_docs
