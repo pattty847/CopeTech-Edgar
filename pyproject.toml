@@ -7,6 +7,7 @@ name = "copetech-edgar"
 version = "0.2.0"
 description = "Reusable EDGAR/SEC backend extracted from Sentinel"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.12"
 
 # Core install stays minimal: retrieving and parsing SEC data needs an async HTTP client
