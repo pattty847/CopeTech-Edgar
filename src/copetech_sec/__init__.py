@@ -1,5 +1,6 @@
 """Reusable SEC EDGAR backend extracted from Sentinel."""
 
+from .client import EdgarClient
 from .sec_api import SECDataFetcher
 from .errors import (
     CopeTechEdgarError,
@@ -17,6 +18,7 @@ __all__ = [
     "Accession",
     "Cik",
     "CopeTechEdgarError",
+    "EdgarClient",
     "SECDataFetcher",
     "SecAccessDeniedError",
     "SecMalformedResponseError",
