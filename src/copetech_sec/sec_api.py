@@ -40,7 +40,10 @@ def load_dotenv_settings(**kwargs) -> bool:
 
 class SECDataFetcher:
     """
-    Acts as a facade/orchestrator for fetching and processing data from SEC EDGAR APIs.
+    Deprecated 0.2.x compatibility facade for fetching and processing SEC data.
+
+    New integrations should use :class:`copetech_sec.EdgarClient`, whose resource
+    namespaces expose the same contracts without growing this orchestrator further.
     Initializes and delegates tasks to specialized handler/processor classes.
     """
 
@@ -437,6 +440,28 @@ class SECDataFetcher:
 
     def list_supported_financial_metrics(self) -> List[Dict]:
         return self.financial_series.supported_metrics()
+
+    async def get_valuation_series(
+        self,
+        ticker: str,
+        *,
+        price_observations: List[Dict[str, Any]],
+        split_events: List[Tuple[str, float]] | None = None,
+        price_source: str = "caller",
+        price_basis: str = "split_adjusted",
+        refresh: bool = False,
+        include_provenance: bool = True,
+    ) -> Optional[Dict]:
+        """Return point-in-time trailing P/E on a caller-supplied price timeline."""
+        return await self.financial_series.get_valuation_series(
+            ticker,
+            price_observations=price_observations,
+            split_events=split_events,
+            price_source=price_source,
+            price_basis=price_basis,
+            refresh=refresh,
+            include_provenance=include_provenance,
+        )
 
     async def get_8k_events(
         self,

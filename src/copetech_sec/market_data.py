@@ -48,7 +48,7 @@ class PriceCandleFetcher:
             symbol,
             period=f"{period_days}d",
             interval="1d",
-            auto_adjust=False,
+            auto_adjust=True,
             progress=False,
             threads=False,
         )

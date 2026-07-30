@@ -10,6 +10,7 @@ from copetech_sec.financial_series import (
     resolve_financial_series,
 )
 from copetech_sec.financial_series_service import FinancialSeriesService
+from copetech_sec.financial_series_store import FinancialSeriesStore
 
 
 def fact(
@@ -40,6 +41,8 @@ def fact(
 def company_facts(
     contract_revenue: list[dict] | None = None,
     revenues: list[dict] | None = None,
+    diluted_eps: list[dict] | None = None,
+    basic_eps: list[dict] | None = None,
 ) -> dict:
     concepts = {}
     if contract_revenue is not None:
@@ -48,6 +51,14 @@ def company_facts(
         }
     if revenues is not None:
         concepts["Revenues"] = {"units": {"USD": revenues}}
+    if diluted_eps is not None:
+        concepts["EarningsPerShareDiluted"] = {
+            "units": {"USD/shares": diluted_eps}
+        }
+    if basic_eps is not None:
+        concepts["EarningsPerShareBasic"] = {
+            "units": {"USD/shares": basic_eps}
+        }
     return {
         "cik": 1045810,
         "entityName": "Fixture Corp",
@@ -56,6 +67,64 @@ def company_facts(
 
 
 class FinancialSeriesNormalizationTests(unittest.TestCase):
+    def test_diluted_eps_is_canonical_and_never_substitutes_basic_eps(self):
+        diluted = fact(
+            1.2,
+            "2025-01-01",
+            "2025-03-31",
+            "2025-04-25",
+            "diluted",
+            form="10-Q",
+            fy=2025,
+            fp="Q1",
+        )
+        basic = {**diluted, "val": 1.4, "accn": "basic"}
+        payload = company_facts(diluted_eps=[diluted], basic_eps=[basic])
+
+        diluted_rows = extract_financial_facts(
+            payload,
+            symbol="TEST",
+            metric="diluted_eps",
+        )
+        basic_rows = extract_financial_facts(
+            payload,
+            symbol="TEST",
+            metric="basic_eps",
+        )
+
+        self.assertEqual([row["value"] for row in diluted_rows], [1.2])
+        self.assertEqual([row["value"] for row in basic_rows], [1.4])
+        self.assertEqual(diluted_rows[0]["concept"], "EarningsPerShareDiluted")
+
+    def test_negative_diluted_eps_is_preserved(self):
+        payload = company_facts(
+            diluted_eps=[
+                fact(
+                    -0.42,
+                    "2025-01-01",
+                    "2025-03-31",
+                    "2025-05-01",
+                    "loss",
+                    form="10-Q",
+                    fy=2025,
+                    fp="Q1",
+                )
+            ]
+        )
+
+        rows = extract_financial_facts(
+            payload,
+            symbol="LOSS",
+            metric="diluted_eps",
+        )
+        series = resolve_financial_series(
+            rows,
+            symbol="LOSS",
+            metric="diluted_eps",
+        )
+
+        self.assertEqual(series["observations"][0]["value"], -0.42)
+
     def test_stitches_revenue_concepts_by_economic_window(self):
         payload = company_facts(
             contract_revenue=[
@@ -294,6 +363,82 @@ class FinancialSeriesServiceTests(unittest.IsolatedAsyncioTestCase):
         assert first is not None and second is not None
         self.assertEqual(first["observations"], second["observations"])
         self.assertIn("source_refresh_failed_using_persisted_facts", second["warnings"])
+
+
+class FinancialSeriesStoreTests(unittest.IsolatedAsyncioTestCase):
+    @staticmethod
+    def _normalized_row(
+        *,
+        value: float = 10,
+        normalization_version: int = 1,
+        retrieved_at: str = "2025-04-25T12:00:00+00:00",
+    ) -> dict:
+        payload = company_facts(
+            revenues=[
+                fact(
+                    value,
+                    "2025-01-01",
+                    "2025-03-31",
+                    "2025-04-25",
+                    "q1",
+                    form="10-Q",
+                    fy=2025,
+                    fp="Q1",
+                )
+            ]
+        )
+        row = extract_financial_facts(
+            payload,
+            symbol="TEST",
+            metric="revenue",
+            retrieved_at=retrieved_at,
+        )[0]
+        row["normalization_version"] = normalization_version
+        return row
+
+    async def test_fact_versions_are_append_only_and_content_addressed(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            store = FinancialSeriesStore(Path(tmpdir) / "facts.sqlite3")
+            first = self._normalized_row()
+            repeated = {
+                **first,
+                "retrieved_at": "2025-04-26T12:00:00+00:00",
+            }
+            revised = {
+                **first,
+                "value": 12,
+                "retrieved_at": "2025-04-27T12:00:00+00:00",
+            }
+
+            self.assertEqual(await store.append_facts([first]), 1)
+            self.assertEqual(await store.append_facts([repeated]), 0)
+            self.assertEqual(await store.append_facts([revised]), 1)
+
+            self.assertEqual(await store.count_versions("TEST", "revenue"), 2)
+            resolved = await store.load_facts("TEST", "revenue")
+            self.assertEqual(len(resolved), 1)
+            self.assertEqual(resolved[0]["value"], 12)
+
+    async def test_latest_normalization_wins_without_rewriting_history(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            store = FinancialSeriesStore(Path(tmpdir) / "facts.sqlite3")
+            version_one = self._normalized_row(
+                value=10,
+                normalization_version=1,
+                retrieved_at="2025-04-27T12:00:00+00:00",
+            )
+            version_two = self._normalized_row(
+                value=11,
+                normalization_version=2,
+                retrieved_at="2025-04-26T12:00:00+00:00",
+            )
+
+            await store.append_facts([version_one, version_two])
+
+            self.assertEqual(await store.count_versions("TEST", "revenue"), 2)
+            resolved = await store.load_facts("TEST", "revenue")
+            self.assertEqual(resolved[0]["normalization_version"], 2)
+            self.assertEqual(resolved[0]["value"], 11)
 
 
 if __name__ == "__main__":

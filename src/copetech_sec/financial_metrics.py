@@ -33,6 +33,26 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
         valid_units=("USD",),
         aggregation="sum",
     ),
+    "diluted_eps": MetricDefinition(
+        id="diluted_eps",
+        label="Diluted earnings per share",
+        fact_type="duration",
+        concepts=(
+            ("us-gaap", "EarningsPerShareDiluted"),
+        ),
+        valid_units=("USD/shares",),
+        aggregation="sum",
+    ),
+    "basic_eps": MetricDefinition(
+        id="basic_eps",
+        label="Basic earnings per share",
+        fact_type="duration",
+        concepts=(
+            ("us-gaap", "EarningsPerShareBasic"),
+        ),
+        valid_units=("USD/shares",),
+        aggregation="sum",
+    ),
 }
 
 

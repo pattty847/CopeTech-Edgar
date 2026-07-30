@@ -32,9 +32,11 @@ class PriceCandleFetcherTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_get_daily_candles_uses_cache(self):
         calls = {"count": 0}
+        options = {}
 
-        def downloader(*_args, **_kwargs):
+        def downloader(*_args, **kwargs):
             calls["count"] += 1
+            options.update(kwargs)
             return pd.DataFrame(
                 {
                     "Open": [100.0],
@@ -53,6 +55,7 @@ class PriceCandleFetcherTests(unittest.IsolatedAsyncioTestCase):
 
             self.assertEqual(first, second)
             self.assertEqual(calls["count"], 1)
+            self.assertIs(options["auto_adjust"], True)
             self.assertTrue((Path(tmpdir) / "market_data" / "AAPL_180_1d.json").exists())
 
     def test_empty_history_returns_empty_list(self):

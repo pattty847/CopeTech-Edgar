@@ -15,7 +15,7 @@ from typing import Any, Iterable
 from .financial_metrics import MetricDefinition, get_metric_definition
 
 
-NORMALIZATION_VERSION = 1
+NORMALIZATION_VERSION = 2
 QUARTER_MIN_DAYS = 70
 QUARTER_MAX_DAYS = 110
 ANNUAL_MIN_DAYS = 330
