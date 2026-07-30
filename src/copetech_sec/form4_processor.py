@@ -14,14 +14,28 @@ except ImportError:  # pragma: no cover - optional dependency in lightweight env
 
 # Import FilingDocumentHandler for dependency injection
 from .document_handler import FilingDocumentHandler, RawFilingResolver
+from .ownership.normalization import (
+    ACQUISITION_CODE_HINTS,
+    DISPOSITION_CODE_HINTS,
+    TRANSACTION_CODE_MAP,
+    resolve_direction,
+)
+from .ownership.parser import OwnershipXmlParser
+from .ownership.service import (
+    OwnershipFilingService,
+    SIGNAL_PAYLOAD_VERSION,
+    ownership_payload_fingerprint,
+)
+from .ownership.signals import (
+    ECONOMIC_INTENT_MAP,
+    SIGNAL_CLASS_MAP,
+    OwnershipSignalClassifier,
+)
 
 # Parser/payload version, part of the payload fingerprint. Derived payloads are valid
 # only while (parser version, source accession set, window config) all match — bump this
 # when the parser or payload shape changes and payloads re-derive from the local raw
 # filing store (zero SEC traffic).
-SIGNAL_PAYLOAD_VERSION = 2
-
-
 def _parse_decimal(raw: Optional[str]) -> Optional[float]:
     """Parse a numeric value out of an ownership-form `<value>` element.
 
@@ -68,11 +82,12 @@ def _is_flag_set(node, tag: str) -> bool:
 def _payload_fingerprint(accessions: List[str], days_back: int, filing_limit: int, anchor_type: str) -> str:
     """Deterministic identity of a derived payload's inputs. If this matches, the cached
     payload is byte-for-byte what a rebuild would produce — regardless of its age."""
-    material = "|".join(
-        [str(SIGNAL_PAYLOAD_VERSION), f"{int(days_back)}d", str(int(filing_limit)), str(anchor_type)]
-        + sorted(str(a) for a in accessions)
+    return ownership_payload_fingerprint(
+        accessions,
+        days_back,
+        filing_limit,
+        anchor_type,
     )
-    return hashlib.sha256(material.encode("utf-8")).hexdigest()
 
 # Use TYPE_CHECKING block to avoid circular imports at runtime
 # SECDataFetcher is needed for fetching filing metadata (get_filings_by_form)
@@ -100,65 +115,19 @@ class Form4Processor:
     # Transaction codes per the SEC Form 4 instructions (Table I/II "Transaction Code"
     # column). Several codes are direction-neutral — the filing's own
     # transactionAcquiredDisposedCode is the authority on direction, not this table.
-    TRANSACTION_CODE_MAP = {
-        # General transactions
-        'P': 'Open market or private purchase',
-        'S': 'Open market or private sale',
-        'V': 'Voluntary early report',
-        # Rule 16b-3 transactions
-        'A': 'Grant, award or other acquisition',
-        'D': 'Disposition to the issuer',
-        'F': 'Payment of exercise price or tax by delivering/withholding securities',
-        'I': 'Discretionary transaction',
-        'M': 'Exercise or conversion of derivative security exempt under Rule 16b-3',
-        # Derivative securities transactions
-        'C': 'Conversion of derivative security',
-        'E': 'Expiration of short derivative position',
-        'H': 'Expiration (or cancellation) of long derivative position',
-        'O': 'Exercise of out-of-the-money derivative security',
-        'X': 'Exercise of in-the-money or at-the-money derivative security',
-        # Other transactions
-        'G': 'Bona fide gift',
-        'J': 'Other acquisition or disposition',
-        'K': 'Transaction in equity swap or similar instrument',
-        'L': 'Small acquisition under Rule 16a-6',
-        'U': 'Disposition pursuant to a tender of shares',
-        'W': 'Acquisition or disposition by will or the laws of descent and distribution',
-        'Z': 'Deposit into or withdrawal from voting trust',
-    }
+    TRANSACTION_CODE_MAP = TRANSACTION_CODE_MAP
 
     # Retained only as a last-resort hint for filings that omit
     # transactionAcquiredDisposedCode. Direction is a per-transaction fact, not a property
     # of the code: 'M' is an acquisition on the non-derivative leg and a disposition on the
     # derivative leg of the same exercise, and G/J/W/K/Z/I run either way.
-    ACQUISITION_CODE_HINTS = frozenset({'P', 'A', 'L'})
-    DISPOSITION_CODE_HINTS = frozenset({'S', 'D', 'F', 'U', 'E', 'H'})
+    ACQUISITION_CODE_HINTS = ACQUISITION_CODE_HINTS
+    DISPOSITION_CODE_HINTS = DISPOSITION_CODE_HINTS
     # Deprecated aliases; kept so existing consumers importing them do not break.
     ACQUISITION_CODES = sorted(ACQUISITION_CODE_HINTS)
     DISPOSITION_CODES = sorted(DISPOSITION_CODE_HINTS)
-    SIGNAL_CLASS_MAP = {
-        'P': 'open_market_buy',
-        'S': 'open_market_sell',
-        'F': 'tax_sale',
-        'M': 'option_exercise',
-        'A': 'award_or_grant',
-        'G': 'gift',
-        'D': 'gift',
-        'C': 'derivative_conversion',
-        'W': 'derivative_conversion',
-    }
-    ECONOMIC_INTENT_MAP = {
-        'open_market_buy': 'bullish',
-        'open_market_sell': 'bearish',
-        'tax_sale': 'neutral',
-        'option_exercise': 'neutral',
-        'award_or_grant': 'compensation',
-        'gift': 'neutral',
-        'derivative_conversion': 'neutral',
-        'planned_sale_10b5_1': 'bearish',
-        'holding': 'neutral',
-        'other': 'neutral',
-    }
+    SIGNAL_CLASS_MAP = SIGNAL_CLASS_MAP
+    ECONOMIC_INTENT_MAP = ECONOMIC_INTENT_MAP
 
     def __init__(self, 
                  document_handler: FilingDocumentHandler, 
@@ -180,6 +149,12 @@ class Form4Processor:
         self.fetch_filings_metadata = fetch_filings_func # e.g., SECDataFetcher.fetch_insider_filings
         self.cache_manager = cache_manager
         self.raw_filings = RawFilingResolver(document_handler, cache_manager)
+        self.ownership_parser = OwnershipXmlParser()
+        self.ownership_signals = OwnershipSignalClassifier()
+        self.ownership_service = OwnershipFilingService(
+            document_handler,
+            cache_manager,
+        )
 
     def parse_form4_xml(self, xml_content: str) -> List[Dict]:
         """
@@ -201,6 +176,7 @@ class Form4Processor:
                 'transaction_code', 'transaction_type', 'shares', 'price_per_share',
                 'value', 'is_derivative', 'is_acquisition', 'is_disposition', etc.
         """
+        return self.ownership_parser.parse(xml_content)
         transactions: List[Dict] = []
         try:
             root = ET.fromstring(xml_content)
@@ -431,17 +407,7 @@ class Form4Processor:
     @classmethod
     def _resolve_direction(cls, acq_disp_code: Optional[str], tx_code: Optional[str]) -> tuple:
         """(is_acquisition, is_disposition) from the filing's A/D code, code table as fallback."""
-        code = (acq_disp_code or '').strip().upper()
-        if code == 'A':
-            return True, False
-        if code == 'D':
-            return False, True
-        hint = (tx_code or '').strip().upper()
-        if hint in cls.ACQUISITION_CODE_HINTS:
-            return True, False
-        if hint in cls.DISPOSITION_CODE_HINTS:
-            return False, True
-        return False, False
+        return resolve_direction(acq_disp_code, tx_code)
 
     async def process_form4_filing(self, accession_no: str, ticker: str = None) -> List[Dict]:
         """
@@ -462,7 +428,7 @@ class Form4Processor:
                 Returns an empty list if the XML download or parsing fails.
         """
         # Use document_handler to download the XML
-        xml_content = await self.raw_filings.get_xml(accession_no, ticker=ticker)
+        xml_content = await self.ownership_service.xml(accession_no, ticker=ticker)
 
         if not xml_content:
             logging.warning(f"Could not download Form 4 XML for {accession_no} (ticker: {ticker})")
@@ -472,46 +438,14 @@ class Form4Processor:
         return self.parse_form4_xml(xml_content)
 
     def _classify_signal(self, transaction: Dict[str, Any]) -> str:
-        tx_code = str(transaction.get('transaction_code') or '').upper()
-        price = transaction.get('price_per_share')
-        is_derivative = bool(transaction.get('is_derivative'))
-
-        # A holdings row is a position statement, not an event.
-        if transaction.get('is_holding'):
-            return 'holding'
-
-        # Rule 10b5-1 plan sales. The authoritative source is the `aff10b5One` flag SEC
-        # added to the ownership schema in 2023, plus the footnote text where filers
-        # describe the plan. The previous check searched `security_title` for "10b5-1",
-        # which only ever holds values like "Common Stock", so the branch was unreachable.
-        if tx_code == 'S' and self._indicates_10b5_1_plan(transaction):
-            return 'planned_sale_10b5_1'
-
-        if tx_code == 'P' and not is_derivative and price not in (None, 0, 0.0):
-            return 'open_market_buy'
-        if tx_code == 'S' and not is_derivative and price not in (None, 0, 0.0):
-            return 'open_market_sell'
-        if tx_code == 'F':
-            return 'tax_sale'
-        if tx_code == 'M':
-            return 'option_exercise'
-        if tx_code in ('A',):
-            return 'award_or_grant'
-        if tx_code in ('G', 'D'):
-            return 'gift'
-        if tx_code in ('C', 'W'):
-            return 'derivative_conversion'
-        return self.SIGNAL_CLASS_MAP.get(tx_code, 'other')
+        return self.ownership_signals.classify(transaction)
 
     @staticmethod
     def _indicates_10b5_1_plan(transaction: Dict[str, Any]) -> bool:
-        if transaction.get('rule_10b5_1_plan'):
-            return True
-        haystack = ' '.join(str(note) for note in (transaction.get('footnotes') or [])).lower()
-        return '10b5-1' in haystack or '10b5‑1' in haystack
+        return OwnershipSignalClassifier.indicates_10b5_1_plan(transaction)
 
     def _economic_intent(self, signal_class: str) -> str:
-        return self.ECONOMIC_INTENT_MAP.get(signal_class, 'neutral')
+        return self.ownership_signals.economic_intent(signal_class)
 
     def _event_identity(self, transaction: Dict[str, Any]) -> str:
         price = transaction.get('price_per_share')
@@ -535,30 +469,10 @@ class Form4Processor:
         ])
 
     def _role_weight(self, role: str) -> float:
-        role_l = (role or '').lower()
-        if 'chief executive' in role_l or 'ceo' in role_l:
-            return 1.0
-        if 'chief financial' in role_l or 'cfo' in role_l:
-            return 0.9
-        if 'president' in role_l or 'chief operating' in role_l or 'coo' in role_l:
-            return 0.85
-        if 'director' in role_l:
-            return 0.7
-        # Compared against the lower-cased role: the parser emits '10% Owner', so matching
-        # against the original-case string made this branch unreachable.
-        if '10% owner' in role_l:
-            return 0.65
-        if 'officer' in role_l:
-            return 0.75
-        return 0.5
+        return self.ownership_signals.role_weight(role)
 
     def _safe_date(self, value: Any) -> Optional[datetime]:
-        if not value:
-            return None
-        try:
-            return datetime.strptime(str(value)[:10], '%Y-%m-%d')
-        except ValueError:
-            return None
+        return self.ownership_signals.safe_date(value)
 
     def _normalize_signal_event(self, transaction: Dict[str, Any], filing_meta: Dict[str, Any], ticker: str) -> Dict[str, Any]:
         signal_class = self._classify_signal(transaction)
