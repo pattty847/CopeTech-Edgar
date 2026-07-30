@@ -144,6 +144,15 @@ This work is targeted for `0.2.0`.
 - Point-in-time historical trailing P/E using split-adjusted prices, TTM diluted EPS,
   split-basis normalization, amendment timing, null non-positive multiples, and full
   price/filing provenance.
+- Bounded, daily-cached Company Concept and XBRL Frames resources under
+  `client.financials`.
+- First-class Forms 3/4/5 discovery and parsed transaction/holding payloads under
+  `client.ownership`.
+- Issuer metadata with every SEC-listed share class and former name, plus mutual-fund
+  class ticker resolution with series/class identifiers.
+- Filing-date-aware historical Form 13F value normalization and FIGI extraction. Raw
+  reported value, reported unit, applied scale, and normalized US dollars remain visible.
+- Provider-neutral, typed read-only agent tool definitions and lazy pandas adapters.
 - Ownership module boundaries for parsing, transaction semantics, signal
   classification, and raw-filing acquisition; `Form4Processor` remains the compatibility
   facade.

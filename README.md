@@ -17,16 +17,21 @@ semantics), **Beta** (works, actively changing), or
   `aff10b5One` Rule 10b5-1 flag, and acquisition/disposition direction taken from the
   filing's own `transactionAcquiredDisposedCode`.
 - **Beta** — Form 13F-HR institutional holdings for a manager CIK, plus quarter-over-quarter
-  changes. Values are whole US dollars as reported (Form 13F since 2023-01-03); a security
+  changes. Values are normalized to whole US dollars using the filing-date-dependent Form
+  13F unit transition; raw reported value/unit/scale and FIGI remain available. A security
   reported across several `otherManager` rows is rolled up to one position.
 - **Beta** — Raw filing/document access backed by an immutable, download-once local store.
-- **Beta** — SEC ticker → CIK resolution and submissions/company facts retrieval.
+- **Beta** — SEC ticker → CIK resolution, sibling share classes, former names, mutual-fund
+  series/class mappings, and submissions/company facts retrieval.
 - **Beta** — Filing discovery by form type (`4`, `4/A`, `10-K`, `10-Q`, `8-K`, `144`, etc.).
 - **Beta** — Point-in-time SEC revenue, basic EPS, and diluted EPS series with provenance,
   concept stitching, revenue-only derived Q4, and quarterly/annual/TTM views. Interim
   TTM diluted EPS uses weighted-average diluted shares rather than adding per-share facts.
 - **Beta** — Historical trailing P/E from split-adjusted caller prices and then-known TTM
   diluted EPS, including amendment, split-basis, staleness, and filing provenance.
+- **Beta** — Bounded Company Concept and cross-issuer XBRL Frames queries with validated
+  paths and daily local caching.
+- **Beta** — Provider-neutral read-only agent tool contracts and lazy pandas adapters.
 - **Beta** — Form 144 planned-sale records; Form 8-K item-code events.
 - **Beta** — Optional file cache and SQLite persistence helpers.
 - **Experimental** — Insider signal payloads (`events`, `daily_aggregates`, `clusters`,
@@ -143,6 +148,12 @@ Expected top-level payload shape:
 # Recent parsed Form 4 transactions for display
 transactions = await client.ownership.transactions("MSFT", days_back=90)
 
+# First-class Forms 3/4/5 transactions and holdings
+ownership = await client.ownership.entries(
+    "MSFT",
+    forms=["3", "3/A", "4", "4/A", "5", "5/A"],
+)
+
 # Filing metadata by form
 filings_10k = await client.filings.annual("MSFT")
 
@@ -174,6 +185,24 @@ pe = await client.financials.valuation(
     price_observations=split_adjusted_prices,
     split_events=split_history,
 )
+
+# One bounded issuer/concept query instead of the full Company Facts payload
+assets = await client.financials.concept(
+    "MSFT",
+    taxonomy="us-gaap",
+    concept="Assets",
+)
+
+# One SEC calendar frame across issuers
+frame = await client.financials.frame(
+    taxonomy="us-gaap",
+    concept="Assets",
+    unit="USD",
+    period="CY2025Q4I",
+)
+
+# Mutual-fund class resolution keeps SEC series and class identifiers
+fund_class = await client.companies.funds.get("LACAX")
 ```
 
 See [Financial series](docs/financial-series.md) for the data contract,
