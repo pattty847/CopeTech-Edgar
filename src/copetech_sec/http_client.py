@@ -204,7 +204,11 @@ class SecHttpClient:
                 url=url,
                 status_code=response.status,
             )
-        return body.decode(response.get_encoding() or "utf-8", errors="replace")
+        # aiohttp's `get_encoding()` requires `response._body` to have been populated by
+        # `response.read()`. We deliberately stream through `response.content` to enforce
+        # the byte ceiling, so use the declared charset directly and default to UTF-8.
+        encoding = getattr(response, "charset", None) or "utf-8"
+        return body.decode(encoding, errors="replace")
 
     async def _get_session(self) -> aiohttp.ClientSession:
         """
