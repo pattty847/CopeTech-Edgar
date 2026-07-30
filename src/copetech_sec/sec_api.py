@@ -7,7 +7,6 @@ import re
 
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Union, Tuple, Any, Callable, Awaitable, Iterable
-from dotenv import load_dotenv
 from .http_client import SecHttpClient
 from .cache_manager import SecCacheManager
 from .document_handler import FilingDocumentHandler
@@ -20,9 +19,23 @@ from .supply_chain_parser import SupplyChainParser
 from .sql_cache_manager import SqlCacheManager
 from .thirteenf_processor import ThirteenFProcessor
 
-import pandas as pd
 
-load_dotenv()
+def load_dotenv_settings(**kwargs) -> bool:
+    """Load a `.env` file into `os.environ`.
+
+    Importing this module used to call `load_dotenv()` at module scope, so
+    `import copetech_sec` mutated the host process's environment as a side effect — a
+    library should not do that to its embedder. Applications that want the behavior
+    (`app.py`, the CLI wrappers) can call this explicitly.
+    """
+    try:
+        from dotenv import load_dotenv
+    except ImportError:
+        logging.debug("python-dotenv is not installed; skipping .env load.")
+        return False
+    return load_dotenv(**kwargs)
+
+
 class SECDataFetcher:
     """
     Acts as a facade/orchestrator for fetching and processing data from SEC EDGAR APIs.

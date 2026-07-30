@@ -4,28 +4,52 @@ build-backend = "hatchling.build"
 
 [project]
 name = "copetech-edgar"
-version = "0.1.0"
+version = "0.2.0"
 description = "Reusable EDGAR/SEC backend extracted from Sentinel"
 readme = "README.md"
 requires-python = ">=3.12"
+
+# Core install stays minimal: retrieving and parsing SEC data needs an async HTTP client
+# and the standard library. Everything that serves the optional FastAPI demo, the AWS
+# deployment, market-price overlays or the research notebooks lives in an extra, so
+# `pip install copetech-edgar` does not pull a web framework, an AWS SDK, an OLAP engine
+# and a Yahoo Finance scraper (~130 MB) to parse a Form 4.
 dependencies = [
   "aiohttp>=3.9.0",
-  "python-dotenv>=1.2.1",
   "aiosqlite>=0.22.1",
-  "pandas>=2.0.0",
+]
+
+[project.scripts]
+copetech-sec-api = "copetech_sec.cli:run_service"
+
+[project.optional-dependencies]
+# pandas powers `analyze_insider_transactions` and the market-data helpers; both already
+# degrade gracefully when it is absent.
+dataframes = ["pandas>=2.0.0"]
+# .env loading for applications embedding the library.
+dotenv = ["python-dotenv>=1.2.1"]
+# The FastAPI demo service and its AWS/market-data dependencies.
+service = [
   "fastapi>=0.115.0",
   "uvicorn[standard]>=0.32.0",
   "boto3>=1.35.0",
   "yfinance>=0.2.66",
-  "duckdb>=1.1.0",
+  "pandas>=2.0.0",
+  "python-dotenv>=1.2.1",
 ]
-
-[project.scripts]
-copetech-sec-api = "copetech_sec.app:run"
-
-[project.optional-dependencies]
+# `analysis/phase0_thesis/` research scripts (not part of the wheel).
+analysis = ["duckdb>=1.1.0", "pandas>=2.0.0", "yfinance>=0.2.66"]
 dev = [
   "pytest>=8.0.0",
+  # starlette's TestClient requires an httpx transport; without it tests/test_app.py fails
+  # at import and pytest aborts collection for the entire suite.
+  "httpx2>=0.28.0",
+  "fastapi>=0.115.0",
+  "uvicorn[standard]>=0.32.0",
+  "boto3>=1.35.0",
+  "yfinance>=0.2.66",
+  "pandas>=2.0.0",
+  "python-dotenv>=1.2.1",
 ]
 
 [tool.hatch.build.targets.wheel]

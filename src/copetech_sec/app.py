@@ -11,13 +11,16 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .aws_resources import AwsResourceManager
 from .market_data import PriceCandleFetcher
-from .sec_api import SECDataFetcher
+from .sec_api import SECDataFetcher, load_dotenv_settings
 from .settings import ServiceSettings
 from .thirteenf_processor import SIG_CIK, normalize_cik
 
 
 TICKER_RE = re.compile(r"^[A-Za-z][A-Za-z0-9.-]{0,9}$")
 
+# This module is the application entrypoint, so reading .env here is appropriate; the
+# library modules deliberately do not.
+load_dotenv_settings()
 settings = ServiceSettings.from_env()
 logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO))
 aws_resources = AwsResourceManager(settings)
