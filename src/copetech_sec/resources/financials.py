@@ -28,6 +28,7 @@ class FinancialsResource:
         end: str | None = None,
         refresh: bool = False,
         include_provenance: bool = True,
+        split_events: list[tuple[str, float]] | None = None,
     ) -> dict[str, Any] | None:
         return await self._fetcher.get_financial_series(
             ticker,
@@ -40,6 +41,7 @@ class FinancialsResource:
             end=end,
             refresh=refresh,
             include_provenance=include_provenance,
+            split_events=split_events,
         )
 
     async def valuation(

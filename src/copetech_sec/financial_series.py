@@ -15,7 +15,7 @@ from typing import Any, Iterable
 from .financial_metrics import MetricDefinition, get_metric_definition
 
 
-NORMALIZATION_VERSION = 2
+NORMALIZATION_VERSION = 3
 QUARTER_MIN_DAYS = 70
 QUARTER_MAX_DAYS = 110
 ANNUAL_MIN_DAYS = 330
@@ -93,7 +93,7 @@ def resolve_financial_series(
     ]
     quarterly = _resolve_duration_windows(candidates, definition, cadence="quarterly")
     annual = _resolve_duration_windows(candidates, definition, cadence="annual")
-    if basis == "canonical":
+    if basis == "canonical" and definition.aggregation == "sum":
         quarterly = _add_derived_fourth_quarters(quarterly, annual)
     if frequency == "quarterly":
         observations = quarterly

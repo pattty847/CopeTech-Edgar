@@ -38,15 +38,21 @@ Add `diluted_eps` to the financial metric registry with explicit unit and concep
 1. `us-gaap:EarningsPerShareDiluted`
 2. IFRS diluted EPS concepts where the taxonomy contract is verified by fixtures
 
-Keep basic EPS separate; never silently substitute it for diluted EPS. Apply the same
-window resolution, amendment timing, availability/selection provenance, contiguous Q4
-derivation, and TTM continuity rules used for revenue. Add real recorded fixtures covering:
+Keep basic EPS separate; never silently substitute it for diluted EPS. Preserve the same
+window resolution, amendment timing, and availability/selection provenance used for
+revenue, but do not apply revenue arithmetic to per-share facts. EPS is not additive:
+never derive Q4 as annual minus three quarters and never sum four quarterly EPS values.
+Reconstruct interim TTM diluted EPS from the diluted numerator and weighted share-days
+implied by paired diluted EPS and weighted-average diluted-share facts. Add real recorded
+fixtures covering:
 
 - standard calendar issuer;
 - non-calendar fiscal year;
 - later comparative repeat;
 - amendment changing a reported value;
 - negative earnings;
+- large share-count changes;
+- split-basis changes and retroactively restated comparatives;
 - foreign private issuer with annual-only facts.
 
 Move CopeNet from legacy `get_financial_trend().metrics.eps` to the canonical EPS series.

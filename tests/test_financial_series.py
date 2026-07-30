@@ -125,6 +125,50 @@ class FinancialSeriesNormalizationTests(unittest.TestCase):
 
         self.assertEqual(series["observations"][0]["value"], -0.42)
 
+    def test_diluted_eps_never_derives_a_fourth_quarter_or_sums_ttm(self):
+        entries = [
+            fact(
+                value,
+                start,
+                end,
+                filed,
+                accession,
+                form=form,
+                fy=2025,
+                fp=fp,
+            )
+            for value, start, end, filed, accession, form, fp in [
+                (0.10, "2025-01-01", "2025-03-31", "2025-04-25", "q1", "10-Q", "Q1"),
+                (0.20, "2025-04-01", "2025-06-30", "2025-07-25", "q2", "10-Q", "Q2"),
+                (0.30, "2025-07-01", "2025-09-30", "2025-10-25", "q3", "10-Q", "Q3"),
+                (1.00, "2025-01-01", "2025-12-31", "2026-02-10", "fy", "10-K", "FY"),
+            ]
+        ]
+        rows = extract_financial_facts(
+            company_facts(diluted_eps=entries),
+            symbol="TEST",
+            metric="diluted_eps",
+        )
+
+        quarterly = resolve_financial_series(
+            rows,
+            symbol="TEST",
+            metric="diluted_eps",
+            frequency="quarterly",
+            basis="canonical",
+        )
+        ttm = resolve_financial_series(
+            rows,
+            symbol="TEST",
+            metric="diluted_eps",
+            frequency="ttm",
+            basis="canonical",
+        )
+
+        self.assertEqual(len(quarterly["observations"]), 3)
+        self.assertFalse(any(row["derived"] for row in quarterly["observations"]))
+        self.assertEqual(ttm["observations"], [])
+
     def test_stitches_revenue_concepts_by_economic_window(self):
         payload = company_facts(
             contract_revenue=[

@@ -41,7 +41,7 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
             ("us-gaap", "EarningsPerShareDiluted"),
         ),
         valid_units=("USD/shares",),
-        aggregation="sum",
+        aggregation="weighted_average",
     ),
     "basic_eps": MetricDefinition(
         id="basic_eps",
@@ -51,7 +51,18 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
             ("us-gaap", "EarningsPerShareBasic"),
         ),
         valid_units=("USD/shares",),
-        aggregation="sum",
+        aggregation="weighted_average",
+    ),
+    "diluted_shares": MetricDefinition(
+        id="diluted_shares",
+        label="Diluted weighted-average shares",
+        fact_type="duration",
+        concepts=(
+            ("us-gaap", "WeightedAverageNumberOfDilutedSharesOutstanding"),
+            ("us-gaap", "WeightedAverageNumberOfShareOutstandingBasicAndDiluted"),
+        ),
+        valid_units=("shares",),
+        aggregation="weighted_average",
     ),
 }
 

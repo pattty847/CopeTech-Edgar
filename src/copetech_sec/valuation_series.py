@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import date, datetime, timezone
 from typing import Any, Iterable
 
-from .financial_series import NORMALIZATION_VERSION, resolve_financial_series
+from .eps_series import resolve_diluted_eps_ttm
+from .financial_series import NORMALIZATION_VERSION
 
 
 def derive_trailing_pe_series(
@@ -13,6 +14,7 @@ def derive_trailing_pe_series(
     price_observations: Iterable[dict[str, Any]],
     *,
     symbol: str,
+    diluted_share_rows: Iterable[dict[str, Any]] = (),
     split_events: Iterable[tuple[str, float]] | None = None,
     price_source: str = "caller",
     price_basis: str = "split_adjusted",
@@ -21,10 +23,9 @@ def derive_trailing_pe_series(
 ) -> dict[str, Any]:
     """Build split-consistent trailing P/E without allowing future SEC facts.
 
-    Prices must already be adjusted for every split in the supplied history. EPS is
-    resolved independently as of each price timestamp, then divided by splits that
-    occurred after that EPS became available so numerator and denominator share the
-    same current-share basis.
+    Prices must already be adjusted for every split in the supplied history. TTM
+    diluted EPS is resolved from annual EPS or reconstructed with weighted-average
+    diluted shares on that same current-share basis.
     """
 
     if price_basis != "split_adjusted":
@@ -33,6 +34,7 @@ def derive_trailing_pe_series(
         raise ValueError("stale_after_days must be positive")
 
     rows = list(financial_fact_rows)
+    share_rows = list(diluted_share_rows)
     prices = sorted(
         (_normalize_price(row) for row in price_observations),
         key=lambda row: row["timestamp"],
@@ -45,18 +47,16 @@ def derive_trailing_pe_series(
     warnings: set[str] = set()
     if splits is None:
         warnings.add("split_history_unverified")
+    eps_payload = resolve_diluted_eps_ttm(
+        rows,
+        share_rows,
+        symbol=symbol,
+        split_events=splits,
+        alignment="availability",
+    )
 
     for price in prices:
         timestamp = price["timestamp"]
-        eps_payload = resolve_financial_series(
-            rows,
-            symbol=symbol,
-            metric="diluted_eps",
-            frequency="ttm",
-            basis="canonical",
-            alignment="availability",
-            as_of=timestamp,
-        )
         eligible = [
             observation
             for observation in eps_payload["observations"]
@@ -84,11 +84,11 @@ def derive_trailing_pe_series(
 
         flags = set(eps.get("qualityFlags") or [])
         available_at = str(eps["availableAt"])
-        split_factor = _split_factor_after(available_at, splits or [])
-        adjusted_eps = float(eps["value"]) / split_factor
-        if split_factor != 1.0:
-            flags.add("eps_split_adjusted")
-        if (_parse_date(timestamp) - _parse_date(available_at)).days > stale_after_days:
+        adjusted_eps = float(eps["value"])
+        is_stale = (
+            _parse_date(timestamp) - _parse_date(available_at)
+        ).days > stale_after_days
+        if is_stale:
             flags.add("stale_eps")
         if splits is None:
             flags.add("split_history_unverified")
@@ -96,7 +96,7 @@ def derive_trailing_pe_series(
         pe_value = None
         if adjusted_eps <= 0:
             flags.add("non_positive_ttm_eps")
-        else:
+        elif not is_stale:
             pe_value = float(price["close"]) / adjusted_eps
 
         source_rows = list(eps.get("sources") or [])
@@ -112,9 +112,9 @@ def derive_trailing_pe_series(
                 "timestamp": timestamp,
                 "basis": price_basis,
             },
-            "epsTtm": float(eps["value"]),
+            "epsTtm": adjusted_eps,
             "epsTtmAdjusted": adjusted_eps,
-            "epsSplitAdjustmentFactor": split_factor,
+            "epsSplitAdjustmentFactor": 1.0,
             "epsAvailableAt": available_at,
             "epsPeriodEnd": eps["periodEnd"],
             "qualityFlags": sorted(flags),
@@ -167,17 +167,6 @@ def _normalize_split(event: tuple[str, float]) -> tuple[str, float]:
     if ratio <= 0:
         raise ValueError(f"split ratio must be positive: {event!r}")
     return _parse_date(timestamp).isoformat(), ratio
-
-
-def _split_factor_after(
-    available_at: str,
-    split_events: Iterable[tuple[str, float]],
-) -> float:
-    factor = 1.0
-    for timestamp, ratio in split_events:
-        if timestamp > available_at:
-            factor *= ratio
-    return factor
 
 
 def _empty_valuation_observation(

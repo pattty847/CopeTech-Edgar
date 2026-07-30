@@ -423,6 +423,7 @@ class SECDataFetcher:
         end: str | None = None,
         refresh: bool = False,
         include_provenance: bool = True,
+        split_events: List[Tuple[str, float]] | None = None,
     ) -> Optional[Dict]:
         """Return a persisted, point-in-time-safe canonical financial series."""
         return await self.financial_series.get_series(
@@ -436,6 +437,7 @@ class SECDataFetcher:
             end=end,
             refresh=refresh,
             include_provenance=include_provenance,
+            split_events=split_events,
         )
 
     def list_supported_financial_metrics(self) -> List[Dict]:

@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Awaitable, Callable, Optional
 
 from .financial_metrics import list_supported_metrics
+from .eps_series import resolve_diluted_eps_ttm
 from .financial_series import extract_financial_facts, resolve_financial_series
 from .financial_series_store import FinancialSeriesStore
 
@@ -45,6 +46,34 @@ class FinancialSeriesService:
             source_warning = "source_refresh_failed_using_persisted_facts"
         return await self._store.load_facts(symbol, metric), source_warning
 
+    async def _refresh_metrics_and_load(
+        self,
+        symbol: str,
+        *,
+        metrics: tuple[str, ...],
+        refresh: bool,
+    ) -> tuple[dict[str, list[dict[str, Any]]], str | None]:
+        facts = await self._fetch_facts(symbol, use_cache=not refresh)
+        source_warning = None
+        if facts:
+            retrieved_at = datetime.now(timezone.utc).isoformat()
+            for metric in metrics:
+                await self._store.append_facts(
+                    extract_financial_facts(
+                        facts,
+                        symbol=symbol,
+                        metric=metric,
+                        retrieved_at=retrieved_at,
+                    )
+                )
+        else:
+            source_warning = "source_refresh_failed_using_persisted_facts"
+        loaded = {
+            metric: await self._store.load_facts(symbol, metric)
+            for metric in metrics
+        }
+        return loaded, source_warning
+
     async def get_series(
         self,
         symbol: str,
@@ -58,33 +87,63 @@ class FinancialSeriesService:
         end: str | None = None,
         refresh: bool = False,
         include_provenance: bool = True,
+        split_events: list[tuple[str, float]] | None = None,
     ) -> dict[str, Any] | None:
         normalized = symbol.strip().upper()
         if not normalized:
             raise ValueError("symbol is required")
-        rows, source_warning = await self._refresh_and_load(
-            normalized,
-            metric=metric,
-            refresh=refresh,
+        canonical_eps_ttm = (
+            metric == "diluted_eps"
+            and frequency == "ttm"
+            and basis == "canonical"
         )
+        if canonical_eps_ttm:
+            loaded, source_warning = await self._refresh_metrics_and_load(
+                normalized,
+                metrics=("diluted_eps", "diluted_shares"),
+                refresh=refresh,
+            )
+            rows = loaded["diluted_eps"]
+            supporting_rows = loaded["diluted_shares"]
+        else:
+            rows, source_warning = await self._refresh_and_load(
+                normalized,
+                metric=metric,
+                refresh=refresh,
+            )
+            supporting_rows = []
         if not rows:
             return None
-        payload = resolve_financial_series(
-            rows,
-            symbol=normalized,
-            metric=metric,
-            frequency=frequency,
-            basis=basis,
-            alignment=alignment,
-            as_of=as_of,
-            start=start,
-            end=end,
-        )
+        if canonical_eps_ttm:
+            payload = resolve_diluted_eps_ttm(
+                rows,
+                supporting_rows,
+                symbol=normalized,
+                split_events=split_events,
+                alignment=alignment,
+                as_of=as_of,
+                start=start,
+                end=end,
+            )
+        else:
+            payload = resolve_financial_series(
+                rows,
+                symbol=normalized,
+                metric=metric,
+                frequency=frequency,
+                basis=basis,
+                alignment=alignment,
+                as_of=as_of,
+                start=start,
+                end=end,
+            )
         payload["retrievedAt"] = max(
             (str(row.get("retrieved_at") or "") for row in rows),
             default=None,
         )
         payload["rawFactCount"] = len(rows)
+        if canonical_eps_ttm:
+            payload["supportingRawFactCount"] = len(supporting_rows)
         if source_warning:
             payload["warnings"] = sorted(
                 set(payload.get("warnings") or []) | {source_warning}
@@ -112,17 +171,20 @@ class FinancialSeriesService:
         normalized = symbol.strip().upper()
         if not normalized:
             raise ValueError("symbol is required")
-        rows, source_warning = await self._refresh_and_load(
+        loaded, source_warning = await self._refresh_metrics_and_load(
             normalized,
-            metric="diluted_eps",
+            metrics=("diluted_eps", "diluted_shares"),
             refresh=refresh,
         )
+        rows = loaded["diluted_eps"]
+        diluted_share_rows = loaded["diluted_shares"]
         if not rows:
             return None
         payload = derive_trailing_pe_series(
             rows,
             price_observations,
             symbol=normalized,
+            diluted_share_rows=diluted_share_rows,
             split_events=split_events,
             price_source=price_source,
             price_basis=price_basis,
@@ -133,6 +195,7 @@ class FinancialSeriesService:
             default=None,
         )
         payload["rawFactCount"] = len(rows)
+        payload["supportingRawFactCount"] = len(diluted_share_rows)
         if source_warning:
             payload["warnings"] = sorted(
                 set(payload.get("warnings") or []) | {source_warning}

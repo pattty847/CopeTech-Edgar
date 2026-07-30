@@ -23,7 +23,8 @@ semantics), **Beta** (works, actively changing), or
 - **Beta** — SEC ticker → CIK resolution and submissions/company facts retrieval.
 - **Beta** — Filing discovery by form type (`4`, `4/A`, `10-K`, `10-Q`, `8-K`, `144`, etc.).
 - **Beta** — Point-in-time SEC revenue, basic EPS, and diluted EPS series with provenance,
-  concept stitching, derived Q4, and quarterly/annual/TTM views.
+  concept stitching, revenue-only derived Q4, and quarterly/annual/TTM views. Interim
+  TTM diluted EPS uses weighted-average diluted shares rather than adding per-share facts.
 - **Beta** — Historical trailing P/E from split-adjusted caller prices and then-known TTM
   diluted EPS, including amendment, split-basis, staleness, and filing provenance.
 - **Beta** — Form 144 planned-sale records; Form 8-K item-code events.

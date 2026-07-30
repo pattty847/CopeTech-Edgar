@@ -21,11 +21,16 @@ payload = await client.financials.series(
 ```
 
 `frequency` accepts `quarterly`, `annual`, or `ttm`. `basis="reported"` excludes
-derived fourth quarters; `canonical` includes them. `as_of` filters by filing date,
+derived fourth quarters for additive metrics such as revenue; `canonical` includes
+them. `as_of` filters by filing date,
 so a historical query cannot see facts that had not yet been published.
 `alignment="availability"` exposes the filing date as `alignedAt`; `period_end`
 is available for accounting-period analysis but must not be used in a
 point-in-time price overlay.
+
+Canonical `diluted_eps` TTM queries also accept `split_events=[(date, ratio), ...]`.
+The list must describe the same fully split-adjusted share basis used by the price
+consumer; an unverified split history yields no canonical TTM observations.
 
 Each observation includes:
 
@@ -59,8 +64,21 @@ Reads select the newest normalization without rewriting prior evidence; the `0.1
 UPSERT table is retained as a migration source throughout `0.2.x`.
 
 `diluted_eps` and `basic_eps` are separate registered metrics. Diluted EPS never
-falls back to basic EPS. Both retain negative values and use the same amendment,
-availability, Q4-derivation, and TTM continuity rules as revenue.
+falls back to basic EPS. Both retain negative values, but per-share facts are
+weighted averages rather than additive amounts: the resolver never derives Q4 EPS
+as annual EPS minus three quarterly EPS values and never sums four EPS facts.
+
+Canonical interim TTM diluted EPS is reconstructed from paired
+`EarningsPerShareDiluted` and weighted-average diluted-share facts:
+
+`TTM numerator = prior annual numerator + current YTD numerator - prior comparable YTD numerator`
+
+The denominator applies the same annual/YTD bridge to weighted share-days. This
+handles issuers whose share count changes materially and prevents pre-split and
+post-split comparative facts from being mixed. Annual diluted EPS remains a direct
+reported TTM observation. If the supporting share facts are unavailable, the
+resolver keeps the latest valid annual observation rather than inventing an
+interim value.
 
 ## Historical trailing P/E
 
@@ -73,12 +91,14 @@ payload = await client.financials.valuation(
 )
 ```
 
+Prices and EPS are normalized to the supplied fully split-adjusted share basis.
 Each price timestamp resolves the TTM diluted EPS that was knowable on that date.
 Amendments affect only timestamps on or after their filing date. Zero or negative
-TTM EPS produces `null`, not a misleading negative multiple. EPS is adjusted by
-subsequent split factors so it shares the price series' current-share basis.
+TTM EPS produces `null`, not a misleading negative multiple. A denominator older
+than the configured staleness window also produces `null`; consumers can render
+that missing coverage as a gap rather than extending an obsolete multiple.
 Observations carry the price basis, price timestamp, TTM EPS availability, all
-contributing SEC filing sources, and quality flags such as `derived_q4`,
+contributing SEC filing sources, and quality flags such as `eps_ttm_reconstructed`,
 `stale_eps`, `eps_split_adjusted`, and `non_positive_ttm_eps`.
 
 ## Source choices
@@ -97,7 +117,8 @@ contributing SEC filing sources, and quality flags such as `derived_q4`,
 
 ## Scope and roadmap
 
-The production registry currently includes USD revenue, diluted EPS, and basic EPS.
+The production registry currently includes USD revenue, diluted EPS, basic EPS,
+and weighted-average diluted shares.
 It is designed to add gross profit, operating income, net income, operating cash
 flow, capital expenditure, free cash flow, and carefully distinguished share-count
 metrics.
@@ -109,4 +130,5 @@ estimates.
 Current limitations include USD-only revenue, Company Facts rather than
 filing-level fallback, and no estimate/forward-metric source. Quality flags expose
 conflicting filing values, multiple available concepts, amendments, derived Q4s,
-and implausible residuals instead of silently hiding them.
+split adjustments, and missing point-in-time TTM EPS instead of silently hiding
+them.
