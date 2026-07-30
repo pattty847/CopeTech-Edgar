@@ -130,6 +130,18 @@ This work is targeted for `0.2.0`.
 
 ### Added
 
+- MIT license.
+- Namespaced `EdgarClient` resources: `companies`, `filings`, `ownership`,
+  `institutions`, and `financials`; `SECDataFetcher` remains compatible for `0.2.x`.
+- Append-only, content-addressed financial fact versions with in-place legacy-table
+  migration and latest-normalization resolution.
+- Separate canonical `diluted_eps` and `basic_eps` metrics.
+- Point-in-time historical trailing P/E using split-adjusted prices, TTM diluted EPS,
+  split-basis normalization, amendment timing, null non-positive multiples, and full
+  price/filing provenance.
+- Ownership module boundaries for parsing, transaction semantics, signal
+  classification, and raw-filing acquisition; `Form4Processor` remains the compatibility
+  facade.
 - Typed SEC acquisition errors distinguish absence, access denial, exhausted throttling,
   transport failures, malformed JSON, and oversized bodies.
 - Canonical `Cik`, `Accession`, and `Ticker` identifier types.

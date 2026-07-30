@@ -4,9 +4,9 @@ Reusable SEC EDGAR backend extracted from Sentinel.
 
 ## What this package is
 
-`copetech-edgar` is a Python package centered on a single async facade: `SECDataFetcher`.
-It wraps SEC API fetches, filing document retrieval, and parser/processor logic into a
-consistent interface for downstream services.
+`copetech-edgar` is a Python package centered on the namespaced async `EdgarClient`.
+`SECDataFetcher` remains a deprecated forwarding facade throughout `0.2.x` so existing
+integrations can migrate without a flag day.
 
 Core capabilities today, labelled **Stable** (fixture-backed contract and mature error
 semantics), **Beta** (works, actively changing), or
@@ -22,8 +22,10 @@ semantics), **Beta** (works, actively changing), or
 - **Beta** — Raw filing/document access backed by an immutable, download-once local store.
 - **Beta** — SEC ticker → CIK resolution and submissions/company facts retrieval.
 - **Beta** — Filing discovery by form type (`4`, `4/A`, `10-K`, `10-Q`, `8-K`, `144`, etc.).
-- **Beta** — Point-in-time SEC financial series with provenance, concept stitching, derived Q4,
-  and quarterly/annual/TTM views (revenue is the first registered metric).
+- **Beta** — Point-in-time SEC revenue, basic EPS, and diluted EPS series with provenance,
+  concept stitching, derived Q4, and quarterly/annual/TTM views.
+- **Beta** — Historical trailing P/E from split-adjusted caller prices and then-known TTM
+  diluted EPS, including amendment, split-basis, staleness, and filing provenance.
 - **Beta** — Form 144 planned-sale records; Form 8-K item-code events.
 - **Beta** — Optional file cache and SQLite persistence helpers.
 - **Experimental** — Insider signal payloads (`events`, `daily_aggregates`, `clusters`,
@@ -45,8 +47,10 @@ This package preserves Sentinel's existing SEC backend behavior as closely as po
 
 ## Repository layout
 
-- `src/copetech_sec/sec_api.py` – `SECDataFetcher` orchestration facade.
-- `src/copetech_sec/form4_processor.py` – Form 4 parsing + signal normalization/aggregation.
+- `src/copetech_sec/client.py` / `resources/` – namespaced `EdgarClient` public API.
+- `src/copetech_sec/sec_api.py` – deprecated `SECDataFetcher` compatibility facade.
+- `src/copetech_sec/ownership/` – ownership parsing, normalization, signals, and acquisition.
+- `src/copetech_sec/form4_processor.py` – Form 4 compatibility facade and aggregate shaping.
 - `src/copetech_sec/document_handler.py` – SEC archive document discovery/download.
 - `src/copetech_sec/http_client.py` – async SEC HTTP client (rate limiting + retries).
 - `src/copetech_sec/financial_processor.py` – company facts normalization and summary shaping.
@@ -75,9 +79,11 @@ uv pip install -e '.[dev]'          # test suite
 
 Python 3.12+ is required.
 
+CopeTech-Edgar is available under the [MIT License](LICENSE).
+
 ## CopeNet EDGAR parser quickstart
 
-The parser is used via `SECDataFetcher` methods (async).
+New integrations use `EdgarClient` resource namespaces.
 
 ### 1) Configure a SEC-compliant user agent
 
@@ -91,13 +97,12 @@ export SEC_API_USER_AGENT="Your Name your-email@example.com"
 
 ```python
 import asyncio
-from copetech_sec import SECDataFetcher
+from copetech_sec import EdgarClient
 
 
 async def main():
-    fetcher = SECDataFetcher()
-    try:
-        payload = await fetcher.get_insider_signal_payload(
+    async with EdgarClient() as client:
+        payload = await client.ownership.signals(
             ticker="AAPL",
             days_back=180,
             filing_limit=20,
@@ -108,8 +113,6 @@ async def main():
         print("events:", len(payload["events"]))
         print("daily aggregates:", len(payload["daily_aggregates"]))
         print("llm digest keys:", sorted(payload["llm_digest"].keys()))
-    finally:
-        await fetcher.close()
 
 
 asyncio.run(main())
@@ -137,13 +140,13 @@ Expected top-level payload shape:
 
 ```python
 # Recent parsed Form 4 transactions for display
-transactions = await fetcher.get_recent_insider_transactions("MSFT", days_back=90)
+transactions = await client.ownership.transactions("MSFT", days_back=90)
 
 # Filing metadata by form
-filings_10k = await fetcher.fetch_annual_reports("MSFT")
+filings_10k = await client.filings.annual("MSFT")
 
 # Complete filing history with source and cursor metadata
-filings_page = await fetcher.get_filings_page(
+filings_page = await client.filings.query(
     "MSFT",
     "10-K",
     days_back=3650,
@@ -151,17 +154,24 @@ filings_page = await fetcher.get_filings_page(
 )
 
 # Latest institutional holdings for one manager CIK, e.g. SIG
-holdings = await fetcher.get_latest_13f_holdings("0001446194", row_limit=25)
+holdings = await client.institutions.latest_holdings("0001446194", row_limit=25)
 
 # Company facts summary
-financials = await fetcher.get_financial_summary("MSFT")
+financials = await client.financials.summary("MSFT")
 
 # Canonical revenue history with filing-date availability and SEC provenance
-revenue = await fetcher.get_financial_series(
+revenue = await client.financials.series(
     "NVDA",
     metric="revenue",
     frequency="quarterly",  # quarterly | annual | ttm
     alignment="availability",
+)
+
+# Historical trailing P/E on a split-adjusted price timeline
+pe = await client.financials.valuation(
+    "NVDA",
+    price_observations=split_adjusted_prices,
+    split_events=split_history,
 )
 ```
 
@@ -251,7 +261,8 @@ See `README_DEPLOY.md` for exact EC2 commands.
 
 ## Caveats and current limitations
 
-- The library is async-first; callers should use an event loop and close the fetcher session.
+- The library is async-first; use `EdgarClient` as an async context manager so its HTTP
+  session is always closed.
 - SEC access quality depends on user-agent quality and network/rate-limit conditions.
 - Helper scripts under `src/copetech_sec/sec_fetch_*.py` are source-layout wrappers;
   for production integrations, prefer importing the package directly.

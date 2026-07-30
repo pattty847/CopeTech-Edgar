@@ -5,6 +5,20 @@ identifiers, CIK-keyed caches, complete submissions history, safe XML, and recor
 fixtures. Phase 2 will prove that architecture with the financial vertical slice that
 unlocks historical valuation plots.
 
+## Implementation status — 2026-07-30
+
+- Complete: immutable content-addressed fact versions and legacy-table migration.
+- Complete: separate US-GAAP diluted/basic EPS metrics, amendment timing, negative EPS,
+  canonical Q4/TTM behavior, and CopeNet migration off legacy EPS trends.
+- Complete: split-consistent, point-in-time trailing P/E plus the CopeNet chart overlay.
+- Complete: ownership parser, normalization, signal-classification, and acquisition
+  namespaces with `Form4Processor` retained as the compatibility facade.
+- Complete: namespaced `EdgarClient` and `SECDataFetcher` compatibility path.
+- Pending release evidence: recorded Company Facts fixtures for every issuer pattern below.
+  The implementation has deterministic synthetic coverage; the 2026-07-30 recording attempt
+  was rejected with HTTP 403 by SEC from the development environment, so no payload was
+  fabricated or relabeled as recorded evidence.
+
 ## Slice 1: immutable fact versions
 
 `FinancialSeriesStore` is currently a deduplicating UPSERT store, not an append-only fact

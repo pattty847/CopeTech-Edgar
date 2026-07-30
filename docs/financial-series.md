@@ -8,7 +8,7 @@ and annual filings often omit a standalone fourth quarter.
 ## Public API
 
 ```python
-payload = await fetcher.get_financial_series(
+payload = await client.financials.series(
     "GOOGL",
     metric="revenue",
     frequency="quarterly",
@@ -52,11 +52,34 @@ TTM revenue is the sum of four contiguous canonical quarters. Derived rows keep
 all contributing sources and are explicitly flagged; they are never presented as
 reported facts.
 
-Raw normalized facts are persisted in SQLite by symbol, metric, taxonomy,
-concept, accession, unit, and economic window. This retains enough provenance to
-re-resolve a series when normalization rules evolve. Company Facts snapshots are
-refreshed daily; if acquisition fails, persisted facts can serve a clearly warned
-stale result.
+Raw normalized facts are persisted in an append-only SQLite version ledger keyed by
+CIK, metric, taxonomy, concept, accession, unit, economic window, normalization
+version, and content hash. Acquisition time is separate from the SEC filing date.
+Reads select the newest normalization without rewriting prior evidence; the `0.1`
+UPSERT table is retained as a migration source throughout `0.2.x`.
+
+`diluted_eps` and `basic_eps` are separate registered metrics. Diluted EPS never
+falls back to basic EPS. Both retain negative values and use the same amendment,
+availability, Q4-derivation, and TTM continuity rules as revenue.
+
+## Historical trailing P/E
+
+```python
+payload = await client.financials.valuation(
+    "AAPL",
+    price_observations=split_adjusted_prices,
+    split_events=split_history,
+    price_source="your-price-provider",
+)
+```
+
+Each price timestamp resolves the TTM diluted EPS that was knowable on that date.
+Amendments affect only timestamps on or after their filing date. Zero or negative
+TTM EPS produces `null`, not a misleading negative multiple. EPS is adjusted by
+subsequent split factors so it shares the price series' current-share basis.
+Observations carry the price basis, price timestamp, TTM EPS availability, all
+contributing SEC filing sources, and quality flags such as `derived_q4`,
+`stale_eps`, `eps_split_adjusted`, and `non_positive_ttm_eps`.
 
 ## Source choices
 
@@ -74,16 +97,14 @@ stale result.
 
 ## Scope and roadmap
 
-The first production metric is USD revenue for duration facts. The registry is
-designed to add gross profit, operating income, net income, operating cash flow,
-capital expenditure, free cash flow, diluted EPS, and carefully distinguished
-share-count metrics.
+The production registry currently includes USD revenue, diluted EPS, and basic EPS.
+It is designed to add gross profit, operating income, net income, operating cash
+flow, capital expenditure, free cash flow, and carefully distinguished share-count
+metrics.
 
-P/E requires a price convention and an earnings denominator. A defensible
-historical trailing P/E series will combine split-adjusted price with point-in-time
-TTM diluted EPS; forward P/E additionally requires timestamped consensus
-estimates. Those valuation metrics should be separate registry entries rather
-than implicit fields on revenue observations.
+Historical trailing P/E uses split-adjusted price with point-in-time TTM diluted
+EPS. Forward P/E remains out of scope because it requires timestamped consensus
+estimates.
 
 Current limitations include USD-only revenue, Company Facts rather than
 filing-level fallback, and no estimate/forward-metric source. Quality flags expose
