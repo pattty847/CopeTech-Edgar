@@ -19,6 +19,7 @@ from copetech_sec.app import (
     get_fetcher,
     get_price_fetcher,
 )
+from copetech_sec.settings import ServiceSettings
 
 
 VALID_HEADERS = {"x-backend-secret": "test-backend-secret", "x-demo-key": "test-demo-key"}
@@ -276,6 +277,16 @@ def test_wrong_backend_secret_is_401(client: TestClient) -> None:
         headers={"x-backend-secret": "wrong", "x-demo-key": "test-demo-key"},
     )
     assert response.status_code == 401
+
+
+def test_backend_secret_fails_closed_when_unconfigured() -> None:
+    settings_without_secret = dataclasses.replace(
+        app_module.settings,
+        backend_api_secret=None,
+    )
+
+    assert settings_without_secret.secret_matches(None) is False
+    assert settings_without_secret.secret_matches("anything") is False
 
 
 def test_company_happy_path(client: TestClient, fake_fetcher: FakeFetcher) -> None:

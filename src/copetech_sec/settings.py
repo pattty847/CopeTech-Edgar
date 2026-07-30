@@ -59,7 +59,7 @@ class ServiceSettings:
 
     def secret_matches(self, candidate: str | None) -> bool:
         if self.backend_api_secret is None:
-            return True
+            return False
         if candidate is None:
             return False
         return secrets.compare_digest(candidate, self.backend_api_secret)

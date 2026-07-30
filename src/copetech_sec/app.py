@@ -106,6 +106,11 @@ def get_demo_key(request: Request) -> str:
 
 
 def enforce_backend_secret(request: Request) -> None:
+    if settings.backend_api_secret is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Backend authentication is not configured.",
+        )
     if settings.secret_matches(request.headers.get("x-backend-secret")):
         return
     raise HTTPException(status_code=401, detail="Invalid backend credentials.")
