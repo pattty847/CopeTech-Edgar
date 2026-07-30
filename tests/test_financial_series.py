@@ -126,6 +126,22 @@ class FinancialSeriesNormalizationTests(unittest.TestCase):
         observation = series["observations"][0]
         self.assertEqual(observation["availableAt"], "2025-05-28")
         self.assertEqual(observation["fiscalYear"], 2026)
+        self.assertEqual(
+            observation["availabilitySource"]["accessionNumber"],
+            "original",
+        )
+        self.assertEqual(
+            observation["selectedSource"]["accessionNumber"],
+            "repeat",
+        )
+        self.assertEqual(
+            [source["accessionNumber"] for source in observation["sources"]],
+            ["original", "repeat"],
+        )
+        self.assertEqual(
+            observation["availableAt"],
+            min(source["filed"] for source in observation["sources"]),
+        )
 
     def test_derives_q4_and_ttm_from_annual_and_three_quarters(self):
         rows = [
@@ -169,6 +185,43 @@ class FinancialSeriesNormalizationTests(unittest.TestCase):
         )
         self.assertEqual(ttm["observations"][0]["value"], 100)
         self.assertEqual(ttm["observations"][0]["availableAt"], "2026-02-10")
+
+    def test_does_not_derive_q4_from_noncontiguous_quarters(self):
+        rows = [
+            fact(
+                value,
+                start,
+                end,
+                filed,
+                accession,
+                form=form,
+                fy=2025,
+                fp=fp,
+            )
+            for value, start, end, filed, accession, form, fp in [
+                (10, "2025-01-01", "2025-03-31", "2025-04-25", "q1", "10-Q", "Q1"),
+                # Missing Q2; these two later windows still fit inside the annual period.
+                (20, "2025-07-01", "2025-09-30", "2025-10-25", "q3", "10-Q", "Q3"),
+                (30, "2025-10-01", "2025-12-20", "2026-01-25", "q4", "10-Q", "Q4"),
+                (100, "2025-01-01", "2025-12-31", "2026-02-10", "fy", "10-K", "FY"),
+            ]
+        ]
+        extracted = extract_financial_facts(
+            company_facts(revenues=rows), symbol="TEST", metric="revenue"
+        )
+
+        series = resolve_financial_series(
+            extracted,
+            symbol="TEST",
+            metric="revenue",
+            frequency="quarterly",
+            basis="canonical",
+        )
+
+        self.assertFalse(
+            any(row["derived"] for row in series["observations"]),
+            series["observations"],
+        )
 
     def test_amendment_changes_only_queries_at_or_after_filing_date(self):
         original = fact(

@@ -255,7 +255,11 @@ def _resolve_window(
     confidence = 1.0
     if "conflicting_filing_values" in flags:
         confidence -= 0.2
-    source = _source_from_fact(selected)
+    availability_source = _source_from_fact(identity_source)
+    selected_source = _source_from_fact(selected)
+    sources = [availability_source]
+    if selected_source["accessionNumber"] != availability_source["accessionNumber"]:
+        sources.append(selected_source)
     return {
         "periodStart": selected["period_start"],
         "periodEnd": selected["period_end"],
@@ -270,7 +274,14 @@ def _resolve_window(
         "derivation": None,
         "confidence": round(max(0.0, confidence), 2),
         "qualityFlags": sorted(flags),
-        "sources": [source],
+        # `availableAt` must always be substantiated by a returned source. A later
+        # filing often repeats an earlier comparative value and wins selection, but
+        # returning only that later filing made the observation appear to predate its
+        # evidence. Keep both roles explicit while retaining `sources` for consumers
+        # that want the complete provenance set.
+        "availabilitySource": availability_source,
+        "selectedSource": selected_source,
+        "sources": sources,
     }
 
 
@@ -292,6 +303,15 @@ def _add_derived_fourth_quarters(
             key=lambda row: row["periodStart"],
         )
         if len(contained) != 3:
+            continue
+        gaps = [
+            (
+                _parse_date(contained[index]["periodStart"])
+                - _parse_date(contained[index - 1]["periodEnd"])
+            ).days
+            for index in range(1, len(contained))
+        ]
+        if any(gap < 0 or gap > 7 for gap in gaps):
             continue
         fourth_start = _next_day(contained[-1]["periodEnd"])
         window = (fourth_start, annual_row["periodEnd"])
@@ -316,6 +336,8 @@ def _add_derived_fourth_quarters(
                 "derivation": "annual minus the three reported standalone quarters",
                 "confidence": 0.9 if len(flags) == 1 else 0.55,
                 "qualityFlags": sorted(flags),
+                "availabilitySource": annual_row["availabilitySource"],
+                "selectedSource": annual_row["selectedSource"],
                 "sources": annual_row["sources"]
                 + [source for row in contained for source in row["sources"]],
             }
@@ -357,6 +379,11 @@ def _trailing_twelve_months(
                 "derivation": "sum of four canonical standalone quarters",
                 "confidence": min(float(row["confidence"]) for row in window),
                 "qualityFlags": flags,
+                "availabilitySource": max(
+                    window,
+                    key=lambda row: row["availableAt"],
+                )["availabilitySource"],
+                "selectedSource": window[-1]["selectedSource"],
                 "sources": [source for row in window for source in row["sources"]],
             }
         )
