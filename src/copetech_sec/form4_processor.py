@@ -20,6 +20,49 @@ from .document_handler import FilingDocumentHandler, RawFilingResolver
 SIGNAL_PAYLOAD_VERSION = 2
 
 
+def _parse_decimal(raw: Optional[str]) -> Optional[float]:
+    """Parse a numeric value out of an ownership-form `<value>` element.
+
+    The previous guard was `raw.replace('.', '', 1).isdigit()`, which silently returned 0.0
+    for anything that was not a bare unsigned integer/decimal: values surrounded by
+    whitespace (pretty-printed XML from some filer agents), negative values, thousands
+    separators, and scientific notation all became zero shares at zero dollars. A parse
+    failure must be distinguishable from a real zero, so this returns None.
+    """
+    if raw is None:
+        return None
+    cleaned = str(raw).strip().replace(",", "").replace("$", "")
+    if not cleaned:
+        return None
+    try:
+        return float(cleaned)
+    except ValueError:
+        logging.debug(f"Non-numeric ownership value {raw!r}; treating as missing.")
+        return None
+
+
+def _element_text(node, path: str) -> Optional[str]:
+    """`findtext` for an ownership `<x><value>…</value></x>` wrapper, whitespace-stripped."""
+    if node is None:
+        return None
+    text = node.findtext(path)
+    if text is None:
+        return None
+    stripped = text.strip()
+    return stripped or None
+
+
+def _is_flag_set(node, tag: str) -> bool:
+    """Ownership booleans appear as 1/0 and occasionally true/false or Y/N."""
+    if node is None:
+        return False
+    raw = node.findtext(tag)
+    if raw is None:
+        # Some filers wrap the flag in the <value> pattern used elsewhere in the schema.
+        raw = node.findtext(f"{tag}/value")
+    return (raw or "").strip().lower() in {"1", "true", "y", "yes"}
+
+
 def _payload_fingerprint(accessions: List[str], days_back: int, filing_limit: int, anchor_type: str) -> str:
     """Deterministic identity of a derived payload's inputs. If this matches, the cached
     payload is byte-for-byte what a rebuild would produce — regardless of its age."""
@@ -52,26 +95,45 @@ class Form4Processor:
     (usually from `SECDataFetcher`) to retrieve the list of recent Form 4 filing accession numbers.
     """
 
-    # Transaction codes for Form 4 filings
+    # Transaction codes per the SEC Form 4 instructions (Table I/II "Transaction Code"
+    # column). Several codes are direction-neutral — the filing's own
+    # transactionAcquiredDisposedCode is the authority on direction, not this table.
     TRANSACTION_CODE_MAP = {
-        'P': 'Purchase',
-        'S': 'Sale',
-        'A': 'Award',
-        'D': 'Disposition (Gift/Other)',
-        'F': 'Tax Withholding',
-        'I': 'Discretionary Transaction',
-        'M': 'Option Exercise',
-        'C': 'Conversion',
-        'W': 'Warrant Exercise',
-        'G': 'Gift',
-        'J': 'Other Acquisition/Disposition',
-        'U': 'Tender of Shares',
-        'X': 'Option Expiration',
-        'Z': 'Trust Transaction',
+        # General transactions
+        'P': 'Open market or private purchase',
+        'S': 'Open market or private sale',
+        'V': 'Voluntary early report',
+        # Rule 16b-3 transactions
+        'A': 'Grant, award or other acquisition',
+        'D': 'Disposition to the issuer',
+        'F': 'Payment of exercise price or tax by delivering/withholding securities',
+        'I': 'Discretionary transaction',
+        'M': 'Exercise or conversion of derivative security exempt under Rule 16b-3',
+        # Derivative securities transactions
+        'C': 'Conversion of derivative security',
+        'E': 'Expiration of short derivative position',
+        'H': 'Expiration (or cancellation) of long derivative position',
+        'O': 'Exercise of out-of-the-money derivative security',
+        'X': 'Exercise of in-the-money or at-the-money derivative security',
+        # Other transactions
+        'G': 'Bona fide gift',
+        'J': 'Other acquisition or disposition',
+        'K': 'Transaction in equity swap or similar instrument',
+        'L': 'Small acquisition under Rule 16a-6',
+        'U': 'Disposition pursuant to a tender of shares',
+        'W': 'Acquisition or disposition by will or the laws of descent and distribution',
+        'Z': 'Deposit into or withdrawal from voting trust',
     }
-    # Define codes considered as 'Acquisition'/'Disposition'
-    ACQUISITION_CODES = ['P', 'A', 'M', 'C', 'W', 'G', 'J', 'I']
-    DISPOSITION_CODES = ['S', 'D', 'F', 'X', 'U', 'Z']
+
+    # Retained only as a last-resort hint for filings that omit
+    # transactionAcquiredDisposedCode. Direction is a per-transaction fact, not a property
+    # of the code: 'M' is an acquisition on the non-derivative leg and a disposition on the
+    # derivative leg of the same exercise, and G/J/W/K/Z/I run either way.
+    ACQUISITION_CODE_HINTS = frozenset({'P', 'A', 'L'})
+    DISPOSITION_CODE_HINTS = frozenset({'S', 'D', 'F', 'U', 'E', 'H'})
+    # Deprecated aliases; kept so existing consumers importing them do not break.
+    ACQUISITION_CODES = sorted(ACQUISITION_CODE_HINTS)
+    DISPOSITION_CODES = sorted(DISPOSITION_CODE_HINTS)
     SIGNAL_CLASS_MAP = {
         'P': 'open_market_buy',
         'S': 'open_market_sell',
@@ -92,6 +154,7 @@ class Form4Processor:
         'gift': 'neutral',
         'derivative_conversion': 'neutral',
         'planned_sale_10b5_1': 'bearish',
+        'holding': 'neutral',
         'other': 'neutral',
     }
 
@@ -136,140 +199,77 @@ class Form4Processor:
                 'transaction_code', 'transaction_type', 'shares', 'price_per_share',
                 'value', 'is_derivative', 'is_acquisition', 'is_disposition', etc.
         """
-        transactions = []
+        transactions: List[Dict] = []
         try:
             root = ET.fromstring(xml_content)
 
-            # Extract common info
-            issuer_cik = root.findtext('.//issuer/issuerCik', default='N/A')
-            issuer_name = root.findtext('.//issuer/issuerName', default='N/A')
-            issuer_symbol = root.findtext('.//issuer/issuerTradingSymbol', default='N/A')
+            issuer = root.find('.//issuer')
+            issuer_cik = _element_text(issuer, 'issuerCik') or 'N/A'
+            issuer_name = _element_text(issuer, 'issuerName') or 'N/A'
+            issuer_symbol = _element_text(issuer, 'issuerTradingSymbol') or 'N/A'
 
-            owner_cik = root.findtext('.//reportingOwner/reportingOwnerId/rptOwnerCik', default='N/A')
-            owner_name = root.findtext('.//reportingOwner/reportingOwnerId/rptOwnerName', default='N/A')
+            document_type = _element_text(root, 'documentType')
+            period_of_report = _element_text(root, 'periodOfReport')
+            footnotes = self._parse_footnotes(root)
 
-            # Extract owner relationship
-            relationship_node = root.find('.//reportingOwner/reportingOwnerRelationship')
-            owner_positions = []
-            officer_title = None
-            if relationship_node is not None:
-                if relationship_node.findtext('isDirector', default='0').strip() in ['1', 'true']:
-                    owner_positions.append('Director')
-                if relationship_node.findtext('isOfficer', default='0').strip() in ['1', 'true']:
-                    owner_positions.append('Officer')
-                    officer_title = relationship_node.findtext('officerTitle', default='').strip()
-                if relationship_node.findtext('isTenPercentOwner', default='0').strip() in ['1', 'true']:
-                    owner_positions.append('10% Owner')
-                if relationship_node.findtext('isOther', default='0').strip() in ['1', 'true']:
-                    owner_positions.append('Other')
-            
-            # Format the position string
-            owner_position_str = ', '.join(owner_positions)
-            if officer_title and 'Officer' in owner_positions:
-                 # Replace 'Officer' with 'Officer (Title)' if title exists
-                 owner_position_str = owner_position_str.replace('Officer', f'Officer ({officer_title})', 1)
-            elif not owner_position_str:
-                 owner_position_str = 'N/A' # Default if no flags are set
+            # Per the EDGAR Ownership XML Technical Specification (v5.5), `aff10b5One` is a
+            # required *document-level* element on Forms 4 and 5 — a sibling of <issuer> and
+            # <reportingOwner>, not a per-transaction field. It carries the Rule 10b5-1(c)
+            # trading-plan checkbox. Filers emit either 1/0 or true/false.
+            rule_10b5_1_plan = _is_flag_set(root, 'aff10b5One')
+            remarks = _element_text(root, 'remarks')
+            not_subject_to_section_16 = _is_flag_set(root, 'notSubjectToSection16')
 
-            # Process Non-Derivative Transactions
-            for tx in root.findall('.//nonDerivativeTransaction'):
-                try:
-                    security_title = tx.findtext('./securityTitle/value', default='N/A')
-                    tx_date = tx.findtext('./transactionDate/value', default='N/A')
-                    tx_code = tx.findtext('./transactionCoding/transactionCode', default='N/A')
+            # A single ownership form may name up to 10 reporting owners (joint filings: a
+            # person plus a family trust, co-filing 10% owners, an estate) — Ownership XML
+            # Technical Specification, `reportingOwner` maxOccurs="10". The parser used to
+            # read only the first via findtext('.//reportingOwner/...') and dropped the rest.
+            #
+            # The schema carries no per-row owner attribution: Table I/II rows describe the
+            # reported transactions once, and every listed owner is a filer of that report.
+            # So exactly one record is emitted per table row — never one per owner-row pair,
+            # which would multiply reported shares and value by the owner count. `owner_*`
+            # holds the primary owner (backward compatible); `reporting_owners` holds all.
+            owners = self._parse_reporting_owners(root)
+            primary_owner = owners[0]
 
-                    shares_str = tx.findtext('./transactionAmounts/transactionShares/value', default='0')
-                    price_str = tx.findtext('./transactionAmounts/transactionPricePerShare/value', default='0')
-                    acq_disp_code = tx.findtext('./transactionAmounts/transactionAcquiredDisposedCode/value', default='N/A')
+            shared_fields = {
+                'ticker': issuer_symbol,
+                'issuer_cik': issuer_cik,
+                'issuer_name': issuer_name,
+                'document_type': document_type,
+                'period_of_report': period_of_report,
+                'reporting_owners': owners,
+                'owner_count': len(owners),
+                'is_joint_filing': len(owners) > 1,
+                'rule_10b5_1_plan': rule_10b5_1_plan,
+                'remarks': remarks,
+                'not_subject_to_section_16': not_subject_to_section_16,
+            }
 
-                    shares_owned_after_str = tx.findtext('./postTransactionAmounts/sharesOwnedFollowingTransaction/value', default='N/A')
-                    direct_indirect = tx.findtext('./ownershipNature/directOrIndirectOwnership/value', default='N/A')
-
-                    shares = float(shares_str) if shares_str and shares_str.replace('.', '', 1).isdigit() else 0.0
-                    price = float(price_str) if price_str and price_str.replace('.', '', 1).isdigit() else 0.0
-                    shares_owned_after = float(shares_owned_after_str) if shares_owned_after_str and shares_owned_after_str.replace('.', '', 1).isdigit() else None
-
-                    transaction_type = self.TRANSACTION_CODE_MAP.get(tx_code, 'Unknown')
-                    is_acquisition = tx_code in self.ACQUISITION_CODES
-                    is_disposition = tx_code in self.DISPOSITION_CODES
-
-                    transaction = {
-                        'ticker': issuer_symbol,
-                        'issuer_cik': issuer_cik,
-                        'issuer_name': issuer_name,
-                        'owner_cik': owner_cik,
-                        'owner_name': owner_name,
-                        'transaction_date': tx_date,
-                        'security_title': security_title,
-                        'transaction_code': tx_code,
-                        'transaction_type': transaction_type,
-                        'acq_disp_code': acq_disp_code,
-                        'is_acquisition': is_acquisition,
-                        'is_disposition': is_disposition,
-                        'shares': shares,
-                        'price_per_share': price,
-                        'value': shares * price if shares is not None and price is not None else 0.0,
-                        'shares_owned_after': shares_owned_after,
-                        'direct_indirect': direct_indirect,
-                        'is_derivative': False,
-                        'owner_position': owner_position_str
-                    }
-                    transactions.append(transaction)
-                except Exception as e:
-                    logging.warning(f"Error parsing non-derivative tx: {e} - XML: {ET.tostring(tx, encoding='unicode')[:200]}")
-
-            # Process Derivative Transactions
-            for tx in root.findall('.//derivativeTransaction'):
-                try:
-                    security_title = tx.findtext('./securityTitle/value', default='N/A')
-                    tx_date = tx.findtext('./transactionDate/value', default='N/A')
-                    tx_code = tx.findtext('./transactionCoding/transactionCode', default='N/A')
-                    conv_exercise_price_str = tx.findtext('./conversionOrExercisePrice/value', default='0')
-                    shares_str = tx.findtext('./transactionAmounts/transactionShares/value', default='0')
-                    acq_disp_code = tx.findtext('./transactionAmounts/transactionAcquiredDisposedCode/value', default='N/A')
-                    exercise_date = tx.findtext('./exerciseDate/value', default='N/A')
-                    expiration_date = tx.findtext('./expirationDate/value', default='N/A')
-                    underlying_title = tx.findtext('./underlyingSecurity/underlyingSecurityTitle/value', default='N/A')
-                    underlying_shares_str = tx.findtext('./underlyingSecurity/underlyingSecurityShares/value', default='0')
-                    shares_owned_after_str = tx.findtext('./postTransactionAmounts/sharesOwnedFollowingTransaction/value', default='N/A')
-                    direct_indirect = tx.findtext('./ownershipNature/directOrIndirectOwnership/value', default='N/A')
-
-                    shares = float(shares_str) if shares_str and shares_str.replace('.', '', 1).isdigit() else 0.0
-                    conv_exercise_price = float(conv_exercise_price_str) if conv_exercise_price_str and conv_exercise_price_str.replace('.', '', 1).isdigit() else 0.0
-                    underlying_shares = float(underlying_shares_str) if underlying_shares_str and underlying_shares_str.replace('.', '', 1).isdigit() else 0.0
-                    shares_owned_after = float(shares_owned_after_str) if shares_owned_after_str and shares_owned_after_str.replace('.', '', 1).isdigit() else None
-
-                    transaction_type = self.TRANSACTION_CODE_MAP.get(tx_code, 'Unknown')
-                    is_acquisition = tx_code in self.ACQUISITION_CODES
-                    is_disposition = tx_code in self.DISPOSITION_CODES
-
-                    transaction = {
-                        'ticker': issuer_symbol,
-                        'issuer_cik': issuer_cik,
-                        'issuer_name': issuer_name,
-                        'owner_cik': owner_cik,
-                        'owner_name': owner_name,
-                        'transaction_date': tx_date,
-                        'security_title': security_title,
-                        'transaction_code': tx_code,
-                        'transaction_type': transaction_type,
-                        'acq_disp_code': acq_disp_code,
-                        'is_acquisition': is_acquisition,
-                        'is_disposition': is_disposition,
-                        'shares': shares,
-                        'conversion_exercise_price': conv_exercise_price,
-                        'exercise_date': exercise_date,
-                        'expiration_date': expiration_date,
-                        'underlying_title': underlying_title,
-                        'underlying_shares': underlying_shares,
-                        'shares_owned_after': shares_owned_after,
-                        'direct_indirect': direct_indirect,
-                        'is_derivative': True,
-                        'owner_position': owner_position_str
-                    }
-                    transactions.append(transaction)
-                except Exception as e:
-                    logging.warning(f"Error parsing derivative tx: {e} - XML: {ET.tostring(tx, encoding='unicode')[:200]}")
+            for table_path, is_derivative, is_holding in (
+                ('.//nonDerivativeTransaction', False, False),
+                ('.//nonDerivativeHolding', False, True),
+                ('.//derivativeTransaction', True, False),
+                ('.//derivativeHolding', True, True),
+            ):
+                for node in root.findall(table_path):
+                    try:
+                        transactions.append(
+                            self._parse_ownership_row(
+                                node,
+                                owner=primary_owner,
+                                shared_fields=shared_fields,
+                                is_derivative=is_derivative,
+                                is_holding=is_holding,
+                                footnotes=footnotes,
+                            )
+                        )
+                    except Exception as exc:
+                        logging.warning(
+                            f"Error parsing ownership row ({table_path}): {exc} - "
+                            f"XML: {ET.tostring(node, encoding='unicode')[:200]}"
+                        )
 
             return transactions
 
@@ -279,6 +279,167 @@ class Form4Processor:
         except Exception as e:
             logging.error(f"Unexpected error parsing Form 4 XML: {e}", exc_info=True)
             return []
+
+    @staticmethod
+    def _parse_footnotes(root: ET.Element) -> Dict[str, str]:
+        """id -> text for every <footnote>. Form 4 footnotes carry material qualifications
+        ("no shares were sold", "sold under a Rule 10b5-1 plan adopted on ...") that are
+        otherwise invisible to consumers."""
+        notes: Dict[str, str] = {}
+        for note in root.findall('.//footnotes/footnote'):
+            note_id = (note.get('id') or '').strip()
+            text = ' '.join((note.text or '').split())
+            if note_id and text:
+                notes[note_id] = text
+        return notes
+
+    @staticmethod
+    def _row_footnote_ids(node: ET.Element) -> List[str]:
+        return [
+            ref.get('id').strip()
+            for ref in node.iter('footnoteId')
+            if (ref.get('id') or '').strip()
+        ]
+
+    def _parse_reporting_owners(self, root: ET.Element) -> List[Dict[str, Any]]:
+        """Every <reportingOwner> in the document, with its own relationship flags."""
+        owners: List[Dict[str, Any]] = []
+        for owner_node in root.findall('.//reportingOwner'):
+            identity = owner_node.find('reportingOwnerId')
+            relationship = owner_node.find('reportingOwnerRelationship')
+
+            positions: List[str] = []
+            officer_title = None
+            if _is_flag_set(relationship, 'isDirector'):
+                positions.append('Director')
+            if _is_flag_set(relationship, 'isOfficer'):
+                officer_title = _element_text(relationship, 'officerTitle')
+                positions.append(f'Officer ({officer_title})' if officer_title else 'Officer')
+            if _is_flag_set(relationship, 'isTenPercentOwner'):
+                positions.append('10% Owner')
+            if _is_flag_set(relationship, 'isOther'):
+                other_text = _element_text(relationship, 'otherText')
+                positions.append(f'Other ({other_text})' if other_text else 'Other')
+
+            owners.append({
+                'owner_cik': _element_text(identity, 'rptOwnerCik') or 'N/A',
+                'owner_name': _element_text(identity, 'rptOwnerName') or 'N/A',
+                'owner_position': ', '.join(positions) or 'N/A',
+                'owner_is_director': _is_flag_set(relationship, 'isDirector'),
+                'owner_is_officer': _is_flag_set(relationship, 'isOfficer'),
+                'owner_is_ten_percent_owner': _is_flag_set(relationship, 'isTenPercentOwner'),
+                'owner_officer_title': officer_title,
+            })
+
+        if not owners:
+            logging.warning("Ownership document contained no <reportingOwner> block.")
+            owners.append({
+                'owner_cik': 'N/A',
+                'owner_name': 'N/A',
+                'owner_position': 'N/A',
+                'owner_is_director': False,
+                'owner_is_officer': False,
+                'owner_is_ten_percent_owner': False,
+                'owner_officer_title': None,
+            })
+        return owners
+
+    def _parse_ownership_row(
+        self,
+        node: ET.Element,
+        *,
+        owner: Dict[str, Any],
+        shared_fields: Dict[str, Any],
+        is_derivative: bool,
+        is_holding: bool,
+        footnotes: Dict[str, str],
+    ) -> Dict[str, Any]:
+        """Normalize one Table I/II row (transaction or holding) into a flat record.
+
+        Both row types produce the same key set so downstream consumers (and
+        `pandas.DataFrame`) see one stable schema. Previously derivative rows lacked
+        `price_per_share`/`value` while non-derivative rows lacked
+        `conversion_exercise_price`, so any consumer indexing a column raised KeyError on
+        half the rows and DataFrames came out ragged.
+        """
+        amounts = node.find('transactionAmounts')
+        post = node.find('postTransactionAmounts')
+
+        tx_code = _element_text(node, 'transactionCoding/transactionCode')
+        acq_disp_code = _element_text(amounts, 'transactionAcquiredDisposedCode/value')
+
+        shares = _parse_decimal(_element_text(amounts, 'transactionShares/value'))
+        price = _parse_decimal(_element_text(amounts, 'transactionPricePerShare/value'))
+        conversion_price = _parse_decimal(_element_text(node, 'conversionOrExercisePrice/value'))
+
+        # Direction comes from the filing's own A/D code. Deriving it from the transaction
+        # code alone mislabels every direction-neutral code: the derivative leg of an
+        # option exercise (M, acquired/disposed = D) was reported as an acquisition, so both
+        # legs of one exercise counted as acquisitions and net insider value was overstated.
+        is_acquisition, is_disposition = self._resolve_direction(acq_disp_code, tx_code)
+
+        # value is only meaningful when a real per-share price was reported. A missing price
+        # (gifts, awards) is unknown, not zero — reporting 0.0 made a $10M grant look free.
+        gross_value = shares * price if (shares is not None and price is not None) else None
+
+        footnote_ids = self._row_footnote_ids(node)
+
+        record: Dict[str, Any] = {
+            **shared_fields,
+            'owner_cik': owner['owner_cik'],
+            'owner_name': owner['owner_name'],
+            'owner_position': owner['owner_position'],
+            'owner_is_director': owner['owner_is_director'],
+            'owner_is_officer': owner['owner_is_officer'],
+            'owner_is_ten_percent_owner': owner['owner_is_ten_percent_owner'],
+            'owner_officer_title': owner['owner_officer_title'],
+            'security_title': _element_text(node, 'securityTitle/value') or 'N/A',
+            'transaction_date': _element_text(node, 'transactionDate/value') or 'N/A',
+            'transaction_code': tx_code or 'N/A',
+            'transaction_type': self.TRANSACTION_CODE_MAP.get(tx_code or '', 'Unknown'),
+            'transaction_form_type': _element_text(node, 'transactionCoding/transactionFormType'),
+            'equity_swap_involved': _is_flag_set(node.find('transactionCoding'), 'equitySwapInvolved'),
+            'acq_disp_code': acq_disp_code or 'N/A',
+            'is_acquisition': is_acquisition,
+            'is_disposition': is_disposition,
+            'shares': shares,
+            'price_per_share': price,
+            'value': gross_value,
+            'conversion_exercise_price': conversion_price,
+            'exercise_date': _element_text(node, 'exerciseDate/value'),
+            'expiration_date': _element_text(node, 'expirationDate/value'),
+            'underlying_title': _element_text(node, 'underlyingSecurity/underlyingSecurityTitle/value'),
+            'underlying_shares': _parse_decimal(
+                _element_text(node, 'underlyingSecurity/underlyingSecurityShares/value')
+            ),
+            'shares_owned_after': _parse_decimal(
+                _element_text(post, 'sharesOwnedFollowingTransaction/value')
+            ),
+            'direct_indirect': _element_text(node, 'ownershipNature/directOrIndirectOwnership/value') or 'N/A',
+            'indirect_ownership_nature': _element_text(node, 'ownershipNature/natureOfOwnership/value'),
+            'is_derivative': is_derivative,
+            # Table rows are either executed transactions or static holdings. Holdings rows
+            # (all of Form 3, and holdings-only Form 4/5 rows) used to be dropped silently.
+            'is_holding': is_holding,
+            'footnote_ids': footnote_ids,
+            'footnotes': [footnotes[fid] for fid in footnote_ids if fid in footnotes],
+        }
+        return record
+
+    @classmethod
+    def _resolve_direction(cls, acq_disp_code: Optional[str], tx_code: Optional[str]) -> tuple:
+        """(is_acquisition, is_disposition) from the filing's A/D code, code table as fallback."""
+        code = (acq_disp_code or '').strip().upper()
+        if code == 'A':
+            return True, False
+        if code == 'D':
+            return False, True
+        hint = (tx_code or '').strip().upper()
+        if hint in cls.ACQUISITION_CODE_HINTS:
+            return True, False
+        if hint in cls.DISPOSITION_CODE_HINTS:
+            return False, True
+        return False, False
 
     async def process_form4_filing(self, accession_no: str, ticker: str = None) -> List[Dict]:
         """
@@ -312,9 +473,16 @@ class Form4Processor:
         tx_code = str(transaction.get('transaction_code') or '').upper()
         price = transaction.get('price_per_share')
         is_derivative = bool(transaction.get('is_derivative'))
-        security_title = str(transaction.get('security_title') or '').lower()
 
-        if '10b5-1' in security_title:
+        # A holdings row is a position statement, not an event.
+        if transaction.get('is_holding'):
+            return 'holding'
+
+        # Rule 10b5-1 plan sales. The authoritative source is the `aff10b5One` flag SEC
+        # added to the ownership schema in 2023, plus the footnote text where filers
+        # describe the plan. The previous check searched `security_title` for "10b5-1",
+        # which only ever holds values like "Common Stock", so the branch was unreachable.
+        if tx_code == 'S' and self._indicates_10b5_1_plan(transaction):
             return 'planned_sale_10b5_1'
 
         if tx_code == 'P' and not is_derivative and price not in (None, 0, 0.0):
@@ -332,6 +500,13 @@ class Form4Processor:
         if tx_code in ('C', 'W'):
             return 'derivative_conversion'
         return self.SIGNAL_CLASS_MAP.get(tx_code, 'other')
+
+    @staticmethod
+    def _indicates_10b5_1_plan(transaction: Dict[str, Any]) -> bool:
+        if transaction.get('rule_10b5_1_plan'):
+            return True
+        haystack = ' '.join(str(note) for note in (transaction.get('footnotes') or [])).lower()
+        return '10b5-1' in haystack or '10b5‑1' in haystack
 
     def _economic_intent(self, signal_class: str) -> str:
         return self.ECONOMIC_INTENT_MAP.get(signal_class, 'neutral')
@@ -367,7 +542,9 @@ class Form4Processor:
             return 0.85
         if 'director' in role_l:
             return 0.7
-        if '10% owner' in role:
+        # Compared against the lower-cased role: the parser emits '10% Owner', so matching
+        # against the original-case string made this branch unreachable.
+        if '10% owner' in role_l:
             return 0.65
         if 'officer' in role_l:
             return 0.75
@@ -843,6 +1020,12 @@ class Form4Processor:
                 continue
             parsed_transactions = await self.process_form4_filing(accession_no, ticker=ticker)
             for transaction in parsed_transactions:
+                # Holdings rows are position statements, not events. They are parsed and
+                # available on `parse_form4_xml` output (Form 3 consists almost entirely of
+                # them), but including them here would inflate the event and aggregate
+                # counts this payload's consumers treat as transaction activity.
+                if transaction.get('is_holding'):
+                    continue
                 normalized_events.append(self._normalize_signal_event(transaction, filing_meta, ticker))
 
         payload = self._build_signal_payload(ticker, normalized_events, days_back, filing_limit, anchor_type)
@@ -966,6 +1149,8 @@ class Form4Processor:
 
             # Format each parsed transaction for the UI
             for tx in parsed_transactions:
+                if tx.get('is_holding'):
+                    continue
                 ui_transaction = {
                     'filer': tx.get('owner_name', 'N/A'),
                     'position': tx.get('owner_position', 'N/A'),
@@ -984,8 +1169,7 @@ class Form4Processor:
                      price = ui_transaction.get('price')
                      if shares is not None and price is not None:
                           try: ui_transaction['value'] = float(shares) * float(price)
-                          except (ValueError, TypeError): ui_transaction['value'] = 0.0
-                     else: ui_transaction['value'] = 0.0
+                          except (ValueError, TypeError): ui_transaction['value'] = None
 
                 all_ui_transactions.append(ui_transaction)
 
@@ -1046,7 +1230,9 @@ class Form4Processor:
              if not accession_no:
                  continue
              parsed = await self.process_form4_filing(accession_no, ticker=ticker)
-             all_parsed_transactions.extend(parsed)
+             all_parsed_transactions.extend(
+                 row for row in parsed if not row.get('is_holding')
+             )
 
         if not all_parsed_transactions:
             return {

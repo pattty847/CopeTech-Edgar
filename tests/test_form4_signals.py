@@ -364,6 +364,62 @@ class Form4SignalPayloadCacheTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(refreshed["events"][0]["is_amendment"])
 
 
+class TransactionOnlyApiTests(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        async def fetch_filings(ticker: str, *, days_back: int, use_cache: bool):
+            return [{
+                "accession_no": "0000000000-26-000001",
+                "url": "https://example.com/filing",
+                "primary_document": "form4.xml",
+            }]
+
+        self.processor = Form4Processor(DummyDocumentHandler(), fetch_filings)
+
+        async def process_form4_filing(accession_no: str, ticker: str | None = None):
+            return [
+                {
+                    "owner_name": "Holder",
+                    "owner_position": "Director",
+                    "is_holding": True,
+                    "is_derivative": False,
+                    "transaction_date": None,
+                    "transaction_type": None,
+                    "shares": 500.0,
+                    "price_per_share": None,
+                    "value": None,
+                    "is_acquisition": False,
+                    "is_disposition": False,
+                },
+                {
+                    "owner_name": "Buyer",
+                    "owner_position": "Officer",
+                    "is_holding": False,
+                    "is_derivative": False,
+                    "transaction_date": "2026-03-01",
+                    "transaction_type": "Purchase",
+                    "shares": 10.0,
+                    "price_per_share": 5.0,
+                    "value": 50.0,
+                    "is_acquisition": True,
+                    "is_disposition": False,
+                },
+            ]
+
+        self.processor.process_form4_filing = process_form4_filing
+
+    async def test_recent_transactions_excludes_holding_rows(self):
+        rows = await self.processor.get_recent_insider_transactions("ACME")
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["filer"], "Buyer")
+
+    async def test_transaction_analysis_excludes_holding_rows(self):
+        result = await self.processor.analyze_insider_transactions("ACME")
+
+        self.assertEqual(result["total_transactions_parsed"], 1)
+        self.assertEqual(result["buy_transaction_count"], 1)
+
+
 class Form4RawStoreAndFingerprintTests(unittest.IsolatedAsyncioTestCase):
     """The clean model: delta the accession index, download each immutable filing once,
     re-derive payloads locally, validate them by input fingerprint — never by age."""

@@ -124,7 +124,13 @@ class Form144Processor:
 
         # Real filings sign via <noticeSignature><noticeDate>…<signature>…; keep the old
         # signature/signatureDate lookups as a fallback for schema variants.
-        signature_block = _find_first(root, "noticeSignature") or _find_first(root, "signature")
+        # `or` cannot be used to chain Element lookups: ElementTree defines an element's
+        # truth value as its child count, so a present-but-childless <noticeSignature> is
+        # falsy and would silently fall through to the legacy <signature> path. (Python also
+        # deprecates relying on that truth value.) Compare against None explicitly.
+        signature_block = _find_first(root, "noticeSignature")
+        if signature_block is None:
+            signature_block = _find_first(root, "signature")
         signature_date = _normalize_date(
             _child_text(signature_block, "noticeDate") or _child_text(signature_block, "signatureDate")
         )
