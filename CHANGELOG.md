@@ -119,6 +119,11 @@ This work is targeted for `0.2.0`.
 - **`Retry-After` as an HTTP-date raised `ValueError`** out of the retry loop; RFC 9110
   permits both forms and both are now handled.
 - **HTTP 503 is now retried** with backoff. SEC uses it as a throttle signal alongside 429.
+- **Large SEC JSON responses were truncated at the first buffered network chunk.**
+  `StreamReader.read(n)` may return fewer than `n` bytes before EOF, so the bounded reader
+  sometimes parsed only the first ~50–200 KiB of Company Facts or submissions data and
+  reported misleading malformed-JSON errors. It now drains the stream to EOF in bounded
+  chunks while preserving the 256 MiB decompressed-body ceiling.
 - **Form 144 signature-block lookup chained Element objects with `or`.** ElementTree defines
   an element's truth value as its child count, so a present-but-childless
   `<noticeSignature>` was treated as absent and fell through to the legacy `<signature>`

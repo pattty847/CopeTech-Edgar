@@ -29,21 +29,37 @@ class FakeContent:
     """Stand-in for `aiohttp.ClientResponse.content`, which the client reads through so
     response bodies stay byte-bounded instead of being inflated wholesale by `.text()`."""
 
-    def __init__(self, body: bytes):
+    def __init__(self, body: bytes, *, max_chunk_size: int | None = None):
         self._body = body
+        self._offset = 0
+        self._max_chunk_size = max_chunk_size
 
     async def read(self, limit: int = -1) -> bytes:
+        if self._offset >= len(self._body):
+            return b""
         if limit is None or limit < 0:
-            return self._body
-        return self._body[:limit]
+            limit = len(self._body) - self._offset
+        if self._max_chunk_size is not None:
+            limit = min(limit, self._max_chunk_size)
+        end = min(len(self._body), self._offset + limit)
+        chunk = self._body[self._offset:end]
+        self._offset = end
+        return chunk
 
 
 class FakeResponse:
-    def __init__(self, status: int, body: str = "", headers: dict[str, str] | None = None):
+    def __init__(
+        self,
+        status: int,
+        body: str = "",
+        headers: dict[str, str] | None = None,
+        *,
+        max_chunk_size: int | None = None,
+    ):
         self.status = status
         self._body = body
         self.headers = headers or {}
-        self.content = FakeContent(body.encode("utf-8"))
+        self.content = FakeContent(body.encode("utf-8"), max_chunk_size=max_chunk_size)
 
     def get_encoding(self) -> str:
         return "utf-8"
@@ -156,6 +172,14 @@ class MakeRequestTests(unittest.IsolatedAsyncioTestCase):
         client, _ = await self._make_client([FakeResponse(200, '{"ok": true, "n": 3}')])
         result = await client.make_request("https://data.sec.gov/x", is_json=True)
         self.assertEqual(result, {"ok": True, "n": 3})
+
+    async def test_drains_a_json_response_that_arrives_in_multiple_chunks(self):
+        client, session = await self._make_client(
+            [FakeResponse(200, '{"companyfacts": ["complete"]}', max_chunk_size=7)]
+        )
+        result = await client.make_request("https://data.sec.gov/companyfacts", is_json=True)
+        self.assertEqual(result, {"companyfacts": ["complete"]})
+        self.assertEqual(len(session.calls), 1)
 
     async def test_rejects_non_json_when_json_was_requested(self):
         client, _ = await self._make_client([FakeResponse(200, "<html>not json</html>")])
@@ -386,7 +410,7 @@ class BoundedResponseTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_body_within_cap_is_returned(self):
         client = SecHttpClient(user_agent="Audit audit@example.com", rate_limit_sleep=0)
-        session = FakeSession([FakeResponse(200, '{"ok": true}')])
+        session = FakeSession([FakeResponse(200, '{"ok": true}', max_chunk_size=3)])
         _install_fake_session(client, session)
         self.assertEqual(await client.make_request("https://data.sec.gov/small.json"), {"ok": True})
 

@@ -21,6 +21,7 @@ from .errors import (
 # cap has to be generous — but an unbounded `response.text()` over a gzip stream is a
 # decompression-bomb primitive, and SEC content is remote data we do not control.
 MAX_RESPONSE_BYTES = 256 * 1024 * 1024
+RESPONSE_READ_CHUNK_BYTES = 64 * 1024
 
 # Sent only when no User-Agent was configured. SEC's fair-access policy asks callers to
 # declare who they are; a fabricated contact address is worse than an honest placeholder,
@@ -197,18 +198,29 @@ class SecHttpClient:
                 url=url,
                 status_code=response.status,
             )
-        body = await response.content.read(MAX_RESPONSE_BYTES + 1)
-        if len(body) > MAX_RESPONSE_BYTES:
-            raise SecResponseTooLargeError(
-                f"SEC response body exceeds the {MAX_RESPONSE_BYTES} byte cap.",
-                url=url,
-                status_code=response.status,
-            )
+        # StreamReader.read(n) is allowed to return fewer than n bytes before EOF. A
+        # single read therefore truncates large Company Facts responses at whichever
+        # network chunk happened to be buffered (often a few hundred KiB), producing a
+        # misleading JSON decode error. Drain the stream explicitly while retaining the
+        # decompressed-byte ceiling.
+        body = bytearray()
+        while True:
+            remaining = MAX_RESPONSE_BYTES + 1 - len(body)
+            chunk = await response.content.read(min(RESPONSE_READ_CHUNK_BYTES, remaining))
+            if not chunk:
+                break
+            body.extend(chunk)
+            if len(body) > MAX_RESPONSE_BYTES:
+                raise SecResponseTooLargeError(
+                    f"SEC response body exceeds the {MAX_RESPONSE_BYTES} byte cap.",
+                    url=url,
+                    status_code=response.status,
+                )
         # aiohttp's `get_encoding()` requires `response._body` to have been populated by
         # `response.read()`. We deliberately stream through `response.content` to enforce
         # the byte ceiling, so use the declared charset directly and default to UTF-8.
         encoding = getattr(response, "charset", None) or "utf-8"
-        return body.decode(encoding, errors="replace")
+        return bytes(body).decode(encoding, errors="replace")
 
     async def _get_session(self) -> aiohttp.ClientSession:
         """
