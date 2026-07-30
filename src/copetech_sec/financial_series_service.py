@@ -79,4 +79,6 @@ class FinancialSeriesService:
         if not include_provenance:
             for observation in payload["observations"]:
                 observation.pop("sources", None)
+                observation.pop("availabilitySource", None)
+                observation.pop("selectedSource", None)
         return payload

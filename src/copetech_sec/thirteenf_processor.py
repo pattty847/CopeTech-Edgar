@@ -1,13 +1,15 @@
 import logging
 import re
-import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta
+from defusedxml import ElementTree as ET
+from defusedxml.common import DefusedXmlException
+from xml.etree.ElementTree import Element
 from decimal import Decimal, InvalidOperation
 from typing import Any, Dict, List, Optional
 
 from .cache_manager import SecCacheManager
 from .document_handler import FilingDocumentHandler
 from .http_client import SecHttpClient
+from .submissions import SubmissionsResource
 
 
 THIRTEENF_FORMS = {"13F-HR", "13F-HR/A"}
@@ -55,10 +57,15 @@ class ThirteenFProcessor:
         http_client: SecHttpClient,
         cache_manager: SecCacheManager,
         document_handler: FilingDocumentHandler,
+        submissions_resource: SubmissionsResource | None = None,
     ):
         self.http_client = http_client
         self.cache_manager = cache_manager
         self.document_handler = document_handler
+        self.submissions_resource = submissions_resource or SubmissionsResource(
+            http_client,
+            cache_manager,
+        )
 
     async def get_13f_filings(
         self,
@@ -80,40 +87,14 @@ class ThirteenFProcessor:
                 return []
             await self.cache_manager.save_data(cache_key, "submissions", submissions)
 
-        cutoff_date = (datetime.now() - timedelta(days=days_back)).strftime("%Y-%m-%d")
-        recent = submissions.get("filings", {}).get("recent", {})
-        forms = recent.get("form", [])
-        filing_dates = recent.get("filingDate", [])
-        accession_numbers = recent.get("accessionNumber", [])
-        report_dates = recent.get("reportDate", [])
-        primary_documents = recent.get("primaryDocument", [])
-        primary_descriptions = recent.get("primaryDocDescription", [])
-        min_len = min(len(forms), len(filing_dates), len(accession_numbers), len(report_dates))
-
-        filings: List[Dict[str, Any]] = []
-        for index in range(min_len):
-            form = forms[index]
-            filing_date = filing_dates[index]
-            if form not in THIRTEENF_FORMS or filing_date < cutoff_date:
-                continue
-
-            accession_no = accession_numbers[index]
-            accession_clean = accession_no.replace("-", "")
-            primary_document = primary_documents[index] if index < len(primary_documents) else None
-            primary_description = primary_descriptions[index] if index < len(primary_descriptions) else None
-            filings.append(
-                {
-                    "accession_no": accession_no,
-                    "filing_date": filing_date,
-                    "form": form,
-                    "report_date": report_dates[index],
-                    "url": f"https://www.sec.gov/Archives/edgar/data/{normalized_cik.lstrip('0')}/{accession_clean}/",
-                    "primary_document": primary_document,
-                    "primary_document_description": primary_description,
-                }
-            )
-
-        return filings
+        result = await self.submissions_resource.query_filings(
+            submissions,
+            cik=normalized_cik,
+            forms=THIRTEENF_FORMS,
+            days_back=days_back,
+            use_cache=use_cache,
+        )
+        return result.items
 
     async def get_latest_13f_holdings(
         self,
@@ -467,24 +448,24 @@ class ThirteenFProcessor:
         return self.parse_information_table_xml(raw_xml)
 
     @staticmethod
-    def _parse_xml_root(xml_content: str) -> ET.Element:
+    def _parse_xml_root(xml_content: str) -> Element:
         try:
             return ET.fromstring(xml_content)
-        except ET.ParseError:
+        except (ET.ParseError, DefusedXmlException):
             match = re.search(r"(<informationTable[\s\S]*?</informationTable>)", xml_content)
             if not match:
                 raise
             return ET.fromstring(match.group(1))
 
     @staticmethod
-    def _child_text(element: ET.Element, child_name: str) -> Optional[str]:
+    def _child_text(element: Element, child_name: str) -> Optional[str]:
         for child in list(element):
             if _strip_namespace(child.tag) == child_name:
                 return child.text
         return None
 
     @staticmethod
-    def _nested_child_text(element: ET.Element, parent_name: str, child_name: str) -> Optional[str]:
+    def _nested_child_text(element: Element, parent_name: str, child_name: str) -> Optional[str]:
         for child in list(element):
             if _strip_namespace(child.tag) != parent_name:
                 continue

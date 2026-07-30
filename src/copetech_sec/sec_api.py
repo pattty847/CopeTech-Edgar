@@ -1,13 +1,13 @@
 import json
 import os
 import logging
-import xml.etree.ElementTree as ET
 import asyncio
 import re
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional, Union, Tuple, Any, Callable, Awaitable, Iterable
 from .http_client import SecHttpClient
+from .errors import SecNotFoundError
 from .cache_manager import SecCacheManager
 from .document_handler import FilingDocumentHandler
 from .form4_processor import Form4Processor
@@ -18,6 +18,8 @@ from .financial_series_service import FinancialSeriesService
 from .supply_chain_parser import SupplyChainParser
 from .sql_cache_manager import SqlCacheManager
 from .thirteenf_processor import ThirteenFProcessor
+from .identifiers import Cik, Ticker
+from .submissions import SubmissionsResource
 
 
 def load_dotenv_settings(**kwargs) -> bool:
@@ -105,10 +107,15 @@ class SECDataFetcher:
             fetch_facts=self.get_company_facts,
             store_path=os.path.join(cache_dir, "financial_series.sqlite3"),
         )
+        self.submissions_resource = SubmissionsResource(
+            http_client=self.http_client,
+            cache_manager=self.cache_manager,
+        )
         self.thirteenf_processor = ThirteenFProcessor(
             http_client=self.http_client,
             cache_manager=self.cache_manager,
             document_handler=self.document_handler,
+            submissions_resource=self.submissions_resource,
         )
         self.supply_chain_parser = SupplyChainParser() # Initialize Parser
 
@@ -117,7 +124,7 @@ class SECDataFetcher:
 
     async def get_cik_for_ticker(self, ticker: str) -> Optional[str]:
         """Retrieves the 10-digit CIK for a given stock ticker symbol."""
-        ticker = ticker.upper()
+        ticker = Ticker(ticker)
         cik = await self.cache_manager.load_cik(ticker)
         if cik: return cik
 
@@ -134,204 +141,167 @@ class SECDataFetcher:
         """Fetches the official Ticker-CIK map from SEC and caches it."""
         url = "https://www.sec.gov/files/company_tickers.json"
         logging.info(f"Fetching Ticker-CIK map from {url}")
-        try:
-            # Prepare headers for www.sec.gov
-            temp_headers = self.http_client.default_headers.copy()
-            temp_headers['Host'] = 'www.sec.gov'
+        # Prepare headers for www.sec.gov
+        temp_headers = self.http_client.default_headers.copy()
+        temp_headers['Host'] = 'www.sec.gov'
 
-            sec_map_data = await self.http_client.make_request(url, headers=temp_headers, is_json=True)
-            if not sec_map_data or not isinstance(sec_map_data, dict):
-                logging.error(f"Failed to fetch/parse Ticker-CIK map from {url}. Type: {type(sec_map_data)}")
-                return False
+        sec_map_data = await self.http_client.make_request(url, headers=temp_headers, is_json=True)
+        if not isinstance(sec_map_data, dict):
+            raise TypeError(f"Ticker-CIK map must be a dict, got {type(sec_map_data).__name__}.")
 
-            ticker_to_cik = {}
-            for _index, company_info in sec_map_data.items():
-                ticker_val = company_info.get('ticker')
-                cik_int = company_info.get('cik_str')
-                if ticker_val and cik_int:
-                    cik_str = str(cik_int).zfill(10)
-                    ticker_to_cik[ticker_val.upper()] = cik_str
+        ticker_to_cik = {}
+        for _index, company_info in sec_map_data.items():
+            ticker_val = company_info.get('ticker')
+            cik_int = company_info.get('cik_str')
+            if ticker_val and cik_int:
+                    cik_str = str(Cik(cik_int))
+                    ticker_to_cik[str(Ticker(ticker_val))] = cik_str
 
-            await self.cache_manager.save_cik_map(ticker_to_cik)
-            return True
-
-        except Exception as e:
-            logging.error(f"Error during Ticker-CIK map fetch: {e}", exc_info=True)
-            return False
+        await self.cache_manager.save_cik_map(ticker_to_cik)
+        return True
 
     async def get_company_info(self, ticker: str, use_cache: bool = True) -> Optional[Dict]:
         """Fetches basic company information using the SEC submissions endpoint."""
-        ticker = ticker.upper()
-        if use_cache:
-            cache_data = await self.cache_manager.load_data(ticker, 'company_info')
-            if cache_data: return cache_data
-
+        ticker = Ticker(ticker)
         cik = await self.get_cik_for_ticker(ticker)
-        if not cik: return None
+        if not cik:
+            return None
+        cache_key = f"CIK{cik}"
+        if use_cache:
+            cache_data = await self.cache_manager.load_data(cache_key, 'company_info')
+            if isinstance(cache_data, dict):
+                return {**cache_data, "ticker": str(ticker)}
 
         submissions_url = self.SUBMISSIONS_ENDPOINT.format(cik=cik)
         try:
             response = await self.http_client.make_request(submissions_url, is_json=True)
-            if response is None or not isinstance(response, dict):
-                logging.error(f"Failed info lookup for {ticker}. Type: {type(response)}")
-                return None
-
-            # Extract relevant company info (can be expanded)
-            company_info = {
-                'ticker': ticker,
-                'cik': cik,
-                'name': response.get('name'),
-                'sic': response.get('sic'),
-                'sic_description': response.get('sicDescription'),
-                'address': response.get('addresses', {}).get('mailing'),
-                'phone': response.get('phone'),
-                'exchange': response.get('exchanges'), # Often a list
-            }
-            await self.cache_manager.save_data(ticker, 'company_info', company_info, cik=cik)
-            return company_info
-        except Exception as e:
-            logging.error(f"Error fetching company info for {ticker}: {e}")
+        except SecNotFoundError:
             return None
+        if not isinstance(response, dict):
+            raise TypeError(f"Company submissions must be a dict, got {type(response).__name__}.")
+
+        company_info = {
+            'ticker': str(ticker),
+            'cik': cik,
+            'name': response.get('name'),
+            'sic': response.get('sic'),
+            'sic_description': response.get('sicDescription'),
+            'address': response.get('addresses', {}).get('mailing'),
+            'phone': response.get('phone'),
+            'exchange': response.get('exchanges'),
+        }
+        await self.cache_manager.save_data(cache_key, 'company_info', company_info)
+        return company_info
 
     async def get_company_submissions(self, ticker: str, use_cache: bool = True) -> Optional[Dict]:
         """ Fetches the complete submissions data for a company."""
-        ticker = ticker.upper()
-        if use_cache:
-            cache_data = await self.cache_manager.load_data(ticker, 'submissions')
-            if cache_data: return cache_data
-
+        ticker = Ticker(ticker)
         cik = await self.get_cik_for_ticker(ticker)
-        if not cik: return None
+        if not cik:
+            return None
+        cache_key = f"CIK{cik}"
+        if use_cache:
+            cache_data = await self.cache_manager.load_data(cache_key, 'submissions')
+            if cache_data: return cache_data
 
         submissions_url = self.SUBMISSIONS_ENDPOINT.format(cik=cik)
         try:
             response = await self.http_client.make_request(submissions_url, is_json=True)
-            if response is None or not isinstance(response, dict):
-                 logging.error(f"Failed submissions lookup for {ticker}. Type: {type(response)}")
-                 return None
+        except SecNotFoundError:
+            return None
+        if not isinstance(response, dict):
+            raise TypeError(f"Company submissions must be a dict, got {type(response).__name__}.")
 
-            await self.cache_manager.save_data(ticker, 'submissions', response, cik=cik)
-            return response
-        except Exception as e:
-             logging.error(f"Error fetching submissions for {ticker}: {e}")
-             return None
+        await self.cache_manager.save_data(cache_key, 'submissions', response)
+        return response
 
     async def get_company_facts(self, ticker: str, use_cache: bool = True) -> Optional[Dict]:
         """[Orchestrator] Fetches company facts (XBRL data) needed by FinancialProcessor."""
-        ticker = ticker.upper()
-        if use_cache:
-            cached_data = await self.cache_manager.load_data(ticker, 'facts')
-            if cached_data: return cached_data
-
+        ticker = Ticker(ticker)
         cik = await self.get_cik_for_ticker(ticker)
-        if not cik: return None
+        if not cik:
+            return None
+        cache_key = f"CIK{cik}"
+        if use_cache:
+            cached_data = await self.cache_manager.load_data(cache_key, 'facts')
+            if cached_data: return cached_data
 
         facts_url = self.COMPANY_FACTS_ENDPOINT.format(cik=cik)
         logging.info(f"Fetching company facts from: {facts_url}")
         try:
-            # Use default headers from http_client for data.sec.gov
             company_facts_data = await self.http_client.make_request(facts_url, is_json=True)
-            if company_facts_data is None or not isinstance(company_facts_data, dict):
-                 logging.error(f"Failed facts lookup for {ticker}. Type: {type(company_facts_data)}")
-                 return None
-
-            await self.cache_manager.save_data(ticker, 'facts', company_facts_data, cik=cik)
-            return company_facts_data
-        except Exception as e:
-            logging.error(f"Error fetching facts for {ticker}: {e}")
+        except SecNotFoundError:
             return None
+        if not isinstance(company_facts_data, dict):
+            raise TypeError(f"Company Facts must be a dict, got {type(company_facts_data).__name__}.")
+
+        await self.cache_manager.save_data(cache_key, 'facts', company_facts_data)
+        return company_facts_data
 
     async def get_filings_by_form(self, ticker: str, form_type: Union[str, Iterable[str]], days_back: int = 90, use_cache: bool = True) -> List[Dict]:
         """ Fetches a list of filings of a specific form type within a given timeframe."""
-        ticker = ticker.upper()
+        result = await self.get_filings_page(
+            ticker,
+            form_type,
+            days_back=days_back,
+            use_cache=use_cache,
+        )
+        return result["items"]
+
+    async def get_filings_page(
+        self,
+        ticker: str,
+        form_type: Union[str, Iterable[str]],
+        *,
+        days_back: int = 90,
+        use_cache: bool = True,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> Dict[str, Any]:
+        """Return filings plus source, warning, and pagination metadata."""
+
+        ticker = Ticker(ticker)
         requested_forms = [form_type] if isinstance(form_type, str) else list(form_type)
         requested_forms = [form for form in requested_forms if form]
         if not requested_forms:
-            logging.warning(f"No form type provided for {ticker}.")
-            return []
-        cache_form_key = ",".join(requested_forms)
-        logging.debug(f"Getting {form_type} filings for {ticker} (days back: {days_back}, cache: {use_cache})")
-        if use_cache:
-            cache_data = await self.cache_manager.load_data(ticker, 'forms', form_type=cache_form_key, days_back=days_back)
-            if cache_data:
-                cutoff_date = (datetime.now() - timedelta(days=days_back)).strftime('%Y-%m-%d')
-                if isinstance(cache_data, list):
-                    filtered_cache = [
-                        filing for filing in cache_data
-                        if filing.get('filing_date', '') >= cutoff_date and filing.get('form') in requested_forms
-                    ]
-                    logging.debug(f"Found {len(filtered_cache)} fresh {cache_form_key} filings in cache for {ticker}.")
-                    return filtered_cache
-                else:
-                    logging.warning(f"Expected list from filings cache for {ticker} {cache_form_key}, got {type(cache_data)}. Ignoring cache.")
+            raise ValueError("At least one form type is required.")
+        cik = await self.get_cik_for_ticker(ticker)
+        if not cik:
+            return {
+                "items": [],
+                "metadata": {
+                    "retrievedAt": datetime.now(timezone.utc).isoformat(),
+                    "source": "sec-submissions",
+                    "sourceFiles": [],
+                    "truncated": False,
+                    "nextCursor": None,
+                    "warnings": ["ticker_not_found"],
+                },
+            }
 
         submissions = await self.get_company_submissions(ticker, use_cache=use_cache)
         if not submissions:
-            logging.warning(f"No submissions data found for {ticker}, cannot extract filings.")
-            return []
-
-        cik = submissions.get('cik')
-        if not cik:
-             cik_lookup = await self.get_cik_for_ticker(ticker)
-             if not cik_lookup:
-                  logging.error(f"Cannot get CIK for {ticker} to process filings.")
-                  return []
-             cik = cik_lookup
-
-        filings = []
-        cutoff_date = (datetime.now() - timedelta(days=days_back)).strftime('%Y-%m-%d')
-        try:
-            recent_filings = submissions.get('filings', {}).get('recent', {})
-            if not recent_filings:
-                logging.info(f"No 'recent' filings found in submissions data for {ticker}.")
-                return []
-
-            # Extract data lists safely
-            form_list = recent_filings.get('form', [])
-            filing_date_list = recent_filings.get('filingDate', [])
-            accession_number_list = recent_filings.get('accessionNumber', [])
-            report_date_list = recent_filings.get('reportDate', [])
-            primary_document_list = recent_filings.get('primaryDocument', [])
-            primary_doc_desc_list = recent_filings.get('primaryDocDescription', []) # Added Description
-            items_list = recent_filings.get('items', []) # 8-K items as comma-separated strings
-
-            min_len = min(len(form_list), len(filing_date_list), len(accession_number_list), len(report_date_list))
-
-            logging.debug(f"Processing {min_len} recent filing entries for {ticker}.")
-            for i in range(min_len):
-                form = form_list[i]
-                filing_date = filing_date_list[i]
-                accession_no = accession_number_list[i]
-                report_date = report_date_list[i]
-
-                if form in requested_forms and filing_date >= cutoff_date:
-                    accession_no_cleaned = accession_no.replace('-', '')
-                    # Use CIK without leading zeros for URL path
-                    filing_url = f"https://www.sec.gov/Archives/edgar/data/{cik.lstrip('0')}/{accession_no_cleaned}/"
-
-                    primary_doc = primary_document_list[i] if i < len(primary_document_list) else None
-                    primary_doc_desc = primary_doc_desc_list[i] if i < len(primary_doc_desc_list) else None
-                    items = items_list[i] if i < len(items_list) else ''
-
-                    filing_dict = {
-                        'accession_no': accession_no,
-                        'filing_date': filing_date,
-                        'form': form,
-                        'report_date': report_date,
-                        'url': filing_url,
-                        'primary_document': primary_doc,
-                        'primary_document_description': primary_doc_desc,
-                        'items': items,
-                    }
-                    filings.append(filing_dict)
-
-            logging.info(f"Extracted {len(filings)} {cache_form_key} filings for {ticker} within {days_back} days.")
-            if filings:
-                 await self.cache_manager.save_data(ticker, 'forms', filings, form_type=cache_form_key, days_back=days_back)
-            return filings
-        except Exception as e:
-             logging.error(f"Error processing filings for {ticker}: {e}", exc_info=True)
-             return []
+            return {
+                "items": [],
+                "metadata": {
+                    "retrievedAt": datetime.now(timezone.utc).isoformat(),
+                    "source": "sec-submissions",
+                    "sourceFiles": [],
+                    "truncated": False,
+                    "nextCursor": None,
+                    "warnings": ["submissions_not_found"],
+                },
+            }
+        result = await self.submissions_resource.query_filings(
+            submissions,
+            cik=cik,
+            forms=requested_forms,
+            days_back=days_back,
+            use_cache=use_cache,
+            limit=limit,
+            cursor=cursor,
+        )
+        return result.to_dict()
 
     # === CONVENIENCE FILING WRAPPERS ===
     async def fetch_insider_filings(self, ticker: str, days_back: int = 90, use_cache: bool = True) -> List[Dict]:

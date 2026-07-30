@@ -7,6 +7,16 @@ import email.utils
 import aiohttp
 from typing import Dict, Optional, Union
 
+from .errors import (
+    SecAccessDeniedError,
+    SecMalformedResponseError,
+    SecNotFoundError,
+    SecRateLimitError,
+    SecRequestError,
+    SecResponseTooLargeError,
+    SecTransportError,
+)
+
 # SEC serves Company Facts payloads that reach tens of megabytes for large filers, so the
 # cap has to be generous — but an unbounded `response.text()` over a gzip stream is a
 # decompression-bomb primitive, and SEC content is remote data we do not control.
@@ -174,7 +184,7 @@ class SecHttpClient:
             await asyncio.sleep(delay)
         self.last_request_time = time.time()
 
-    async def _read_bounded_text(self, response: aiohttp.ClientResponse, url: str) -> Optional[str]:
+    async def _read_bounded_text(self, response: aiohttp.ClientResponse, url: str) -> str:
         """Read a response body with a hard byte ceiling.
 
         `response.text()` on a gzip stream will happily inflate an unbounded amount of
@@ -182,15 +192,18 @@ class SecHttpClient:
         """
         declared = response.headers.get("Content-Length")
         if declared and declared.isdigit() and int(declared) > MAX_RESPONSE_BYTES:
-            logging.error(
-                f"Refusing {url}: Content-Length {int(declared)} exceeds "
-                f"{MAX_RESPONSE_BYTES} byte cap."
+            raise SecResponseTooLargeError(
+                f"SEC response Content-Length exceeds the {MAX_RESPONSE_BYTES} byte cap.",
+                url=url,
+                status_code=response.status,
             )
-            return None
         body = await response.content.read(MAX_RESPONSE_BYTES + 1)
         if len(body) > MAX_RESPONSE_BYTES:
-            logging.error(f"Refusing {url}: response body exceeds {MAX_RESPONSE_BYTES} byte cap.")
-            return None
+            raise SecResponseTooLargeError(
+                f"SEC response body exceeds the {MAX_RESPONSE_BYTES} byte cap.",
+                url=url,
+                status_code=response.status,
+            )
         return body.decode(response.get_encoding() or "utf-8", errors="replace")
 
     async def _get_session(self) -> aiohttp.ClientSession:
@@ -269,6 +282,7 @@ class SecHttpClient:
                   # Assign empty dict if absolutely no User-Agent is set anywhere, though request will likely fail
                   request_headers = request_headers or {}
 
+        last_error: SecRequestError | None = None
         for attempt in range(max_retries):
             try:
                 # Every attempt takes its own slot: a retry is another SEC request.
@@ -280,6 +294,12 @@ class SecHttpClient:
                     # Handle throttling. SEC signals fair-access violations with 429 and,
                     # under load, 503; both are retryable and both may carry Retry-After.
                     if response.status in (429, 503):
+                        last_error = SecRateLimitError(
+                            f"SEC throttled the request with HTTP {response.status}.",
+                            url=url,
+                            status_code=response.status,
+                            retryable=True,
+                        )
                         retry_after = _retry_after_seconds(response.headers.get('Retry-After'))
                         wait_time = min((2 ** attempt) + (retry_after if retry_after is not None else 1.0), 10)
                         logging.warning(
@@ -295,24 +315,34 @@ class SecHttpClient:
                     # Process successful response
                     if is_json:
                         text_content = await self._read_bounded_text(response, url)
-                        if text_content is None:
-                            return None
                         try:
                             # Check if it looks like JSON before attempting to parse
                             if text_content.strip().startswith(('{', '[')):
                                 return json.loads(text_content)
                             else:
-                                logging.warning(f"Content from {url} doesn't appear to be JSON (starts with: {text_content[:50]}...). Returning as text.")
-                                return text_content # Return text if not JSON-like
+                                raise SecMalformedResponseError(
+                                    "SEC response was not JSON as requested.",
+                                    url=url,
+                                    status_code=response.status,
+                                )
                         except json.JSONDecodeError as json_err:
-                            logging.error(f"JSON decode error for {url}: {json_err}. Content length: {len(text_content)}.")
-                            logging.warning(f"Returning raw text instead (first 100 chars): {text_content[:100]}...")
-                            return text_content # Return raw text on decode error
+                            raise SecMalformedResponseError(
+                                f"SEC returned malformed JSON: {json_err}",
+                                url=url,
+                                status_code=response.status,
+                            ) from json_err
                     else:
                         # Return raw text if JSON parsing wasn't requested
                         return await self._read_bounded_text(response, url)
 
+            except (SecMalformedResponseError, SecResponseTooLargeError):
+                 raise
             except asyncio.TimeoutError:
+                 last_error = SecTransportError(
+                     "SEC request timed out.",
+                     url=url,
+                     retryable=True,
+                 )
                  logging.warning(f"Request timeout on attempt {attempt+1}/{max_retries} for {url}")
             except aiohttp.ClientResponseError as e:
                  # Log specific HTTP errors
@@ -320,13 +350,37 @@ class SecHttpClient:
                  # Don't retry on certain client errors like 404 Not Found
                  if e.status in [404, 400, 403]:
                      logging.error(f"Non-retryable client error {e.status} encountered. Aborting request for {url}.")
-                     return None
+                     if e.status == 404:
+                         raise SecNotFoundError(
+                             "SEC resource was not found.",
+                             url=url,
+                             status_code=e.status,
+                         ) from e
+                     if e.status == 403:
+                         raise SecAccessDeniedError(
+                             "SEC denied the request.",
+                             url=url,
+                             status_code=e.status,
+                         ) from e
+                     raise SecRequestError(
+                         "SEC rejected the request.",
+                         url=url,
+                         status_code=e.status,
+                     ) from e
+                 last_error = SecRequestError(
+                     f"SEC returned HTTP {e.status}.",
+                     url=url,
+                     status_code=e.status,
+                     retryable=e.status >= 500,
+                 )
             except aiohttp.ClientError as e:
                  # Catch other potential client errors (connection issues, etc.)
                  logging.warning(f"Client request error on attempt {attempt+1}/{max_retries} for {url}: {str(e)}")
-            except Exception as e:
-                 # Catch any other unexpected errors during the request
-                 logging.error(f"Unexpected error during request attempt {attempt+1}/{max_retries} for {url}: {e}", exc_info=True)
+                 last_error = SecTransportError(
+                     f"SEC connection failed: {e}",
+                     url=url,
+                     retryable=True,
+                 )
 
             # Wait before the next retry (if not the last attempt)
             if attempt < max_retries - 1:
@@ -335,7 +389,11 @@ class SecHttpClient:
                 await asyncio.sleep(retry_wait)
 
         logging.error(f"Request failed for {url} after {max_retries} retries.")
-        return None
+        raise last_error or SecTransportError(
+            "SEC request failed without a response.",
+            url=url,
+            retryable=True,
+        )
 
     async def make_archive_request(self, url: str, max_retries: int = 3, is_json: bool = False) -> Optional[Union[Dict, str]]:
         """
@@ -371,6 +429,7 @@ class SecHttpClient:
             "Sec-Fetch-Site": "none"
         }
 
+        last_error: SecRequestError | None = None
         for attempt in range(max_retries):
             try:
                 await self._acquire_request_slot()
@@ -381,6 +440,12 @@ class SecHttpClient:
 
                     # Handle throttling (see make_request: 503 is SEC's other throttle signal)
                     if response.status in (429, 503):
+                        last_error = SecRateLimitError(
+                            f"SEC throttled the archive request with HTTP {response.status}.",
+                            url=url,
+                            status_code=response.status,
+                            retryable=True,
+                        )
                         retry_after = _retry_after_seconds(response.headers.get('Retry-After'))
                         wait_time = min((2 ** attempt) + (retry_after if retry_after is not None else 1.0), 15)
                         logging.warning(
@@ -396,31 +461,67 @@ class SecHttpClient:
                     # Process successful response
                     if is_json:
                         text_content = await self._read_bounded_text(response, url)
-                        if text_content is None:
-                            return None
                         try:
                             if text_content.strip().startswith(('{', '[')):
                                 return json.loads(text_content)
                             else:
-                                logging.warning(f"Archive content from {url} doesn't appear to be JSON. Returning as text.")
-                                return text_content
+                                raise SecMalformedResponseError(
+                                    "SEC archive response was not JSON as requested.",
+                                    url=url,
+                                    status_code=response.status,
+                                )
                         except json.JSONDecodeError as json_err:
-                            logging.error(f"JSON decode error for archive {url}: {json_err}")
-                            return text_content
+                            raise SecMalformedResponseError(
+                                f"SEC archive returned malformed JSON: {json_err}",
+                                url=url,
+                                status_code=response.status,
+                            ) from json_err
                     else:
                         return await self._read_bounded_text(response, url)
 
+            except (SecMalformedResponseError, SecResponseTooLargeError):
+                raise
             except asyncio.TimeoutError:
+                last_error = SecTransportError(
+                    "SEC archive request timed out.",
+                    url=url,
+                    retryable=True,
+                )
                 logging.warning(f"Archive request timeout on attempt {attempt+1}/{max_retries} for {url}")
             except aiohttp.ClientResponseError as e:
                 logging.error(f"Archive HTTP error {e.status} on attempt {attempt+1}/{max_retries} for {url}: {e.message}")
                 if e.status in [404, 400, 403]:
                     logging.error(f"Non-retryable archive error {e.status} encountered. Aborting request for {url}.")
-                    return None
+                    if e.status == 404:
+                        raise SecNotFoundError(
+                            "SEC archive resource was not found.",
+                            url=url,
+                            status_code=e.status,
+                        ) from e
+                    if e.status == 403:
+                        raise SecAccessDeniedError(
+                            "SEC denied the archive request.",
+                            url=url,
+                            status_code=e.status,
+                        ) from e
+                    raise SecRequestError(
+                        "SEC rejected the archive request.",
+                        url=url,
+                        status_code=e.status,
+                    ) from e
+                last_error = SecRequestError(
+                    f"SEC archive returned HTTP {e.status}.",
+                    url=url,
+                    status_code=e.status,
+                    retryable=e.status >= 500,
+                )
             except aiohttp.ClientError as e:
                 logging.warning(f"Archive client error on attempt {attempt+1}/{max_retries} for {url}: {str(e)}")
-            except Exception as e:
-                logging.error(f"Unexpected archive error on attempt {attempt+1}/{max_retries} for {url}: {e}", exc_info=True)
+                last_error = SecTransportError(
+                    f"SEC archive connection failed: {e}",
+                    url=url,
+                    retryable=True,
+                )
 
             # Wait before retry
             if attempt < max_retries - 1:
@@ -429,7 +530,11 @@ class SecHttpClient:
                 await asyncio.sleep(retry_wait)
 
         logging.error(f"Archive request failed for {url} after {max_retries} retries.")
-        return None
+        raise last_error or SecTransportError(
+            "SEC archive request failed without a response.",
+            url=url,
+            retryable=True,
+        )
 
     async def test_api_access(self, test_endpoint_url: str) -> bool:
         """
@@ -468,8 +573,7 @@ class SecHttpClient:
                 logging.error(f"SEC API access test failed for {test_endpoint_url}: Request unsuccessful after retries.")
                 return False
 
-        except Exception as e:
-            # Catch any unexpected errors during the test
+        except SecRequestError as e:
             logging.error(f"Error testing SEC API access to {test_endpoint_url}: {str(e)}", exc_info=True)
             return False
 

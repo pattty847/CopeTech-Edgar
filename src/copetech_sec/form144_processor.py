@@ -12,7 +12,9 @@ multiple security classes; each becomes its own record).
 from __future__ import annotations
 
 import logging
-import xml.etree.ElementTree as ET
+from defusedxml import ElementTree as ET
+from defusedxml.common import DefusedXmlException
+from xml.etree.ElementTree import Element
 from datetime import datetime, timezone
 from typing import Awaitable, Callable, Dict, List, Optional
 
@@ -23,18 +25,18 @@ def _strip_namespace(tag: str) -> str:
     return tag.rsplit("}", 1)[-1] if "}" in tag else tag
 
 
-def _find_first(root: ET.Element, local_name: str) -> Optional[ET.Element]:
+def _find_first(root: Element, local_name: str) -> Optional[Element]:
     for element in root.iter():
         if _strip_namespace(element.tag) == local_name:
             return element
     return None
 
 
-def _find_all(root: ET.Element, local_name: str) -> List[ET.Element]:
+def _find_all(root: Element, local_name: str) -> List[Element]:
     return [element for element in root.iter() if _strip_namespace(element.tag) == local_name]
 
 
-def _child_text(element: Optional[ET.Element], local_name: str) -> Optional[str]:
+def _child_text(element: Optional[Element], local_name: str) -> Optional[str]:
     if element is None:
         return None
     for child in element.iter():
@@ -110,7 +112,7 @@ class Form144Processor:
         """
         try:
             root = ET.fromstring(xml_content)
-        except ET.ParseError as exc:
+        except (ET.ParseError, DefusedXmlException) as exc:
             logging.error("Form 144 XML parse error: %s", exc)
             return []
 
@@ -198,7 +200,7 @@ class Form144Processor:
         return records
 
     @staticmethod
-    def _extract_relationship(root: ET.Element) -> Optional[str]:
+    def _extract_relationship(root: Element) -> Optional[str]:
         # Real electronic filings: <relationshipsToIssuer><relationshipToIssuer>Officer</...>
         real_block = _find_first(root, "relationshipsToIssuer")
         if real_block is not None:
@@ -226,7 +228,7 @@ class Form144Processor:
         return ", ".join(flags) or None
 
     @staticmethod
-    def _extract_recent_sales(root: ET.Element) -> List[Dict]:
+    def _extract_recent_sales(root: Element) -> List[Dict]:
         sales: List[Dict] = []
         for block in _find_all(root, "securitiesSoldInPast3Months"):
             sales.append(

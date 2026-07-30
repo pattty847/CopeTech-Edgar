@@ -16,6 +16,13 @@ from multidict import CIMultiDict, CIMultiDictProxy
 from yarl import URL
 
 from copetech_sec.http_client import SecHttpClient
+from copetech_sec.errors import (
+    SecAccessDeniedError,
+    SecMalformedResponseError,
+    SecNotFoundError,
+    SecRequestError,
+    SecResponseTooLargeError,
+)
 
 
 class FakeContent:
@@ -150,10 +157,10 @@ class MakeRequestTests(unittest.IsolatedAsyncioTestCase):
         result = await client.make_request("https://data.sec.gov/x", is_json=True)
         self.assertEqual(result, {"ok": True, "n": 3})
 
-    async def test_returns_text_when_response_does_not_look_like_json(self):
+    async def test_rejects_non_json_when_json_was_requested(self):
         client, _ = await self._make_client([FakeResponse(200, "<html>not json</html>")])
-        result = await client.make_request("https://data.sec.gov/x", is_json=True)
-        self.assertEqual(result, "<html>not json</html>")
+        with self.assertRaises(SecMalformedResponseError):
+            await client.make_request("https://data.sec.gov/x", is_json=True)
 
     async def test_returns_text_when_is_json_false(self):
         client, _ = await self._make_client([FakeResponse(200, "raw body")])
@@ -172,29 +179,30 @@ class MakeRequestTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result, {"ok": True})
         self.assertEqual(len(session.calls), 3)
 
-    async def test_404_returns_none_without_retrying(self):
+    async def test_404_raises_not_found_without_retrying(self):
         client, session = await self._make_client(
             [
                 FakeResponse(404, ""),
                 FakeResponse(200, '{"ok": true}'),  # should never be consumed
             ]
         )
-        result = await client.make_request("https://data.sec.gov/missing", max_retries=4)
-        self.assertIsNone(result)
+        with self.assertRaises(SecNotFoundError):
+            await client.make_request("https://data.sec.gov/missing", max_retries=4)
         self.assertEqual(len(session.calls), 1)
 
-    async def test_403_returns_none_without_retrying(self):
+    async def test_403_raises_access_denied_without_retrying(self):
         client, session = await self._make_client([FakeResponse(403, "")])
-        result = await client.make_request("https://data.sec.gov/forbidden", max_retries=3)
-        self.assertIsNone(result)
+        with self.assertRaises(SecAccessDeniedError):
+            await client.make_request("https://data.sec.gov/forbidden", max_retries=3)
         self.assertEqual(len(session.calls), 1)
 
-    async def test_500_retries_up_to_max_then_returns_none(self):
+    async def test_500_retries_up_to_max_then_raises(self):
         client, session = await self._make_client(
             [FakeResponse(500, ""), FakeResponse(500, ""), FakeResponse(500, "")]
         )
-        result = await client.make_request("https://data.sec.gov/x", max_retries=3)
-        self.assertIsNone(result)
+        with self.assertRaises(SecRequestError) as caught:
+            await client.make_request("https://data.sec.gov/x", max_retries=3)
+        self.assertTrue(caught.exception.retryable)
         self.assertEqual(len(session.calls), 3)
 
     async def test_user_agent_propagates_to_request_headers(self):
@@ -359,7 +367,8 @@ class BoundedResponseTests(unittest.IsolatedAsyncioTestCase):
         session = FakeSession([FakeResponse(200, "{}", headers={"Content-Length": oversized})])
         _install_fake_session(client, session)
 
-        self.assertIsNone(await client.make_request("https://data.sec.gov/huge.json"))
+        with self.assertRaises(SecResponseTooLargeError):
+            await client.make_request("https://data.sec.gov/huge.json")
 
     async def test_body_exceeding_cap_is_refused(self):
         from copetech_sec import http_client as http_client_module
@@ -370,7 +379,8 @@ class BoundedResponseTests(unittest.IsolatedAsyncioTestCase):
             client = SecHttpClient(user_agent="Audit audit@example.com", rate_limit_sleep=0)
             session = FakeSession([FakeResponse(200, "x" * 64)])
             _install_fake_session(client, session)
-            self.assertIsNone(await client.make_request("https://data.sec.gov/big.json", is_json=False))
+            with self.assertRaises(SecResponseTooLargeError):
+                await client.make_request("https://data.sec.gov/big.json", is_json=False)
         finally:
             http_client_module.MAX_RESPONSE_BYTES = original_cap
 

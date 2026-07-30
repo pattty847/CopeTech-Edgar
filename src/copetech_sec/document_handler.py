@@ -8,6 +8,7 @@ from urllib.parse import quote, unquote
 
 # Assuming http_client defines SecHttpClient with make_request method
 from .http_client import SecHttpClient
+from .errors import SecNotFoundError
 from .identifiers import Accession, Cik
 
 
@@ -137,13 +138,10 @@ class FilingDocumentHandler:
 
         # 2. CIK from ticker
         if not cik_for_url and ticker:
-            try:
-                cik_lookup = await self.get_cik_for_ticker(ticker)
-                if cik_lookup:
-                    cik_for_url = Cik(cik_lookup).archive_path
-                    logging.debug(f"Using CIK {cik_for_url} from ticker {ticker} for filing {accession}.")
-            except Exception as e:
-                logging.warning(f"Error looking up CIK for ticker {ticker} for filing {accession_no}: {e}")
+            cik_lookup = await self.get_cik_for_ticker(ticker)
+            if cik_lookup:
+                cik_for_url = Cik(cik_lookup).archive_path
+                logging.debug(f"Using CIK {cik_for_url} from ticker {ticker} for filing {accession}.")
 
         # 3. Unsafe fallback: accession prefix. Wrong when the filing was submitted
         # by a filer-agent (the prefix is the agent's CIK, not the filer's).
@@ -223,8 +221,8 @@ class FilingDocumentHandler:
             logging.info(f"Found {len(documents)} documents in index.json for {accession_no}")
             return documents
 
-        except Exception as e:
-            logging.error(f"Error fetching/parsing index.json for document list ({accession_no}): {e}", exc_info=True)
+        except SecNotFoundError:
+            logging.info(f"No index.json exists for filing {accession}.")
             return None
 
     async def download_form_document(
@@ -281,9 +279,8 @@ class FilingDocumentHandler:
             # Content type check is unreliable, return the text
             return response_content
 
-        except Exception as e:
-            # Catch unexpected errors during the download process itself
-            logging.error(f"Unexpected error downloading document {document_name} ({accession_number}) from {url}: {e}", exc_info=True)
+        except SecNotFoundError:
+            logging.info(f"Document {document_name} does not exist in filing {accession}.")
             return None
 
     async def _find_primary_document_name(self, accession_no: str, cik_for_url: str) -> Optional[str]:
@@ -347,8 +344,8 @@ class FilingDocumentHandler:
                     logging.info(f"Found primary document candidate from index.json: {primary_doc}")
             else:
                 logging.warning(f"index.json for {accession_no} didn't return expected directory structure.")
-        except Exception as e:
-            logging.error(f"Error parsing index.json for {accession_no}: {e}")
+        except SecNotFoundError:
+            logging.info(f"No index.json exists for filing {accession}.")
 
         # 2. Fallback to index.htm if no candidate from index.json
         if not primary_doc:
@@ -401,8 +398,8 @@ class FilingDocumentHandler:
                                     primary_doc = candidate
                                     logging.info(f"Found potential primary document via first link in index.htm table: {primary_doc}")
                                     break
-            except Exception as e:
-                logging.error(f"Error processing HTML index for {accession_no}: {e}")
+            except SecNotFoundError:
+                logging.info(f"No index.htm exists for filing {accession}.")
 
         if not primary_doc:
             logging.error(f"Could not determine primary document for {accession_no}")

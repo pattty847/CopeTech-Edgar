@@ -11,7 +11,9 @@ None — every `company_info` cache read/write became a no-op.
 from __future__ import annotations
 
 import tempfile
+import os
 import unittest
+from datetime import datetime
 
 from copetech_sec.cache_manager import SecCacheManager
 
@@ -103,6 +105,15 @@ class RawFilingStoreTests(unittest.TestCase):
     def test_rejects_bogus_accession(self):
         self.assertIsNone(self.manager.raw_filing_path("../../etc/passwd"))
 
+    def test_rejects_xml_with_entity_declarations(self):
+        hostile = """<!DOCTYPE ownershipDocument [
+          <!ENTITY payload "expanded">
+        ]><ownershipDocument><issuer>&payload;</issuer></ownershipDocument>"""
+
+        self.assertFalse(
+            self.manager.save_raw_filing("0000320193-26-000044", hostile)
+        )
+
 
 class InsiderSignalsPayloadFileTests(unittest.TestCase):
     def setUp(self):
@@ -133,3 +144,26 @@ class InsiderSignalsPayloadFileTests(unittest.TestCase):
         # One fixed file per key; the dated leftovers are gone.
         self.assertEqual(files, ["ACME_insider_signals_180d_40_filing_date.json"])
         self.assertEqual(loaded, {"fingerprint": "abc"})
+
+
+class TickerMapTtlTests(unittest.IsolatedAsyncioTestCase):
+    async def test_ticker_map_round_trip_uses_metadata_envelope(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            manager = SecCacheManager(tmpdir, ticker_map_ttl_seconds=60)
+            await manager.save_cik_map({"AAPL": "0000320193"})
+
+            self.assertEqual(await manager.load_cik("aapl"), "0000320193")
+            map_path = manager._get_cache_path("mappings", map_type="ticker_cik")
+            payload = manager._read_cache_file(map_path)
+            self.assertEqual(payload["schemaVersion"], 1)
+            self.assertIn("retrievedAt", payload)
+
+    async def test_stale_ticker_map_is_not_used(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            manager = SecCacheManager(tmpdir, ticker_map_ttl_seconds=1)
+            await manager.save_cik_map({"AAPL": "0000320193"})
+            map_path = manager._get_cache_path("mappings", map_type="ticker_cik")
+            old = datetime.now().timestamp() - 10
+            os.utime(map_path, (old, old))
+
+            self.assertIsNone(await manager.load_cik("AAPL"))

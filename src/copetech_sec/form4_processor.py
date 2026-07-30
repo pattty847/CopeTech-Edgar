@@ -1,6 +1,8 @@
 import hashlib
 import logging
-import xml.etree.ElementTree as ET
+from defusedxml import ElementTree as ET
+from defusedxml.common import DefusedXmlException
+from xml.etree.ElementTree import Element, tostring
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional, TYPE_CHECKING, Callable, Awaitable, Any
@@ -268,12 +270,12 @@ class Form4Processor:
                     except Exception as exc:
                         logging.warning(
                             f"Error parsing ownership row ({table_path}): {exc} - "
-                            f"XML: {ET.tostring(node, encoding='unicode')[:200]}"
+                            f"XML: {tostring(node, encoding='unicode')[:200]}"
                         )
 
             return transactions
 
-        except ET.ParseError as e:
+        except (ET.ParseError, DefusedXmlException) as e:
             logging.error(f"XML Parse Error in Form 4: {e} - Content length: {len(xml_content)}")
             return []
         except Exception as e:
@@ -281,7 +283,7 @@ class Form4Processor:
             return []
 
     @staticmethod
-    def _parse_footnotes(root: ET.Element) -> Dict[str, str]:
+    def _parse_footnotes(root: Element) -> Dict[str, str]:
         """id -> text for every <footnote>. Form 4 footnotes carry material qualifications
         ("no shares were sold", "sold under a Rule 10b5-1 plan adopted on ...") that are
         otherwise invisible to consumers."""
@@ -294,14 +296,14 @@ class Form4Processor:
         return notes
 
     @staticmethod
-    def _row_footnote_ids(node: ET.Element) -> List[str]:
+    def _row_footnote_ids(node: Element) -> List[str]:
         return [
             ref.get('id').strip()
             for ref in node.iter('footnoteId')
             if (ref.get('id') or '').strip()
         ]
 
-    def _parse_reporting_owners(self, root: ET.Element) -> List[Dict[str, Any]]:
+    def _parse_reporting_owners(self, root: Element) -> List[Dict[str, Any]]:
         """Every <reportingOwner> in the document, with its own relationship flags."""
         owners: List[Dict[str, Any]] = []
         for owner_node in root.findall('.//reportingOwner'):
@@ -346,7 +348,7 @@ class Form4Processor:
 
     def _parse_ownership_row(
         self,
-        node: ET.Element,
+        node: Element,
         *,
         owner: Dict[str, Any],
         shared_fields: Dict[str, Any],

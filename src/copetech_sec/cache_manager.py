@@ -3,8 +3,9 @@ import json
 import logging
 import glob
 import re
-import xml.etree.ElementTree as ET
-from datetime import datetime
+from defusedxml import ElementTree as ET
+from defusedxml.common import DefusedXmlException
+from datetime import datetime, timezone
 from typing import Optional, Dict, List, Any
 
 class SecCacheManager:
@@ -32,6 +33,7 @@ class SecCacheManager:
     SUBDIRS = {
         "mappings": "mappings",
         "submissions": "submissions",
+        "submissions_history": "submissions",
         "forms": "forms",
         "facts": "facts",
         "reports": "reports", # Kept for potential future use, even if deprecated
@@ -46,7 +48,11 @@ class SecCacheManager:
     # shard by CIK/year if this ever holds hundreds of thousands of files.
     RAW_FILINGS_SUBDIR = os.path.join("raw", "filings")
 
-    def __init__(self, cache_dir: str = "data/edgar"):
+    def __init__(
+        self,
+        cache_dir: str = "data/edgar",
+        ticker_map_ttl_seconds: int = 24 * 60 * 60,
+    ):
         """
         Initializes the SEC Cache Manager.
 
@@ -59,6 +65,7 @@ class SecCacheManager:
                 project root.
         """
         self.cache_dir = cache_dir
+        self.ticker_map_ttl_seconds = ticker_map_ttl_seconds
         self._ensure_directories()
 
     def _ensure_directories(self):
@@ -116,6 +123,12 @@ class SecCacheManager:
 
         if data_type == "submissions":
             filename = f"{ticker_upper}_submissions_{timestamp}.json"
+        elif data_type == "submissions_history":
+            history_file = kwargs.get("history_file")
+            if not history_file:
+                raise ValueError("history_file is required for submissions_history.")
+            safe_history_file = self._safe_cache_segment(str(history_file))
+            filename = f"{ticker_upper}_history_{safe_history_file}.json"
         elif data_type == "forms":
             form_type = kwargs.get("form_type")
             if not form_type: raise ValueError("form_type is required for 'forms' data_type")
@@ -164,6 +177,12 @@ class SecCacheManager:
 
         if data_type == "submissions":
             pattern = f"{ticker_upper}_submissions_*.json"
+        elif data_type == "submissions_history":
+            history_file = kwargs.get("history_file")
+            if not history_file:
+                return []
+            safe_history_file = self._safe_cache_segment(str(history_file))
+            pattern = f"{ticker_upper}_history_{safe_history_file}.json"
         elif data_type == "forms":
             form_type = kwargs.get("form_type")
             if not form_type: return []
@@ -323,9 +342,22 @@ class SecCacheManager:
             Optional[str]: The 10-digit CIK string if found in the cache, otherwise None.
         """
         map_file = self._get_cache_path("mappings", map_type="ticker_cik")
+        if not os.path.exists(map_file):
+            return None
+        age_seconds = max(0.0, datetime.now().timestamp() - os.path.getmtime(map_file))
+        if age_seconds > self.ticker_map_ttl_seconds:
+            logging.info(
+                "Ticker-CIK map is stale (%.0fs old; TTL %ss).",
+                age_seconds,
+                self.ticker_map_ttl_seconds,
+            )
+            return None
         cik_map = self._read_cache_file(map_file)
         if isinstance(cik_map, dict):
-            cik = cik_map.get(ticker.upper())
+            mappings = cik_map.get("mappings", cik_map)
+            if not isinstance(mappings, dict):
+                return None
+            cik = mappings.get(ticker.upper())
             if cik:
                  logging.debug(f"CIK found in cache for {ticker}: {cik}")
                  return cik
@@ -344,7 +376,12 @@ class SecCacheManager:
                 to their 10-digit CIK strings.
         """
         map_file = self._get_cache_path("mappings", map_type="ticker_cik")
-        success = self._write_cache_file(map_file, cik_map)
+        payload = {
+            "schemaVersion": 1,
+            "retrievedAt": datetime.now(timezone.utc).isoformat(),
+            "mappings": cik_map,
+        }
+        success = self._write_cache_file(map_file, payload)
         if not success:
              logging.error("Failed to save Ticker-CIK map to cache.")
 
@@ -422,7 +459,7 @@ class SecCacheManager:
             return False
         try:
             ET.fromstring(content)
-        except ET.ParseError:
+        except (ET.ParseError, DefusedXmlException):
             logging.warning(f"Refusing to cache non-XML content for accession {accession_no}")
             return False
         try:

@@ -8,8 +8,18 @@ from typing import Annotated, Optional
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from .aws_resources import AwsResourceManager
+from .errors import (
+    SecAccessDeniedError,
+    SecMalformedResponseError,
+    SecNotFoundError,
+    SecRateLimitError,
+    SecRequestError,
+    SecResponseTooLargeError,
+    SecTransportError,
+)
 from .market_data import PriceCandleFetcher
 from .sec_api import SECDataFetcher, load_dotenv_settings
 from .settings import ServiceSettings
@@ -36,10 +46,37 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="CopeTech SEC API",
-    version="0.1.0",
+    version="0.2.0",
     description="HTTP API for CopeTech EDGAR/SEC demos.",
     lifespan=lifespan,
 )
+
+
+@app.exception_handler(SecNotFoundError)
+async def handle_sec_not_found(_request: Request, exc: SecNotFoundError) -> JSONResponse:
+    return JSONResponse(status_code=404, content={"detail": str(exc), "source": "sec"})
+
+
+@app.exception_handler(SecRateLimitError)
+async def handle_sec_throttle(_request: Request, exc: SecRateLimitError) -> JSONResponse:
+    return JSONResponse(status_code=503, content={"detail": str(exc), "source": "sec"})
+
+
+@app.exception_handler(SecTransportError)
+async def handle_sec_transport(_request: Request, exc: SecTransportError) -> JSONResponse:
+    return JSONResponse(status_code=503, content={"detail": str(exc), "source": "sec"})
+
+
+@app.exception_handler(SecAccessDeniedError)
+async def handle_sec_denied(_request: Request, exc: SecAccessDeniedError) -> JSONResponse:
+    return JSONResponse(status_code=502, content={"detail": str(exc), "source": "sec"})
+
+
+@app.exception_handler(SecMalformedResponseError)
+@app.exception_handler(SecResponseTooLargeError)
+@app.exception_handler(SecRequestError)
+async def handle_sec_upstream(_request: Request, exc: SecRequestError) -> JSONResponse:
+    return JSONResponse(status_code=502, content={"detail": str(exc), "source": "sec"})
 
 app.add_middleware(
     CORSMiddleware,
