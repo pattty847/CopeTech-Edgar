@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from .xbrl import XbrlResource
+
 if TYPE_CHECKING:
     from ..sec_api import SECDataFetcher
 
@@ -11,6 +13,39 @@ if TYPE_CHECKING:
 class FinancialsResource:
     def __init__(self, fetcher: SECDataFetcher):
         self._fetcher = fetcher
+        self.xbrl = XbrlResource(fetcher)
+
+    async def concept(
+        self,
+        ticker: str,
+        *,
+        taxonomy: str,
+        concept: str,
+        use_cache: bool = True,
+    ) -> dict[str, Any] | None:
+        return await self.xbrl.company_concept(
+            ticker,
+            taxonomy=taxonomy,
+            concept=concept,
+            use_cache=use_cache,
+        )
+
+    async def frame(
+        self,
+        *,
+        taxonomy: str,
+        concept: str,
+        unit: str,
+        period: str,
+        use_cache: bool = True,
+    ) -> dict[str, Any] | None:
+        return await self.xbrl.frame(
+            taxonomy=taxonomy,
+            concept=concept,
+            unit=unit,
+            period=period,
+            use_cache=use_cache,
+        )
 
     def metrics(self) -> list[dict[str, Any]]:
         return self._fetcher.list_supported_financial_metrics()

@@ -36,6 +36,8 @@ class SecCacheManager:
         "submissions_history": "submissions",
         "forms": "forms",
         "facts": "facts",
+        "xbrl_concepts": "facts",
+        "xbrl_frames": "facts",
         "reports": "reports", # Kept for potential future use, even if deprecated
         "company_info": "submissions",
         "insider_signals": "forms",
@@ -140,6 +142,24 @@ class SecCacheManager:
             # Facts can update more often, add time to timestamp
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"{ticker_upper}_facts_{timestamp}.json"
+        elif data_type == "xbrl_concepts":
+            taxonomy = self._safe_cache_segment(str(kwargs.get("taxonomy") or ""))
+            concept = self._safe_cache_segment(str(kwargs.get("concept") or ""))
+            if not taxonomy or taxonomy == "default" or not concept or concept == "default":
+                raise ValueError("taxonomy and concept are required for xbrl_concepts.")
+            filename = f"{ticker_upper}_{taxonomy}_{concept}_{timestamp}.json"
+        elif data_type == "xbrl_frames":
+            taxonomy = self._safe_cache_segment(str(kwargs.get("taxonomy") or ""))
+            concept = self._safe_cache_segment(str(kwargs.get("concept") or ""))
+            unit = self._safe_cache_segment(str(kwargs.get("unit") or ""))
+            period = self._safe_cache_segment(str(kwargs.get("period") or ""))
+            if any(value == "default" for value in (taxonomy, concept, unit, period)):
+                raise ValueError(
+                    "taxonomy, concept, unit, and period are required for xbrl_frames."
+                )
+            filename = (
+                f"{ticker_upper}_{taxonomy}_{concept}_{unit}_{period}_{timestamp}.json"
+            )
         elif data_type == "company_info": # Using submissions subdir for info for now
             # Treat company info like submissions (daily cache)
              subdir = self.SUBDIRS["submissions"]
@@ -194,6 +214,16 @@ class SecCacheManager:
                 pattern = f"{ticker_upper}_{safe_form_type}_*.json"
         elif data_type == "facts":
             pattern = f"{ticker_upper}_facts_*.json"
+        elif data_type == "xbrl_concepts":
+            taxonomy = self._safe_cache_segment(str(kwargs.get("taxonomy") or ""))
+            concept = self._safe_cache_segment(str(kwargs.get("concept") or ""))
+            pattern = f"{ticker_upper}_{taxonomy}_{concept}_*.json"
+        elif data_type == "xbrl_frames":
+            taxonomy = self._safe_cache_segment(str(kwargs.get("taxonomy") or ""))
+            concept = self._safe_cache_segment(str(kwargs.get("concept") or ""))
+            unit = self._safe_cache_segment(str(kwargs.get("unit") or ""))
+            period = self._safe_cache_segment(str(kwargs.get("period") or ""))
+            pattern = f"{ticker_upper}_{taxonomy}_{concept}_{unit}_{period}_*.json"
         elif data_type == "company_info": # Using submissions subdir for info
             subdir = self.SUBDIRS["submissions"]
             pattern = f"{ticker_upper}_info_*.json"
@@ -259,7 +289,14 @@ class SecCacheManager:
             bool: True if the cache file is considered fresh, False otherwise.
         """
         # Simple check: if cache is from today for submissions/forms/info
-        if data_type in ["submissions", "forms", "company_info", "facts"]:
+        if data_type in [
+            "submissions",
+            "forms",
+            "company_info",
+            "facts",
+            "xbrl_concepts",
+            "xbrl_frames",
+        ]:
             today = datetime.now().strftime("%Y%m%d")
             is_fresh = today in os.path.basename(cache_file)
             logging.debug(f"Checking freshness for {cache_file} ({data_type}): {'Fresh' if is_fresh else 'Stale'}")
@@ -501,7 +538,15 @@ class SecCacheManager:
         # fixed filename per key, and day-stamped metadata/index files only ever need
         # their newest copy (freshness reads the newest file's date). Without this the
         # dated files accumulate forever — one per ticker per window per day.
-        if data_type in ("insider_signals", "forms", "submissions", "company_info", "facts"):
+        if data_type in (
+            "insider_signals",
+            "forms",
+            "submissions",
+            "company_info",
+            "facts",
+            "xbrl_concepts",
+            "xbrl_frames",
+        ):
             self._prune_superseded_files(cache_file, data_type, ticker, **kwargs)
 
     # Specific Load/Save methods (kept for compatibility during refactor, but delegate)

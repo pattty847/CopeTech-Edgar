@@ -5,6 +5,7 @@ from .filings import FilingsResource
 from .financials import FinancialsResource
 from .institutions import InstitutionsResource
 from .ownership import OwnershipResource
+from .xbrl import XbrlResource
 
 __all__ = [
     "CompaniesResource",
@@ -12,4 +13,5 @@ __all__ = [
     "FinancialsResource",
     "InstitutionsResource",
     "OwnershipResource",
+    "XbrlResource",
 ]
