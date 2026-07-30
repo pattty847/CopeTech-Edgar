@@ -3,8 +3,59 @@ import os
 import logging
 import time
 import asyncio
+import email.utils
 import aiohttp
 from typing import Dict, Optional, Union
+
+# SEC serves Company Facts payloads that reach tens of megabytes for large filers, so the
+# cap has to be generous — but an unbounded `response.text()` over a gzip stream is a
+# decompression-bomb primitive, and SEC content is remote data we do not control.
+MAX_RESPONSE_BYTES = 256 * 1024 * 1024
+
+# Sent only when no User-Agent was configured. SEC's fair-access policy asks callers to
+# declare who they are; a fabricated contact address is worse than an honest placeholder,
+# so this names the library and points at the setting instead of inventing an email.
+UNCONFIGURED_USER_AGENT = "copetech-edgar (unconfigured - set SEC_API_USER_AGENT)"
+
+
+def _supported_accept_encoding() -> str:
+    """Advertise only what this install can decode.
+
+    aiohttp needs the optional `brotli`/`brotlicffi` package to inflate a Brotli response;
+    advertising `br` without it invites a body we cannot read.
+    """
+    try:
+        import brotli  # noqa: F401
+    except ImportError:
+        try:
+            import brotlicffi  # noqa: F401
+        except ImportError:
+            return "gzip, deflate"
+    return "gzip, deflate, br"
+
+
+_SUPPORTED_ACCEPT_ENCODING = _supported_accept_encoding()
+
+
+def _retry_after_seconds(raw: Optional[str]) -> Optional[float]:
+    """Parse a `Retry-After` header. RFC 9110 permits either delta-seconds or an
+    HTTP-date; the date form used to raise ValueError out of the retry loop."""
+    if not raw:
+        return None
+    raw = raw.strip()
+    try:
+        return max(0.0, float(raw))
+    except ValueError:
+        pass
+    try:
+        from datetime import datetime, timezone
+        # Raises ValueError on anything that is not a parseable HTTP-date.
+        parsed = email.utils.parsedate_to_datetime(raw)
+        now = datetime.now(parsed.tzinfo or timezone.utc)
+        return max(0.0, (parsed - now).total_seconds())
+    except (TypeError, ValueError, OverflowError):
+        return None
+
 
 class SecHttpClient:
     """
@@ -45,52 +96,102 @@ class SecHttpClient:
             logging.warning("Format: 'Name (first/last) your@email.com'")
 
         self.default_headers = {
-            "User-Agent": self.user_agent or "Default Agent (email@example.com)", # Fallback needed
+            "User-Agent": self.user_agent or UNCONFIGURED_USER_AGENT,
             "Accept-Encoding": "gzip, deflate",
             "Host": "data.sec.gov" # Default host, may need overrides
         }
         self.request_interval = rate_limit_sleep
         self.last_request_time = 0
+        # Slot reservation for the shared SEC request budget. `last_request_time` alone
+        # cannot govern concurrent callers: they all read the same stale value, compute the
+        # same sleep, sleep in parallel, and then fire simultaneously. `_next_slot_at` is a
+        # monotonic reservation cursor advanced under `_slot_lock`, so N concurrent
+        # coroutines take N distinct slots spaced `request_interval` apart.
+        self._next_slot_at = 0.0
+        self._slot_lock = asyncio.Lock()
+        # Explicit ClientTimeout rather than a bare number: aiohttp 4 removes the implicit
+        # int->ClientTimeout coercion, and a separate sock_read budget means a stalled
+        # multi-megabyte Company Facts download fails instead of hanging on the total.
+        self._timeout = aiohttp.ClientTimeout(total=30, connect=10, sock_read=20)
+        self._archive_timeout = aiohttp.ClientTimeout(total=45, connect=10, sock_read=30)
         self._session: Optional[aiohttp.ClientSession] = None
         self._archive_session: Optional[aiohttp.ClientSession] = None
 
     def _normalize_user_agent(self, user_agent: str) -> str:
         """
         Normalizes the User-Agent string to ensure strict SEC compliance.
-        
+
         If the user_agent is in format "Name Email", converts it to "Name/1.0 (Email)".
         If already properly formatted, returns as-is.
-        
+
         Args:
             user_agent (str): The original user agent string
-            
+
         Returns:
             str: The normalized user agent string
         """
         if not user_agent:
             return user_agent
-            
+
         # Check if it's in "Name Email" format without version/parentheses
         parts = user_agent.strip().split()
         if len(parts) >= 2:
             # Look for email pattern (contains @)
             email_part = None
             name_parts = []
-            
+
             for part in parts:
                 if '@' in part:
                     email_part = part
                 else:
                     name_parts.append(part)
-            
+
             # If we found an email and it's not already in proper format
             if email_part and '(' not in user_agent and '/' not in user_agent:
                 name = ' '.join(name_parts)
                 normalized = f"{name}/1.0 ({email_part})"
                 logging.info(f"Normalized User-Agent from '{user_agent}' to '{normalized}'")
                 return normalized
-        
+
         return user_agent
+
+    async def _acquire_request_slot(self) -> None:
+        """Reserve the next slot in the shared SEC request budget, then wait for it.
+
+        Both `make_request` and `make_archive_request` funnel through here, so www.sec.gov
+        and data.sec.gov traffic share one budget — SEC's fair-access limit applies to the
+        caller, not to a hostname. The lock is held only for the arithmetic; the wait
+        happens outside it, so reserving is O(1) and callers do not serialize on I/O.
+        """
+        async with self._slot_lock:
+            now = time.monotonic()
+            scheduled = max(now, self._next_slot_at)
+            self._next_slot_at = scheduled + self.request_interval
+
+        delay = scheduled - time.monotonic()
+        if delay > 0:
+            logging.debug(f"Rate limit: waiting {delay:.3f}s for the next SEC request slot")
+            await asyncio.sleep(delay)
+        self.last_request_time = time.time()
+
+    async def _read_bounded_text(self, response: aiohttp.ClientResponse, url: str) -> Optional[str]:
+        """Read a response body with a hard byte ceiling.
+
+        `response.text()` on a gzip stream will happily inflate an unbounded amount of
+        memory. SEC is a trusted publisher, but its responses are still remote data.
+        """
+        declared = response.headers.get("Content-Length")
+        if declared and declared.isdigit() and int(declared) > MAX_RESPONSE_BYTES:
+            logging.error(
+                f"Refusing {url}: Content-Length {int(declared)} exceeds "
+                f"{MAX_RESPONSE_BYTES} byte cap."
+            )
+            return None
+        body = await response.content.read(MAX_RESPONSE_BYTES + 1)
+        if len(body) > MAX_RESPONSE_BYTES:
+            logging.error(f"Refusing {url}: response body exceeds {MAX_RESPONSE_BYTES} byte cap.")
+            return None
+        return body.decode(response.get_encoding() or "utf-8", errors="replace")
 
     async def _get_session(self) -> aiohttp.ClientSession:
         """
@@ -110,7 +211,7 @@ class SecHttpClient:
     async def _get_archive_session(self) -> aiohttp.ClientSession:
         """
         Lazily initializes and returns a separate ClientSession specifically for Archives.
-        
+
         This ensures clean separation between data.sec.gov and www.sec.gov requests
         to avoid connection pool contamination.
 
@@ -153,14 +254,6 @@ class SecHttpClient:
                 ultimately fails after all retries or encounters a non-retryable error
                 (e.g., 404 Not Found).
         """
-        current_time = time.time()
-        time_since_last = current_time - self.last_request_time
-
-        if time_since_last < self.request_interval:
-            sleep_time = self.request_interval - time_since_last
-            logging.debug(f"Rate limit: sleeping for {sleep_time:.3f}s")
-            await asyncio.sleep(sleep_time)
-
         session = await self._get_session()
 
         # Determine which headers to use - prioritize provided headers, fallback to default
@@ -178,17 +271,21 @@ class SecHttpClient:
 
         for attempt in range(max_retries):
             try:
-                self.last_request_time = time.time()
+                # Every attempt takes its own slot: a retry is another SEC request.
+                await self._acquire_request_slot()
                 logging.debug(f"Making request (Attempt {attempt+1}/{max_retries}): GET {url} Headers: {request_headers}")
                 # Use the determined headers
-                async with session.get(url, headers=request_headers, timeout=10) as response:
+                async with session.get(url, headers=request_headers, timeout=self._timeout) as response:
                     logging.debug(f"Response status for {url}: {response.status}")
-                    # Handle rate limiting (429)
-                    if response.status == 429:
-                        # Exponential backoff: 1, 3, 7 seconds (approx)
-                        wait_time = (2 ** attempt) + float(response.headers.get('Retry-After', 1)) # Use Retry-After if available
-                        wait_time = min(wait_time, 10) # Cap wait time
-                        logging.warning(f"Rate limited (429) by SEC API. Waiting {wait_time:.2f}s before retry {attempt+1}/{max_retries} for {url}")
+                    # Handle throttling. SEC signals fair-access violations with 429 and,
+                    # under load, 503; both are retryable and both may carry Retry-After.
+                    if response.status in (429, 503):
+                        retry_after = _retry_after_seconds(response.headers.get('Retry-After'))
+                        wait_time = min((2 ** attempt) + (retry_after if retry_after is not None else 1.0), 10)
+                        logging.warning(
+                            f"Throttled ({response.status}) by SEC API. Waiting {wait_time:.2f}s before "
+                            f"retry {attempt+1}/{max_retries} for {url}"
+                        )
                         await asyncio.sleep(wait_time)
                         continue # Retry the loop
 
@@ -197,7 +294,9 @@ class SecHttpClient:
 
                     # Process successful response
                     if is_json:
-                        text_content = await response.text()
+                        text_content = await self._read_bounded_text(response, url)
+                        if text_content is None:
+                            return None
                         try:
                             # Check if it looks like JSON before attempting to parse
                             if text_content.strip().startswith(('{', '[')):
@@ -211,7 +310,7 @@ class SecHttpClient:
                             return text_content # Return raw text on decode error
                     else:
                         # Return raw text if JSON parsing wasn't requested
-                        return await response.text()
+                        return await self._read_bounded_text(response, url)
 
             except asyncio.TimeoutError:
                  logging.warning(f"Request timeout on attempt {attempt+1}/{max_retries} for {url}")
@@ -241,34 +340,29 @@ class SecHttpClient:
     async def make_archive_request(self, url: str, max_retries: int = 3, is_json: bool = False) -> Optional[Union[Dict, str]]:
         """
         Performs a rate-limited request specifically for SEC Archives endpoints.
-        
+
         Uses specialized headers and separate session to avoid bot detection.
         Optimized for www.sec.gov/Archives/ endpoints.
 
         Args:
             url (str): The full URL to fetch from Archives
-            max_retries (int): Maximum retry attempts  
+            max_retries (int): Maximum retry attempts
             is_json (bool): Whether to parse as JSON (usually False for HTML/XML documents)
 
         Returns:
             Optional[Union[Dict, str]]: The response content or None if failed
         """
-        # Rate limiting
-        current_time = time.time()
-        time_since_last = current_time - self.last_request_time
-
-        if time_since_last < self.request_interval:
-            sleep_time = self.request_interval - time_since_last
-            logging.debug(f"Rate limit: sleeping for {sleep_time:.3f}s")
-            await asyncio.sleep(sleep_time)
-
         session = await self._get_archive_session()
 
         # Archive-specific headers to avoid bot detection
         archive_headers = {
-            "User-Agent": self.user_agent or "Default Agent (email@example.com)",
+            "User-Agent": self.user_agent or UNCONFIGURED_USER_AGENT,
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-            "Accept-Encoding": "gzip, deflate, br",
+            # Only advertise encodings aiohttp can actually decode. `br` was advertised
+            # unconditionally, but Brotli decoding needs the optional `brotli`/`brotlicffi`
+            # package; without it a Brotli-encoded response is undecodable. SEC's own
+            # documented sample headers ask for "gzip, deflate".
+            "Accept-Encoding": _SUPPORTED_ACCEPT_ENCODING,
             "Host": "www.sec.gov",
             "Connection": "keep-alive",
             "Upgrade-Insecure-Requests": "1",
@@ -279,17 +373,20 @@ class SecHttpClient:
 
         for attempt in range(max_retries):
             try:
-                self.last_request_time = time.time()
+                await self._acquire_request_slot()
                 logging.debug(f"Making archive request (Attempt {attempt+1}/{max_retries}): GET {url}")
-                
-                async with session.get(url, headers=archive_headers, timeout=15) as response:
+
+                async with session.get(url, headers=archive_headers, timeout=self._archive_timeout) as response:
                     logging.debug(f"Archive response status for {url}: {response.status}")
-                    
-                    # Handle rate limiting
-                    if response.status == 429:
-                        wait_time = (2 ** attempt) + float(response.headers.get('Retry-After', 1))
-                        wait_time = min(wait_time, 15)
-                        logging.warning(f"Archive rate limited (429). Waiting {wait_time:.2f}s before retry {attempt+1}/{max_retries}")
+
+                    # Handle throttling (see make_request: 503 is SEC's other throttle signal)
+                    if response.status in (429, 503):
+                        retry_after = _retry_after_seconds(response.headers.get('Retry-After'))
+                        wait_time = min((2 ** attempt) + (retry_after if retry_after is not None else 1.0), 15)
+                        logging.warning(
+                            f"Archive throttled ({response.status}). Waiting {wait_time:.2f}s before "
+                            f"retry {attempt+1}/{max_retries}"
+                        )
                         await asyncio.sleep(wait_time)
                         continue
 
@@ -298,7 +395,9 @@ class SecHttpClient:
 
                     # Process successful response
                     if is_json:
-                        text_content = await response.text()
+                        text_content = await self._read_bounded_text(response, url)
+                        if text_content is None:
+                            return None
                         try:
                             if text_content.strip().startswith(('{', '[')):
                                 return json.loads(text_content)
@@ -309,7 +408,7 @@ class SecHttpClient:
                             logging.error(f"JSON decode error for archive {url}: {json_err}")
                             return text_content
                     else:
-                        return await response.text()
+                        return await self._read_bounded_text(response, url)
 
             except asyncio.TimeoutError:
                 logging.warning(f"Archive request timeout on attempt {attempt+1}/{max_retries} for {url}")
@@ -386,8 +485,8 @@ class SecHttpClient:
             await self._session.close()
             logging.info("SecHttpClient aiohttp session closed.")
         self._session = None
-        
+
         if self._archive_session and not self._archive_session.closed:
             await self._archive_session.close()
             logging.info("SecHttpClient archive aiohttp session closed.")
-        self._archive_session = None 
+        self._archive_session = None
