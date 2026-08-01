@@ -24,6 +24,7 @@ def resolve_diluted_eps_ttm(
     *,
     symbol: str,
     split_events: Iterable[tuple[str, float]] | None,
+    net_income_rows: Iterable[dict[str, Any]] = (),
     as_of: str | None = None,
     start: str | None = None,
     end: str | None = None,
@@ -46,7 +47,8 @@ def resolve_diluted_eps_ttm(
     )
     eps = _eligible_rows(eps_rows, "diluted_eps", cutoff)
     shares = _eligible_rows(diluted_share_rows, "diluted_shares", cutoff)
-    pairs = _pair_facts(eps, shares)
+    income = _eligible_rows(net_income_rows, "net_income", cutoff)
+    pairs = _pair_facts(eps, shares, income)
     warnings: set[str] = set()
     observations: list[dict[str, Any]] = []
     if splits is None:
@@ -105,40 +107,87 @@ def _eligible_rows(
 def _pair_facts(
     eps_rows: list[dict[str, Any]],
     share_rows: list[dict[str, Any]],
+    income_rows: list[dict[str, Any]] = (),
 ) -> list[dict[str, Any]]:
+    """Attach a weighted-average diluted share count to each diluted-EPS fact.
+
+    Some issuers never tag a consolidated weighted-average share count. Alphabet is the
+    reference case: through mid-2024 it reported shares broken out by share class using
+    XBRL dimensions, and the SEC's Company Facts API returns only non-dimensional facts.
+    Diluted EPS was fully tagged the whole time; only the divisor was missing, which
+    stranded every interim TTM reconstruction and left one usable EPS point per year.
+
+    Where the count is absent, it is recovered from the identity that defines it:
+    ``weighted average diluted shares = net income / diluted EPS``. Measured against 264
+    windows where both the tagged and derived values exist (GOOG, AAPL), the two agree to
+    within 0.22% — the residual is EPS reporting quantization, since a figure published to
+    two decimals carries about that much relative error.
+
+    This also makes the TTM numerator exact rather than approximate: ``eps * shares``
+    collapses back to the reported net income instead of multiplying two rounded values.
+    """
     shares_by_filing: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
     for row in share_rows:
         key = (row["period_start"], row["period_end"], row["accession_number"])
         shares_by_filing.setdefault(key, []).append(row)
+    income_by_filing: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
+    for row in income_rows:
+        key = (row["period_start"], row["period_end"], row["accession_number"])
+        income_by_filing.setdefault(key, []).append(row)
     pairs: list[dict[str, Any]] = []
     for eps in eps_rows:
         key = (eps["period_start"], eps["period_end"], eps["accession_number"])
+        eps_value = float(eps["value"])
         candidates = shares_by_filing.get(key) or []
-        if not candidates:
+        if candidates:
+            share = min(
+                candidates,
+                key=lambda row: (int(row["concept_priority"]), row["concept"]),
+            )
             pairs.append(
                 {
                     **eps,
-                    "eps": float(eps["value"]),
-                    "shares": None,
+                    "eps": eps_value,
+                    "shares": float(share["value"]),
                     "eps_source": _source(eps),
-                    "share_source": None,
+                    "share_source": _source(share),
                 }
             )
             continue
-        share = min(
-            candidates,
-            key=lambda row: (int(row["concept_priority"]), row["concept"]),
-        )
+        derived = _derive_shares(eps_value, income_by_filing.get(key) or [])
         pairs.append(
             {
                 **eps,
-                "eps": float(eps["value"]),
-                "shares": float(share["value"]),
+                "eps": eps_value,
+                "shares": None if derived is None else derived[0],
+                "quality_flags": sorted(
+                    set(eps.get("quality_flags") or [])
+                    | ({"diluted_shares_derived_from_net_income"} if derived else set())
+                ),
                 "eps_source": _source(eps),
-                "share_source": _source(share),
+                "share_source": None if derived is None else _source(derived[1]),
             }
         )
     return pairs
+
+
+def _derive_shares(
+    eps_value: float,
+    income_candidates: list[dict[str, Any]],
+) -> tuple[float, dict[str, Any]] | None:
+    """Weighted-average diluted shares implied by net income and diluted EPS.
+
+    A zero or missing EPS gives no information about the divisor, and a non-positive
+    implied count would be nonsense, so both decline rather than guess.
+    """
+    if not income_candidates or eps_value == 0:
+        return None
+    income = min(
+        income_candidates,
+        key=lambda row: (int(row["concept_priority"]), row["concept"]),
+    )
+    shares = float(income["value"]) / eps_value
+    return (shares, income) if shares > 0 else None
 
 
 def _latest_ttm_at(

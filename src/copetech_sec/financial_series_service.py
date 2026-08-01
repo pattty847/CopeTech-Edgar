@@ -100,11 +100,12 @@ class FinancialSeriesService:
         if canonical_eps_ttm:
             loaded, source_warning = await self._refresh_metrics_and_load(
                 normalized,
-                metrics=("diluted_eps", "diluted_shares"),
+                metrics=("diluted_eps", "diluted_shares", "net_income"),
                 refresh=refresh,
             )
             rows = loaded["diluted_eps"]
             supporting_rows = loaded["diluted_shares"]
+            income_rows = loaded["net_income"]
         else:
             rows, source_warning = await self._refresh_and_load(
                 normalized,
@@ -112,6 +113,7 @@ class FinancialSeriesService:
                 refresh=refresh,
             )
             supporting_rows = []
+            income_rows = []
         if not rows:
             return None
         if canonical_eps_ttm:
@@ -120,6 +122,7 @@ class FinancialSeriesService:
                 supporting_rows,
                 symbol=normalized,
                 split_events=split_events,
+                net_income_rows=income_rows,
                 alignment=alignment,
                 as_of=as_of,
                 start=start,
@@ -173,11 +176,12 @@ class FinancialSeriesService:
             raise ValueError("symbol is required")
         loaded, source_warning = await self._refresh_metrics_and_load(
             normalized,
-            metrics=("diluted_eps", "diluted_shares"),
+            metrics=("diluted_eps", "diluted_shares", "net_income"),
             refresh=refresh,
         )
         rows = loaded["diluted_eps"]
         diluted_share_rows = loaded["diluted_shares"]
+        net_income_rows = loaded["net_income"]
         if not rows:
             return None
         payload = derive_trailing_pe_series(
@@ -185,6 +189,7 @@ class FinancialSeriesService:
             price_observations,
             symbol=normalized,
             diluted_share_rows=diluted_share_rows,
+            net_income_rows=net_income_rows,
             split_events=split_events,
             price_source=price_source,
             price_basis=price_basis,

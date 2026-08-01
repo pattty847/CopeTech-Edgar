@@ -15,6 +15,7 @@ def derive_trailing_pe_series(
     *,
     symbol: str,
     diluted_share_rows: Iterable[dict[str, Any]] = (),
+    net_income_rows: Iterable[dict[str, Any]] = (),
     split_events: Iterable[tuple[str, float]] | None = None,
     price_source: str = "caller",
     price_basis: str = "split_adjusted",
@@ -35,6 +36,7 @@ def derive_trailing_pe_series(
 
     rows = list(financial_fact_rows)
     share_rows = list(diluted_share_rows)
+    income_rows = list(net_income_rows)
     prices = sorted(
         (_normalize_price(row) for row in price_observations),
         key=lambda row: row["timestamp"],
@@ -52,6 +54,7 @@ def derive_trailing_pe_series(
         share_rows,
         symbol=symbol,
         split_events=splits,
+        net_income_rows=income_rows,
         alignment="availability",
     )
 

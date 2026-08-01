@@ -53,6 +53,17 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
         valid_units=("USD/shares",),
         aggregation="weighted_average",
     ),
+    "net_income": MetricDefinition(
+        id="net_income",
+        label="Net income",
+        fact_type="duration",
+        concepts=(
+            ("us-gaap", "NetIncomeLoss"),
+            ("us-gaap", "ProfitLoss"),
+        ),
+        valid_units=("USD",),
+        aggregation="sum",
+    ),
     "diluted_shares": MetricDefinition(
         id="diluted_shares",
         label="Diluted weighted-average shares",
