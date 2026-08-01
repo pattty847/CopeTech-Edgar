@@ -34,6 +34,11 @@ FACT_CONTENT_FIELDS = (
 )
 
 
+def _bare_cik(cik: Any) -> str:
+    """CIK without zero padding — the store writes it bare, callers may pass it padded."""
+    return str(cik).strip().lstrip("0") if cik else ""
+
+
 def financial_fact_content_hash(row: dict[str, Any]) -> str:
     """Return a stable hash of normalized fact content, excluding acquisition time."""
 
@@ -219,10 +224,29 @@ class FinancialSeriesStore:
             values,
         )
 
-    async def load_facts(self, symbol: str, metric: str) -> list[dict[str, Any]]:
-        """Load the newest normalization for each immutable SEC fact identity."""
+    async def load_facts(
+        self,
+        symbol: str,
+        metric: str,
+        *,
+        cik: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Load the newest normalization for each immutable SEC fact identity.
+
+        A fact belongs to the *issuer*, not to a ticker — which is why both the uniqueness
+        constraint and the version ranking are already keyed by CIK. Filtering the read by
+        symbol alone therefore stranded every issuer with two tickers on one CIK: Alphabet
+        files once, so whichever of GOOG/GOOGL was ingested first claimed the rows and the
+        second ticker's identical facts were silently dropped by `INSERT OR IGNORE`,
+        leaving it with no history at all. BRK.A/BRK.B, FOX/FOXA and UA/UAA are the same
+        shape.
+
+        Passing the CIK matches on the issuer. The symbol match stays as a fallback so
+        rows written before this keep resolving without a migration.
+        """
 
         await self.initialize()
+        normalized_cik = _bare_cik(cik)
         async with aiosqlite.connect(self.db_path) as db:
             db.row_factory = aiosqlite.Row
             async with db.execute(
@@ -239,13 +263,14 @@ class FinancialSeriesStore:
                                 id DESC
                         ) AS version_rank
                     FROM financial_fact_versions
-                    WHERE symbol = ? AND metric = ?
+                    WHERE metric = ?
+                      AND (symbol = ? OR (? != '' AND LTRIM(cik, '0') = ?))
                 )
                 SELECT * FROM ranked
                 WHERE version_rank = 1
                 ORDER BY period_end, filed, accession_number
                 """,
-                (symbol.upper(), metric),
+                (metric, symbol.upper(), normalized_cik, normalized_cik),
             ) as cursor:
                 rows = await cursor.fetchall()
         output: list[dict[str, Any]] = []

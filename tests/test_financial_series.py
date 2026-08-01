@@ -487,3 +487,63 @@ class FinancialSeriesStoreTests(unittest.IsolatedAsyncioTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SharedCikMultiTickerTests(unittest.IsolatedAsyncioTestCase):
+    """An issuer files once; two tickers must both resolve to that filing.
+
+    Alphabet trades as GOOG and GOOGL under one CIK. Fact identity and version ranking
+    were already keyed by CIK, but the read filtered on symbol — so whichever ticker was
+    ingested first claimed the rows and the second one's identical facts were dropped by
+    `INSERT OR IGNORE`, leaving it with no financial history at all. BRK.A/BRK.B,
+    FOX/FOXA and UA/UAA share the shape.
+    """
+
+    @staticmethod
+    def _rows(symbol: str) -> list[dict]:
+        payload = company_facts(
+            revenues=[
+                fact(10, "2025-01-01", "2025-03-31", "2025-04-25", "q1", form="10-Q", fy=2025, fp="Q1")
+            ]
+        )
+        payload["cik"] = 1652044
+        return extract_financial_facts(
+            payload,
+            symbol=symbol,
+            metric="revenue",
+            retrieved_at="2025-04-25T12:00:00+00:00",
+        )
+
+    async def test_second_ticker_on_the_same_cik_still_resolves(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            store = FinancialSeriesStore(Path(tmpdir) / "facts.sqlite3")
+            await store.append_facts(self._rows("GOOG"))
+            # The identical facts arriving under the sibling ticker are correctly ignored:
+            # they are the same economic fact from the same accession.
+            self.assertEqual(await store.append_facts(self._rows("GOOGL")), 0)
+
+            by_symbol = await store.load_facts("GOOGL", "revenue")
+            by_cik = await store.load_facts("GOOGL", "revenue", cik=1652044)
+
+            self.assertEqual(by_symbol, [], "symbol-only reads are what stranded the sibling")
+            self.assertEqual(len(by_cik), 1)
+            self.assertEqual(by_cik[0]["value"], 10)
+
+    async def test_zero_padded_ciks_match_the_bare_form_the_store_writes(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            store = FinancialSeriesStore(Path(tmpdir) / "facts.sqlite3")
+            await store.append_facts(self._rows("GOOG"))
+
+            # `get_cik_for_ticker` returns the 10-digit padded form.
+            padded = await store.load_facts("GOOGL", "revenue", cik="0001652044")
+
+            self.assertEqual(len(padded), 1)
+
+    async def test_an_unrelated_issuer_is_not_pulled_in_by_cik(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            store = FinancialSeriesStore(Path(tmpdir) / "facts.sqlite3")
+            await store.append_facts(self._rows("GOOG"))
+
+            other = await store.load_facts("MSFT", "revenue", cik=789019)
+
+            self.assertEqual(other, [])

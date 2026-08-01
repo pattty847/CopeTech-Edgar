@@ -44,7 +44,10 @@ class FinancialSeriesService:
             await self._store.append_facts(extracted)
         else:
             source_warning = "source_refresh_failed_using_persisted_facts"
-        return await self._store.load_facts(symbol, metric), source_warning
+        # Facts are keyed to the issuer, so read by CIK: a second ticker on the same CIK
+        # (GOOG/GOOGL) never gets its own rows, because the first one already wrote them.
+        cik = (facts or {}).get("cik")
+        return await self._store.load_facts(symbol, metric, cik=cik), source_warning
 
     async def _refresh_metrics_and_load(
         self,
@@ -68,8 +71,9 @@ class FinancialSeriesService:
                 )
         else:
             source_warning = "source_refresh_failed_using_persisted_facts"
+        cik = (facts or {}).get("cik")
         loaded = {
-            metric: await self._store.load_facts(symbol, metric)
+            metric: await self._store.load_facts(symbol, metric, cik=cik)
             for metric in metrics
         }
         return loaded, source_warning
