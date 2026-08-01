@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import unittest
 
+from copetech_sec.eps_series import TTM_EPS_DISCONTINUITY_FLAG as FLAG
 from copetech_sec.eps_series import resolve_diluted_eps_ttm
 from copetech_sec.financial_series import extract_financial_facts
 
@@ -164,6 +165,64 @@ class DerivedDilutedSharesTests(unittest.TestCase):
 
         self.assertEqual([row for row in payload["observations"] if row["derived"]], [])
 
+
+
+class TtmDiscontinuityTests(unittest.TestCase):
+    """Marking trailing EPS that moved abnormally against the prior quarter.
+
+    A P/E can fall because the price dropped or because earnings jumped, and the chart
+    cannot tell you which. GOOG posted $9.11 diluted for one quarter against $2.31 a year
+    earlier and its trailing multiple halved on the denominator alone.
+    """
+
+    @staticmethod
+    def _series(values: list[float]) -> dict:
+        eps, income = [], []
+        for index, per_share in enumerate(values):
+            year = 2020 + index
+            eps.append(
+                _fact(per_share, f"{year}-01-01", f"{year}-12-31", f"{year + 1}-02-05",
+                      f"fy{year}", form="10-K", fp="FY")
+            )
+            income.append(
+                _fact(per_share * 1_000_000_000, f"{year}-01-01", f"{year}-12-31",
+                      f"{year + 1}-02-05", f"fy{year}", form="10-K", fp="FY")
+            )
+        eps_rows, share_rows, income_rows = _bundle(eps, None, income)
+        return resolve_diluted_eps_ttm(
+            eps_rows, share_rows, symbol="TEST", split_events=[], net_income_rows=income_rows
+        )
+
+    def test_a_doubling_is_flagged(self):
+        payload = self._series([2.00, 2.10, 4.60])
+
+        flags = [row["qualityFlags"] for row in payload["observations"]]
+        self.assertNotIn(FLAG, flags[1], "a 5% move is ordinary")
+        self.assertIn(FLAG, flags[2])
+        self.assertIn(FLAG, payload["warnings"])
+
+    def test_ordinary_growth_is_not_flagged(self):
+        payload = self._series([2.00, 2.20, 2.45, 2.70])
+
+        for row in payload["observations"]:
+            self.assertNotIn(FLAG, row["qualityFlags"])
+        self.assertNotIn(FLAG, payload["warnings"])
+
+    def test_a_collapse_is_flagged_as_well_as_a_spike(self):
+        payload = self._series([4.00, 1.00])
+
+        self.assertIn(FLAG, payload["observations"][1]["qualityFlags"])
+
+    def test_crossing_from_a_loss_into_a_profit_is_flagged(self):
+        # A relative change across zero is meaningless, so the sign flip is the signal.
+        payload = self._series([-0.50, 0.55])
+
+        self.assertIn(FLAG, payload["observations"][1]["qualityFlags"])
+
+    def test_the_first_observation_is_never_flagged(self):
+        payload = self._series([9.99])
+
+        self.assertNotIn(FLAG, payload["observations"][0]["qualityFlags"])
 
 if __name__ == "__main__":
     unittest.main()
