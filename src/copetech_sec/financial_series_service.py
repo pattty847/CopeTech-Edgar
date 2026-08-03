@@ -21,18 +21,43 @@ from .financial_series_store import FinancialSeriesStore
 FetchFacts = Callable[[str, bool], Awaitable[Optional[dict[str, Any]]]]
 
 # Market-cap multiples served by the generic trailing-multiple engine. The
-# denominator is a TTM series: a single base metric, or a derived composite
-# resolved from its components' TTM windows.
+# denominator is either a TTM flow (kind "ttm": a base metric or a derived
+# composite resolved from its components' TTM windows) or a point-in-time
+# balance (kind "instant"). `invert` turns a multiple into a yield;
+# `adjustment` names a derived instant series added to the market cap for
+# enterprise-value numerators.
 TRAILING_MULTIPLE_METRICS: dict[str, dict[str, Any]] = {
     "trailing_ps": {
         "label": "Trailing P/S",
         "denominator": "revenue",
         "components": ("revenue",),
+        "kind": "ttm",
     },
     "trailing_pfcf": {
         "label": "Trailing P/FCF",
         "denominator": "fcf",
         "components": ("operating_cash_flow", "capex"),
+        "kind": "ttm",
+    },
+    "trailing_pb": {
+        "label": "Trailing P/B",
+        "denominator": "stockholders_equity",
+        "components": ("stockholders_equity",),
+        "kind": "instant",
+    },
+    "fcf_yield": {
+        "label": "FCF yield",
+        "denominator": "fcf",
+        "components": ("operating_cash_flow", "capex"),
+        "kind": "ttm",
+        "invert": True,
+    },
+    "ev_s": {
+        "label": "EV/S",
+        "denominator": "revenue",
+        "components": ("revenue",),
+        "kind": "ttm",
+        "adjustment": "net_debt",
     },
 }
 
@@ -342,10 +367,23 @@ class FinancialSeriesService:
         )
 
         spec = TRAILING_MULTIPLE_METRICS[metric]
-        share_metrics = ("diluted_shares", "net_income", "diluted_eps")
+        denominator_frequency = "instant" if spec["kind"] == "instant" else "ttm"
+        adjustment_metric = spec.get("adjustment")
+        adjustment_components: tuple[str, ...] = ()
+        if adjustment_metric:
+            adjustment_definition = get_derived_definition(adjustment_metric)
+            adjustment_components = (
+                adjustment_definition.required + adjustment_definition.optional
+            )
+        share_metrics = (
+            "diluted_shares",
+            "net_income",
+            "diluted_eps",
+            "shares_outstanding",
+        )
         loaded, source_warning = await self._refresh_metrics_and_load(
             symbol,
-            metrics=tuple(spec["components"]) + share_metrics,
+            metrics=tuple(spec["components"]) + adjustment_components + share_metrics,
             refresh=refresh,
         )
         denominator_rows = [
@@ -353,45 +391,72 @@ class FinancialSeriesService:
         ]
         if not denominator_rows:
             return None
+        resolve_frequency = "quarterly" if spec["kind"] == "instant" else "ttm"
         if len(spec["components"]) == 1:
-            ttm_payload = resolve_financial_series(
+            denominator_payload = resolve_financial_series(
                 loaded[spec["components"][0]],
                 symbol=symbol,
                 metric=spec["components"][0],
-                frequency="ttm",
+                frequency=resolve_frequency,
             )
         else:
-            ttm_payload = resolve_derived_series(
+            denominator_payload = resolve_derived_series(
                 {
                     component: resolve_financial_series(
                         loaded[component],
                         symbol=symbol,
                         metric=component,
-                        frequency="ttm",
+                        frequency=resolve_frequency,
                     )
                     for component in spec["components"]
                     if loaded[component]
                 },
                 symbol=symbol,
                 metric=spec["denominator"],
-                frequency="ttm",
+                frequency=resolve_frequency,
                 basis="canonical",
                 alignment="availability",
             )
+        adjustment_observations = None
+        if adjustment_metric:
+            # Instant components joined on their shared balance date; the engine
+            # then as-of joins the composite onto each price bar.
+            adjustment_observations = resolve_derived_series(
+                {
+                    component: resolve_financial_series(
+                        loaded[component],
+                        symbol=symbol,
+                        metric=component,
+                        frequency="quarterly",
+                    )
+                    for component in adjustment_components
+                    if loaded[component]
+                },
+                symbol=symbol,
+                metric=adjustment_metric,
+                frequency="quarterly",
+                basis="canonical",
+                alignment="availability",
+            )["observations"]
         shares = build_share_windows(
             loaded["diluted_shares"],
             loaded["net_income"],
             loaded["diluted_eps"],
             symbol=symbol,
+            instant_share_rows=loaded["shares_outstanding"],
         )
         payload = derive_trailing_multiple_series(
             price_observations,
-            ttm_payload["observations"],
+            denominator_payload["observations"],
             shares,
             symbol=symbol,
             metric=metric,
             label=spec["label"],
             denominator_metric=spec["denominator"],
+            denominator_frequency=denominator_frequency,
+            invert=bool(spec.get("invert")),
+            adjustment_observations=adjustment_observations,
+            adjustment_metric=adjustment_metric,
             split_events=split_events,
             price_source=price_source,
             price_basis=price_basis,

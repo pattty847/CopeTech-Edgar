@@ -153,21 +153,28 @@ def derive_trailing_multiple_series(
     metric: str,
     label: str,
     denominator_metric: str,
+    denominator_frequency: str = "ttm",
+    invert: bool = False,
+    adjustment_observations: Iterable[dict[str, Any]] | None = None,
+    adjustment_metric: str | None = None,
     split_events: Iterable[tuple[str, float]] | None = None,
     price_source: str = "caller",
     price_basis: str = "split_adjusted",
     stale_after_days: int = 180,
     include_provenance: bool = True,
 ) -> dict[str, Any]:
-    """Trailing market-cap multiple: price × point-in-time shares ÷ TTM value.
+    """Trailing market-cap multiple: price × point-in-time shares ÷ SEC value.
 
     The numerator is an implied market cap: the split-adjusted close times the
-    latest diluted weighted-average share count known at that bar, restated onto
-    the current share basis (multiplied by every split after its filing) so it
-    matches the basis the price history is stored on. Weighted-average shares
-    from the most recent filing stand in for point-in-time shares outstanding —
-    the standard practice until instant DEI share counts land — and every
-    observation carries both inputs so the approximation is auditable.
+    latest share count known at that bar, restated onto the current share basis
+    (multiplied by every split after its filing) so it matches the basis the
+    price history is stored on. Cover-page shares-outstanding counts are used
+    when the caller supplies them in `share_windows`; diluted weighted-average
+    shares are the fallback. The denominator is either a TTM flow (revenue,
+    FCF) or an instant balance (equity for P/B). `invert` flips the ratio for
+    yields; `adjustment_observations` add a point-in-time balance (net debt)
+    to the market cap for enterprise-value multiples. Every observation
+    carries all inputs so the arithmetic is auditable.
     """
 
     if price_basis != "split_adjusted":
@@ -191,6 +198,14 @@ def derive_trailing_multiple_series(
         share_windows,
         key=lambda row: (row["availableAt"], row["periodEnd"]),
     )
+    adjustments = (
+        None
+        if adjustment_observations is None
+        else sorted(
+            adjustment_observations,
+            key=lambda row: (row["availableAt"], row["periodEnd"]),
+        )
+    )
     observations: list[dict[str, Any]] = []
     warnings: set[str] = set()
     if splits is None:
@@ -208,10 +223,20 @@ def derive_trailing_multiple_series(
             key=lambda row: (row["periodEnd"], row["availableAt"]),
             default=None,
         )
-        if denominator is None or share_window is None:
+        adjustment = None
+        if adjustments is not None:
+            adjustment = max(
+                (row for row in adjustments if row["availableAt"] <= timestamp),
+                key=lambda row: (row["periodEnd"], row["availableAt"]),
+                default=None,
+            )
+        adjustment_missing = adjustments is not None and adjustment is None
+        if denominator is None or share_window is None or adjustment_missing:
             missing = (
-                ["no_point_in_time_ttm_denominator"] if denominator is None else []
-            ) + (["no_point_in_time_share_count"] if share_window is None else [])
+                (["no_point_in_time_ttm_denominator"] if denominator is None else [])
+                + (["no_point_in_time_share_count"] if share_window is None else [])
+                + (["no_point_in_time_adjustment"] if adjustment_missing else [])
+            )
             observation = _empty_multiple_observation(
                 price,
                 price_source=price_source,
@@ -227,11 +252,18 @@ def derive_trailing_multiple_series(
         flags = set(denominator.get("qualityFlags") or []) | set(
             share_window.get("qualityFlags") or []
         )
+        if adjustment is not None:
+            flags |= set(adjustment.get("qualityFlags") or [])
         denominator_available = str(denominator["availableAt"])
         shares_available = str(share_window["availableAt"])
-        newest_needed = max(denominator_available, shares_available)
+        # The most-stale required input governs: a fresh balance sheet cannot
+        # rescue a ten-month-old TTM denominator.
+        oldest_needed = min(
+            [denominator_available, shares_available]
+            + ([str(adjustment["availableAt"])] if adjustment is not None else [])
+        )
         is_stale = (
-            _parse_date(timestamp) - _parse_date(newest_needed)
+            _parse_date(timestamp) - _parse_date(oldest_needed)
         ).days > stale_after_days
         if is_stale:
             flags.add("stale_fundamentals")
@@ -247,7 +279,17 @@ def derive_trailing_multiple_series(
             if ttm_value <= 0:
                 flags.add("non_positive_ttm_denominator")
             elif adjusted_shares > 0 and not is_stale:
-                value = float(price["close"]) * adjusted_shares / ttm_value
+                numerator = float(price["close"]) * adjusted_shares
+                if adjustment is not None:
+                    numerator += float(adjustment["value"])
+                if invert:
+                    value = ttm_value / numerator if numerator > 0 else None
+                    if value is None:
+                        flags.add("non_positive_enterprise_value")
+                elif numerator <= 0:
+                    flags.add("non_positive_enterprise_value")
+                else:
+                    value = numerator / ttm_value
 
         observation = {
             "timestamp": timestamp,
@@ -267,9 +309,16 @@ def derive_trailing_multiple_series(
             "sharesOutstanding": adjusted_shares,
             "sharesAvailableAt": shares_available,
             "sharesBasis": "split_adjusted",
+            "adjustmentValue": (
+                float(adjustment["value"]) if adjustment is not None else None
+            ),
+            "adjustmentAvailableAt": (
+                str(adjustment["availableAt"]) if adjustment is not None else None
+            ),
             "qualityFlags": sorted(flags),
             "sources": list(denominator.get("sources") or [])
-            + list(share_window.get("sources") or []),
+            + list(share_window.get("sources") or [])
+            + (list(adjustment.get("sources") or []) if adjustment is not None else []),
         }
         if not include_provenance:
             observation.pop("sources")
@@ -285,7 +334,9 @@ def derive_trailing_multiple_series(
         "alignment": "price_timestamp",
         "priceBasis": price_basis,
         "denominatorMetric": denominator_metric,
-        "denominatorFrequency": "ttm",
+        "denominatorFrequency": denominator_frequency,
+        "adjustmentMetric": adjustment_metric,
+        "inverted": invert,
         "normalizationVersion": NORMALIZATION_VERSION,
         "observations": observations,
         "warnings": sorted(warnings),
@@ -298,14 +349,20 @@ def build_share_windows(
     eps_rows: Iterable[dict[str, Any]],
     *,
     symbol: str,
+    instant_share_rows: Iterable[dict[str, Any]] = (),
 ) -> list[dict[str, Any]]:
-    """Diluted weighted-average share observations, one per resolved window.
+    """Share-count observations for market-cap numerators, one per window.
 
-    Issuers that tag share counts only dimensionally (Alphabet's per-class
-    counts) are missing a consolidated figure in Company Facts, so windows
-    absent from the tagged series are recovered as net income ÷ diluted EPS,
-    flagged `diluted_shares_derived_from_net_income` — the same recovery the
-    TTM EPS engine uses, documented there as agreeing within 0.22%.
+    Cover-page shares-outstanding counts (`instant_share_rows`, the dei facts)
+    are true point-in-time counts and are dated later than the balance sheet
+    they accompany, so where present they win the most-recent-known selection
+    naturally; they carry `point_in_time_shares_outstanding`. Diluted
+    weighted-average windows fill the rest of the timeline. Issuers that tag
+    counts only dimensionally (Alphabet's per-class counts) are missing a
+    consolidated figure in Company Facts, so windows absent from both series
+    are recovered as net income ÷ diluted EPS, flagged
+    `diluted_shares_derived_from_net_income` — the same recovery the TTM EPS
+    engine uses, documented there as agreeing within 0.22%.
     """
 
     def _observations(rows: list[dict[str, Any]], metric: str) -> list[dict[str, Any]]:
@@ -326,6 +383,25 @@ def build_share_windows(
     windows: dict[tuple[str, str], dict[str, Any]] = {}
     for observation in _observations(list(share_rows), "diluted_shares"):
         windows[(observation["periodStart"], observation["periodEnd"])] = observation
+
+    instant_rows = list(instant_share_rows)
+    if instant_rows:
+        payload = resolve_financial_series(
+            instant_rows,
+            symbol=symbol,
+            metric="shares_outstanding",
+            frequency="quarterly",
+            basis="reported",
+        )
+        for observation in payload["observations"]:
+            key = (observation["periodStart"], observation["periodEnd"])
+            windows[key] = {
+                **observation,
+                "qualityFlags": sorted(
+                    set(observation.get("qualityFlags") or [])
+                    | {"point_in_time_shares_outstanding"}
+                ),
+            }
 
     income = {
         (row["periodStart"], row["periodEnd"]): row
@@ -379,6 +455,8 @@ def _empty_multiple_observation(
         "sharesOutstanding": None,
         "sharesAvailableAt": None,
         "sharesBasis": "split_adjusted",
+        "adjustmentValue": None,
+        "adjustmentAvailableAt": None,
         "qualityFlags": quality_flags,
         "sources": [],
     }

@@ -29,6 +29,7 @@ ANNUAL_MAX_DAYS = 400
 SUPPORTED_FORMS = frozenset(
     {"10-Q", "10-Q/A", "10-K", "10-K/A", "20-F", "20-F/A", "40-F", "40-F/A"}
 )
+ANNUAL_FORMS = frozenset({"10-K", "10-K/A", "20-F", "20-F/A", "40-F", "40-F/A"})
 
 
 def extract_financial_facts(
@@ -61,6 +62,7 @@ def extract_financial_facts(
                     concept_priority=concept_priority,
                     unit=unit,
                     retrieved_at=timestamp,
+                    fact_type=definition.fact_type,
                 )
                 if normalized is not None:
                     rows.append(normalized)
@@ -97,19 +99,37 @@ def resolve_financial_series(
         if row.get("metric") == metric
         and (cutoff is None or _parse_date(row.get("filed")) <= cutoff)
     ]
-    quarterly = _resolve_duration_windows(candidates, definition, cadence="quarterly")
-    annual = _resolve_duration_windows(candidates, definition, cadence="annual")
-    if basis == "canonical" and definition.aggregation == "sum":
-        if definition.ytd_cadence:
-            ytd = _resolve_duration_windows(candidates, definition, cadence="ytd")
-            quarterly = _add_quarters_derived_from_ytd(quarterly, ytd)
-        quarterly = _add_derived_fourth_quarters(quarterly, annual)
-    if frequency == "quarterly":
-        observations = quarterly
-    elif frequency == "annual":
-        observations = annual
+    extra_warnings: set[str] = set()
+    if definition.fact_type == "instant":
+        # Balance-sheet metrics have no duration cadence: "quarterly" means every
+        # reported balance date, "annual" only the fiscal-year-end dates (those
+        # first substantiated by an annual filing), and TTM has no meaning.
+        instants = _resolve_duration_windows(candidates, definition, cadence="instant")
+        if frequency == "ttm":
+            observations = []
+            extra_warnings.add("ttm_not_applicable_for_instant_metric")
+        elif frequency == "annual":
+            observations = [
+                row
+                for row in instants
+                if row["availabilitySource"]["form"] in ANNUAL_FORMS
+            ]
+        else:
+            observations = instants
     else:
-        observations = _trailing_twelve_months(quarterly, definition)
+        quarterly = _resolve_duration_windows(candidates, definition, cadence="quarterly")
+        annual = _resolve_duration_windows(candidates, definition, cadence="annual")
+        if basis == "canonical" and definition.aggregation == "sum":
+            if definition.ytd_cadence:
+                ytd = _resolve_duration_windows(candidates, definition, cadence="ytd")
+                quarterly = _add_quarters_derived_from_ytd(quarterly, ytd)
+            quarterly = _add_derived_fourth_quarters(quarterly, annual)
+        if frequency == "quarterly":
+            observations = quarterly
+        elif frequency == "annual":
+            observations = annual
+        else:
+            observations = _trailing_twelve_months(quarterly, definition)
     observations = [
         row
         for row in observations
@@ -130,6 +150,7 @@ def resolve_financial_series(
             for warning in row.get("qualityFlags", [])
             if warning
         }
+        | extra_warnings
     )
     entity_name = next(
         (str(row.get("entity_name")) for row in candidates if row.get("entity_name")),
@@ -164,12 +185,16 @@ def _normalize_raw_fact(
     concept_priority: int,
     unit: str,
     retrieved_at: str,
+    fact_type: str = "duration",
 ) -> dict[str, Any] | None:
     form = str(entry.get("form") or "")
     start = str(entry.get("start") or "")
     end = str(entry.get("end") or "")
     filed = str(entry.get("filed") or "")
     accession = str(entry.get("accn") or "")
+    if fact_type == "instant":
+        # Balance-sheet facts have no duration: they are measured at one date.
+        start = end
     if (
         form not in SUPPORTED_FORMS
         or not start
@@ -225,11 +250,15 @@ def _resolve_duration_windows(
             SEMIANNUAL_MIN_DAYS <= days <= SEMIANNUAL_MAX_DAYS
             or NINE_MONTH_MIN_DAYS <= days <= NINE_MONTH_MAX_DAYS
         )
+    elif cadence == "instant":
+        accepted = lambda days: days == 0
     else:
         accepted = lambda days: ANNUAL_MIN_DAYS <= days <= ANNUAL_MAX_DAYS
     grouped: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
     for row in rows:
-        if accepted(int(row.get("duration_days") or -1)):
+        # duration_days of 0 is a legitimate instant window — `or` would eat it.
+        duration_days = row.get("duration_days")
+        if accepted(-1 if duration_days is None else int(duration_days)):
             key = (row["period_start"], row["period_end"], row["unit"])
             grouped.setdefault(key, []).append(row)
     return [

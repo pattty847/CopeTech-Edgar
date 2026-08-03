@@ -94,6 +94,35 @@ def _capex_intensity(values: dict[str, float]) -> ComputeResult:
     return values["capex"] / revenue, (), ("capex", "revenue")
 
 
+def _net_debt(values: dict[str, float]) -> ComputeResult:
+    debt_components = [
+        component
+        for component in ("debt_current", "debt_noncurrent")
+        if component in values
+    ]
+    cash_components = [
+        component
+        for component in ("cash_equivalents", "short_term_investments")
+        if component in values
+    ]
+    debt = sum(values[component] for component in debt_components)
+    cash = sum(values[component] for component in cash_components)
+    flags: tuple[str, ...] = ()
+    if not debt_components:
+        # Absence of debt tags usually means a debt-free balance sheet, but an
+        # issuer using nonstandard tags looks identical — say so out loud.
+        flags = ("debt_concepts_missing_assumed_zero",)
+    return debt - cash, flags, tuple(debt_components + cash_components)
+
+
+def _working_capital(values: dict[str, float]) -> ComputeResult:
+    return (
+        values["current_assets"] - values["current_liabilities"],
+        (),
+        ("current_assets", "current_liabilities"),
+    )
+
+
 def _revenue_per_share(values: dict[str, float]) -> ComputeResult:
     shares = values["diluted_shares"]
     if shares == 0:
@@ -168,6 +197,27 @@ DERIVED_METRIC_REGISTRY: dict[str, DerivedMetricDefinition] = {
         compute=_capex_intensity,
         derivation="capital expenditures divided by revenue",
     ),
+    "net_debt": DerivedMetricDefinition(
+        id="net_debt",
+        label="Net debt",
+        unit="USD",
+        required=("cash_equivalents",),
+        optional=("short_term_investments", "debt_current", "debt_noncurrent"),
+        compute=_net_debt,
+        derivation=(
+            "current plus noncurrent debt minus cash and short-term investments,"
+            " joined on the same balance date"
+        ),
+    ),
+    "working_capital": DerivedMetricDefinition(
+        id="working_capital",
+        label="Working capital",
+        unit="USD",
+        required=("current_assets", "current_liabilities"),
+        optional=(),
+        compute=_working_capital,
+        derivation="current assets minus current liabilities at the same balance date",
+    ),
     "revenue_per_share": DerivedMetricDefinition(
         id="revenue_per_share",
         label="Revenue per diluted share",
@@ -233,7 +283,7 @@ def resolve_derived_series(
     }
     if frequency == "ttm":
         for component in definition.required:
-            if get_metric_definition(component).aggregation != "sum":
+            if get_metric_definition(component).aggregation == "weighted_average":
                 warnings.add("ttm_unavailable_for_weighted_average_component")
     required_windows = [
         indexed.get(component, {}).keys() for component in definition.required
