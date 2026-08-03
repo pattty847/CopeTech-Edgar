@@ -59,6 +59,13 @@ TRAILING_MULTIPLE_METRICS: dict[str, dict[str, Any]] = {
         "kind": "ttm",
         "adjustment": "net_debt",
     },
+    "ev_ebitda": {
+        "label": "EV/EBITDA",
+        "denominator": "ebitda",
+        "components": ("operating_income", "dep_amort"),
+        "kind": "ttm",
+        "adjustment": "net_debt",
+    },
 }
 
 
@@ -69,7 +76,15 @@ class FinancialSeriesService:
 
     @staticmethod
     def supported_metrics() -> list[dict[str, Any]]:
-        return list_supported_metrics() + list_derived_metrics()
+        # Merged by id with the derived entry winning: a derived metric that
+        # shadows a base one (gross_profit) is what get_series actually serves.
+        from .roic_series import ROIC_METRIC_INFO
+
+        merged = {entry["id"]: entry for entry in list_supported_metrics()}
+        for entry in list_derived_metrics():
+            merged[entry["id"]] = entry
+        merged["roic"] = dict(ROIC_METRIC_INFO)
+        return list(merged.values())
 
     async def _refresh_and_load(
         self,
@@ -143,6 +158,17 @@ class FinancialSeriesService:
         normalized = symbol.strip().upper()
         if not normalized:
             raise ValueError("symbol is required")
+        if metric == "roic":
+            return await self._get_roic_series(
+                normalized,
+                frequency=frequency,
+                alignment=alignment,
+                as_of=as_of,
+                start=start,
+                end=end,
+                refresh=refresh,
+                include_provenance=include_provenance,
+            )
         if is_derived_metric(metric):
             return await self._get_derived_series(
                 normalized,
@@ -347,6 +373,91 @@ class FinancialSeriesService:
             payload["warnings"] = sorted(
                 set(payload.get("warnings") or []) | {source_warning}
             )
+        return payload
+
+    async def _get_roic_series(
+        self,
+        symbol: str,
+        *,
+        frequency: str,
+        alignment: str,
+        as_of: str | None,
+        start: str | None,
+        end: str | None,
+        refresh: bool,
+        include_provenance: bool,
+    ) -> dict[str, Any] | None:
+        from .derived_series import get_derived_definition as _derived
+        from .roic_series import resolve_roic_series
+
+        capital_definition = _derived("invested_capital")
+        capital_components = capital_definition.required + capital_definition.optional
+        flow_metrics = ("operating_income", "tax_expense", "pretax_income")
+        loaded, source_warning = await self._refresh_metrics_and_load(
+            symbol,
+            metrics=flow_metrics + capital_components,
+            refresh=refresh,
+        )
+        all_rows = [row for rows in loaded.values() for row in rows]
+        if not all_rows:
+            return None
+
+        def _flow(metric: str) -> dict[str, Any]:
+            return resolve_financial_series(
+                loaded[metric],
+                symbol=symbol,
+                metric=metric,
+                frequency="ttm",
+                alignment=alignment,
+                as_of=as_of,
+                start=start,
+                end=end,
+            )
+
+        capital = resolve_derived_series(
+            {
+                component: resolve_financial_series(
+                    loaded[component],
+                    symbol=symbol,
+                    metric=component,
+                    frequency="quarterly",
+                    alignment=alignment,
+                    as_of=as_of,
+                )
+                for component in capital_components
+                if loaded[component]
+            },
+            symbol=symbol,
+            metric="invested_capital",
+            frequency="quarterly",
+            basis="canonical",
+            alignment=alignment,
+            as_of=as_of,
+        )
+        payload = resolve_roic_series(
+            _flow("operating_income"),
+            _flow("tax_expense"),
+            _flow("pretax_income"),
+            capital,
+            symbol=symbol,
+            frequency=frequency,
+            alignment=alignment,
+            as_of=as_of,
+        )
+        payload["retrievedAt"] = max(
+            (str(row.get("retrieved_at") or "") for row in all_rows),
+            default=None,
+        )
+        payload["rawFactCount"] = len(all_rows)
+        if source_warning:
+            payload["warnings"] = sorted(
+                set(payload.get("warnings") or []) | {source_warning}
+            )
+        if not include_provenance:
+            for observation in payload["observations"]:
+                observation.pop("sources", None)
+                observation.pop("availabilitySource", None)
+                observation.pop("selectedSource", None)
         return payload
 
     async def _get_trailing_multiple_series(

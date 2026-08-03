@@ -94,6 +94,60 @@ def _capex_intensity(values: dict[str, float]) -> ComputeResult:
     return values["capex"] / revenue, (), ("capex", "revenue")
 
 
+def _gross_profit_dollars(values: dict[str, float]) -> ComputeResult:
+    if "gross_profit" in values:
+        return values["gross_profit"], (), ("gross_profit",)
+    if "cost_of_revenue" in values:
+        return (
+            values["revenue"] - values["cost_of_revenue"],
+            ("gross_profit_derived_from_cost_of_revenue",),
+            ("cost_of_revenue", "revenue"),
+        )
+    return None
+
+
+def _ebitda(values: dict[str, float]) -> ComputeResult:
+    return (
+        values["operating_income"] + values["dep_amort"],
+        (),
+        ("operating_income", "dep_amort"),
+    )
+
+
+def _interest_coverage(values: dict[str, float]) -> ComputeResult:
+    interest = values["interest_expense"]
+    if interest <= 0:
+        return None
+    return (
+        values["operating_income"] / interest,
+        (),
+        ("operating_income", "interest_expense"),
+    )
+
+
+def _invested_capital(values: dict[str, float]) -> ComputeResult:
+    debt_components = [
+        component
+        for component in ("debt_current", "debt_noncurrent")
+        if component in values
+    ]
+    cash_components = [
+        component
+        for component in ("cash_equivalents", "short_term_investments")
+        if component in values
+    ]
+    debt = sum(values[component] for component in debt_components)
+    cash = sum(values[component] for component in cash_components)
+    flags: tuple[str, ...] = ()
+    if not debt_components:
+        flags = ("debt_concepts_missing_assumed_zero",)
+    return (
+        values["stockholders_equity"] + debt - cash,
+        flags,
+        tuple(["stockholders_equity"] + debt_components + cash_components),
+    )
+
+
 def _net_debt(values: dict[str, float]) -> ComputeResult:
     debt_components = [
         component
@@ -196,6 +250,53 @@ DERIVED_METRIC_REGISTRY: dict[str, DerivedMetricDefinition] = {
         optional=(),
         compute=_capex_intensity,
         derivation="capital expenditures divided by revenue",
+    ),
+    # Shadows the base gross_profit metric: issuers that never tag GrossProfit
+    # (Alphabet tags CostOfRevenue instead) get the derived dollar series with
+    # the same fallback gross_margin uses. The service routes derived ids first,
+    # and the metric listing dedupes by id with the derived entry winning.
+    "gross_profit": DerivedMetricDefinition(
+        id="gross_profit",
+        label="Gross profit",
+        unit="USD",
+        required=("revenue",),
+        optional=("gross_profit", "cost_of_revenue"),
+        compute=_gross_profit_dollars,
+        derivation=(
+            "reported gross profit; falls back to revenue minus cost of revenue"
+            " when the issuer does not tag GrossProfit"
+        ),
+    ),
+    "ebitda": DerivedMetricDefinition(
+        id="ebitda",
+        label="EBITDA",
+        unit="USD",
+        required=("operating_income", "dep_amort"),
+        optional=(),
+        compute=_ebitda,
+        derivation="operating income plus depreciation and amortization",
+    ),
+    "interest_coverage": DerivedMetricDefinition(
+        id="interest_coverage",
+        label="Interest coverage",
+        # "x" renders as a multiple (29.1×); "ratio" would render as a percent.
+        unit="x",
+        required=("operating_income", "interest_expense"),
+        optional=(),
+        compute=_interest_coverage,
+        derivation="operating income divided by interest expense over the same window",
+    ),
+    "invested_capital": DerivedMetricDefinition(
+        id="invested_capital",
+        label="Invested capital",
+        unit="USD",
+        required=("stockholders_equity", "cash_equivalents"),
+        optional=("short_term_investments", "debt_current", "debt_noncurrent"),
+        compute=_invested_capital,
+        derivation=(
+            "stockholders' equity plus debt minus cash and short-term investments"
+            " at the same balance date (operating leases and goodwill untouched)"
+        ),
     ),
     "net_debt": DerivedMetricDefinition(
         id="net_debt",

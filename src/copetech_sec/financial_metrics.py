@@ -170,10 +170,47 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
             ("us-gaap", "DepreciationDepletionAndAmortization"),
             ("us-gaap", "DepreciationAmortizationAndAccretionNet"),
             ("us-gaap", "DepreciationAndAmortization"),
+            # Alphabet tags depreciation alone; intangible amortization is
+            # reported separately when it exists at all. Understates D&A for
+            # issuers with heavy intangible amortization — provenance shows
+            # which concept was used.
+            ("us-gaap", "Depreciation"),
         ),
         valid_units=("USD",),
         aggregation="sum",
         ytd_cadence=True,
+    ),
+    "interest_expense": MetricDefinition(
+        id="interest_expense",
+        label="Interest expense",
+        fact_type="duration",
+        concepts=(
+            ("us-gaap", "InterestExpense"),
+            ("us-gaap", "InterestExpenseNonoperating"),
+            ("us-gaap", "InterestExpenseDebt"),
+            ("us-gaap", "InterestIncomeExpenseNet"),
+        ),
+        valid_units=("USD",),
+        aggregation="sum",
+    ),
+    "tax_expense": MetricDefinition(
+        id="tax_expense",
+        label="Income tax expense",
+        fact_type="duration",
+        concepts=(("us-gaap", "IncomeTaxExpenseBenefit"),),
+        valid_units=("USD",),
+        aggregation="sum",
+    ),
+    "pretax_income": MetricDefinition(
+        id="pretax_income",
+        label="Pre-tax income",
+        fact_type="duration",
+        concepts=(
+            ("us-gaap", "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"),
+            ("us-gaap", "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments"),
+        ),
+        valid_units=("USD",),
+        aggregation="sum",
     ),
     # Balance-sheet (instant) metrics: one value per reported balance date.
     "shares_outstanding": MetricDefinition(
