@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import date, datetime, timezone
 from typing import Any, Iterable
 
-from .eps_series import resolve_diluted_eps_ttm
-from .financial_series import NORMALIZATION_VERSION
+from .eps_series import _split_factor_after, resolve_diluted_eps_ttm
+from .financial_series import NORMALIZATION_VERSION, resolve_financial_series
 
 
 def derive_trailing_pe_series(
@@ -141,6 +141,246 @@ def derive_trailing_pe_series(
         "normalizationVersion": NORMALIZATION_VERSION,
         "observations": observations,
         "warnings": sorted(warnings),
+    }
+
+
+def derive_trailing_multiple_series(
+    price_observations: Iterable[dict[str, Any]],
+    ttm_observations: Iterable[dict[str, Any]],
+    share_windows: Iterable[dict[str, Any]],
+    *,
+    symbol: str,
+    metric: str,
+    label: str,
+    denominator_metric: str,
+    split_events: Iterable[tuple[str, float]] | None = None,
+    price_source: str = "caller",
+    price_basis: str = "split_adjusted",
+    stale_after_days: int = 180,
+    include_provenance: bool = True,
+) -> dict[str, Any]:
+    """Trailing market-cap multiple: price × point-in-time shares ÷ TTM value.
+
+    The numerator is an implied market cap: the split-adjusted close times the
+    latest diluted weighted-average share count known at that bar, restated onto
+    the current share basis (multiplied by every split after its filing) so it
+    matches the basis the price history is stored on. Weighted-average shares
+    from the most recent filing stand in for point-in-time shares outstanding —
+    the standard practice until instant DEI share counts land — and every
+    observation carries both inputs so the approximation is auditable.
+    """
+
+    if price_basis != "split_adjusted":
+        raise ValueError(f"{metric} requires price_basis='split_adjusted'")
+    if stale_after_days < 1:
+        raise ValueError("stale_after_days must be positive")
+
+    prices = sorted(
+        (_normalize_price(row) for row in price_observations),
+        key=lambda row: row["timestamp"],
+    )
+    splits = None if split_events is None else sorted(
+        (_normalize_split(event) for event in split_events),
+        key=lambda event: event[0],
+    )
+    denominators = sorted(
+        ttm_observations,
+        key=lambda row: (row["availableAt"], row["periodEnd"]),
+    )
+    shares = sorted(
+        share_windows,
+        key=lambda row: (row["availableAt"], row["periodEnd"]),
+    )
+    observations: list[dict[str, Any]] = []
+    warnings: set[str] = set()
+    if splits is None:
+        warnings.add("split_history_unverified")
+
+    for price in prices:
+        timestamp = price["timestamp"]
+        denominator = max(
+            (row for row in denominators if row["availableAt"] <= timestamp),
+            key=lambda row: (row["periodEnd"], row["availableAt"]),
+            default=None,
+        )
+        share_window = max(
+            (row for row in shares if row["availableAt"] <= timestamp),
+            key=lambda row: (row["periodEnd"], row["availableAt"]),
+            default=None,
+        )
+        if denominator is None or share_window is None:
+            missing = (
+                ["no_point_in_time_ttm_denominator"] if denominator is None else []
+            ) + (["no_point_in_time_share_count"] if share_window is None else [])
+            observation = _empty_multiple_observation(
+                price,
+                price_source=price_source,
+                quality_flags=sorted(set(missing) | ({"split_history_unverified"} if splits is None else set())),
+            )
+            if not include_provenance:
+                observation.pop("sources")
+                observation.pop("priceSource")
+            observations.append(observation)
+            warnings.update(observation["qualityFlags"])
+            continue
+
+        flags = set(denominator.get("qualityFlags") or []) | set(
+            share_window.get("qualityFlags") or []
+        )
+        denominator_available = str(denominator["availableAt"])
+        shares_available = str(share_window["availableAt"])
+        newest_needed = max(denominator_available, shares_available)
+        is_stale = (
+            _parse_date(timestamp) - _parse_date(newest_needed)
+        ).days > stale_after_days
+        if is_stale:
+            flags.add("stale_fundamentals")
+        value = None
+        adjusted_shares = None
+        ttm_value = float(denominator["value"])
+        if splits is None:
+            flags.add("split_history_unverified")
+        else:
+            adjusted_shares = float(share_window["value"]) * _split_factor_after(
+                shares_available, splits
+            )
+            if ttm_value <= 0:
+                flags.add("non_positive_ttm_denominator")
+            elif adjusted_shares > 0 and not is_stale:
+                value = float(price["close"]) * adjusted_shares / ttm_value
+
+        observation = {
+            "timestamp": timestamp,
+            "alignedAt": timestamp,
+            "value": round(value, 6) if value is not None else None,
+            "unit": "ratio",
+            "price": price["close"],
+            "priceBasis": price_basis,
+            "priceSource": {
+                "provider": price_source,
+                "timestamp": timestamp,
+                "basis": price_basis,
+            },
+            "denominatorTtm": ttm_value,
+            "denominatorAvailableAt": denominator_available,
+            "denominatorPeriodEnd": denominator["periodEnd"],
+            "sharesOutstanding": adjusted_shares,
+            "sharesAvailableAt": shares_available,
+            "sharesBasis": "split_adjusted",
+            "qualityFlags": sorted(flags),
+            "sources": list(denominator.get("sources") or [])
+            + list(share_window.get("sources") or []),
+        }
+        if not include_provenance:
+            observation.pop("sources")
+            observation.pop("priceSource")
+        observations.append(observation)
+        warnings.update(flags)
+
+    return {
+        "symbol": symbol.upper(),
+        "metric": metric,
+        "label": label,
+        "frequency": "price",
+        "alignment": "price_timestamp",
+        "priceBasis": price_basis,
+        "denominatorMetric": denominator_metric,
+        "denominatorFrequency": "ttm",
+        "normalizationVersion": NORMALIZATION_VERSION,
+        "observations": observations,
+        "warnings": sorted(warnings),
+    }
+
+
+def build_share_windows(
+    share_rows: Iterable[dict[str, Any]],
+    net_income_rows: Iterable[dict[str, Any]],
+    eps_rows: Iterable[dict[str, Any]],
+    *,
+    symbol: str,
+) -> list[dict[str, Any]]:
+    """Diluted weighted-average share observations, one per resolved window.
+
+    Issuers that tag share counts only dimensionally (Alphabet's per-class
+    counts) are missing a consolidated figure in Company Facts, so windows
+    absent from the tagged series are recovered as net income ÷ diluted EPS,
+    flagged `diluted_shares_derived_from_net_income` — the same recovery the
+    TTM EPS engine uses, documented there as agreeing within 0.22%.
+    """
+
+    def _observations(rows: list[dict[str, Any]], metric: str) -> list[dict[str, Any]]:
+        if not rows:
+            return []
+        output = []
+        for frequency in ("quarterly", "annual"):
+            payload = resolve_financial_series(
+                rows,
+                symbol=symbol,
+                metric=metric,
+                frequency=frequency,
+                basis="reported",
+            )
+            output.extend(payload["observations"])
+        return output
+
+    windows: dict[tuple[str, str], dict[str, Any]] = {}
+    for observation in _observations(list(share_rows), "diluted_shares"):
+        windows[(observation["periodStart"], observation["periodEnd"])] = observation
+
+    income = {
+        (row["periodStart"], row["periodEnd"]): row
+        for row in _observations(list(net_income_rows), "net_income")
+    }
+    for eps in _observations(list(eps_rows), "diluted_eps"):
+        key = (eps["periodStart"], eps["periodEnd"])
+        if key in windows or key not in income:
+            continue
+        eps_value = float(eps["value"])
+        if eps_value == 0:
+            continue
+        matching_income = income[key]
+        windows[key] = {
+            **eps,
+            "value": float(matching_income["value"]) / eps_value,
+            "unit": "shares",
+            "availableAt": max(eps["availableAt"], matching_income["availableAt"]),
+            "qualityFlags": sorted(
+                set(eps.get("qualityFlags") or [])
+                | set(matching_income.get("qualityFlags") or [])
+                | {"diluted_shares_derived_from_net_income"}
+            ),
+            "sources": list(eps.get("sources") or [])
+            + list(matching_income.get("sources") or []),
+        }
+    return sorted(windows.values(), key=lambda row: (row["periodEnd"], row["availableAt"]))
+
+
+def _empty_multiple_observation(
+    price: dict[str, Any],
+    *,
+    price_source: str,
+    quality_flags: list[str],
+) -> dict[str, Any]:
+    return {
+        "timestamp": price["timestamp"],
+        "alignedAt": price["timestamp"],
+        "value": None,
+        "unit": "ratio",
+        "price": price["close"],
+        "priceBasis": "split_adjusted",
+        "priceSource": {
+            "provider": price_source,
+            "timestamp": price["timestamp"],
+            "basis": "split_adjusted",
+        },
+        "denominatorTtm": None,
+        "denominatorAvailableAt": None,
+        "denominatorPeriodEnd": None,
+        "sharesOutstanding": None,
+        "sharesAvailableAt": None,
+        "sharesBasis": "split_adjusted",
+        "qualityFlags": quality_flags,
+        "sources": [],
     }
 
 

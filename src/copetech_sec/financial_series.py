@@ -18,6 +18,12 @@ from .financial_metrics import MetricDefinition, get_metric_definition
 NORMALIZATION_VERSION = 3
 QUARTER_MIN_DAYS = 70
 QUARTER_MAX_DAYS = 110
+# Cumulative (year-to-date) windows from Q2/Q3 filings: roughly six and nine
+# months, with slack for 52/53-week fiscal calendars.
+SEMIANNUAL_MIN_DAYS = 150
+SEMIANNUAL_MAX_DAYS = 200
+NINE_MONTH_MIN_DAYS = 240
+NINE_MONTH_MAX_DAYS = 300
 ANNUAL_MIN_DAYS = 330
 ANNUAL_MAX_DAYS = 400
 SUPPORTED_FORMS = frozenset(
@@ -94,6 +100,9 @@ def resolve_financial_series(
     quarterly = _resolve_duration_windows(candidates, definition, cadence="quarterly")
     annual = _resolve_duration_windows(candidates, definition, cadence="annual")
     if basis == "canonical" and definition.aggregation == "sum":
+        if definition.ytd_cadence:
+            ytd = _resolve_duration_windows(candidates, definition, cadence="ytd")
+            quarterly = _add_quarters_derived_from_ytd(quarterly, ytd)
         quarterly = _add_derived_fourth_quarters(quarterly, annual)
     if frequency == "quarterly":
         observations = quarterly
@@ -211,6 +220,11 @@ def _resolve_duration_windows(
 ) -> list[dict[str, Any]]:
     if cadence == "quarterly":
         accepted = lambda days: QUARTER_MIN_DAYS <= days <= QUARTER_MAX_DAYS
+    elif cadence == "ytd":
+        accepted = lambda days: (
+            SEMIANNUAL_MIN_DAYS <= days <= SEMIANNUAL_MAX_DAYS
+            or NINE_MONTH_MIN_DAYS <= days <= NINE_MONTH_MAX_DAYS
+        )
     else:
         accepted = lambda days: ANNUAL_MIN_DAYS <= days <= ANNUAL_MAX_DAYS
     grouped: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
@@ -283,6 +297,77 @@ def _resolve_window(
         "selectedSource": selected_source,
         "sources": sources,
     }
+
+
+def _add_quarters_derived_from_ytd(
+    quarterly: list[dict[str, Any]],
+    ytd: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Derive standalone Q2/Q3 from cumulative windows: Qn = YTDn − YTDn−1.
+
+    Cash-flow statements in Q2/Q3 10-Qs carry only year-to-date figures, so the
+    quarterly cadence would otherwise hold nothing but fiscal Q1. Windows chain
+    on a shared period start: the six-month cumulative minus the first quarter
+    yields Q2, the nine-month cumulative minus the six-month yields Q3. Each
+    derivation uses only reported windows — a derived quarter never feeds
+    another derivation, so one bad filing cannot cascade.
+    """
+    output = list(quarterly)
+    existing_windows = {(row["periodStart"], row["periodEnd"]) for row in quarterly}
+    grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for row in quarterly + ytd:
+        grouped.setdefault((row["periodStart"], row["unit"]), []).append(row)
+    for group in grouped.values():
+        ordered = sorted(group, key=lambda row: row["periodEnd"])
+        for index in range(1, len(ordered)):
+            shorter, cumulative = ordered[index - 1], ordered[index]
+            if cumulative["frequency"] != "ytd":
+                continue
+            increment_days = (
+                _parse_date(cumulative["periodEnd"]) - _parse_date(shorter["periodEnd"])
+            ).days
+            if not (QUARTER_MIN_DAYS <= increment_days <= QUARTER_MAX_DAYS):
+                continue
+            window = (_next_day(shorter["periodEnd"]), cumulative["periodEnd"])
+            if window in existing_windows:
+                continue
+            value = float(cumulative["value"]) - float(shorter["value"])
+            flags = (
+                set(shorter.get("qualityFlags") or [])
+                | set(cumulative.get("qualityFlags") or [])
+                | {"derived_from_ytd"}
+            )
+            implausible = value < 0 and float(shorter["value"]) >= 0 and float(cumulative["value"]) >= 0
+            if implausible:
+                flags.add("implausible_ytd_residual")
+            existing_windows.add(window)
+            output.append(
+                {
+                    "periodStart": window[0],
+                    "periodEnd": window[1],
+                    "availableAt": max(shorter["availableAt"], cumulative["availableAt"]),
+                    "value": value,
+                    "unit": cumulative["unit"],
+                    "frequency": "quarterly",
+                    "fiscalYear": cumulative.get("fiscalYear"),
+                    "fiscalPeriod": cumulative.get("fiscalPeriod"),
+                    "reported": False,
+                    "derived": True,
+                    "derivation": "cumulative year-to-date minus the preceding shorter window",
+                    "confidence": min(
+                        0.9 if not implausible else 0.55,
+                        float(shorter["confidence"]),
+                        float(cumulative["confidence"]),
+                    ),
+                    "qualityFlags": sorted(flags),
+                    "availabilitySource": max(
+                        (shorter, cumulative), key=lambda row: row["availableAt"]
+                    )["availabilitySource"],
+                    "selectedSource": cumulative["selectedSource"],
+                    "sources": shorter["sources"] + cumulative["sources"],
+                }
+            )
+    return output
 
 
 def _add_derived_fourth_quarters(

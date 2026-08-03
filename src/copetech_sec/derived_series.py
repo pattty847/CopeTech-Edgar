@@ -80,6 +80,20 @@ def _fcf_margin(values: dict[str, float]) -> ComputeResult:
     return fcf / revenue, (), ("operating_cash_flow", "capex", "revenue")
 
 
+def _sbc_burden(values: dict[str, float]) -> ComputeResult:
+    revenue = values["revenue"]
+    if revenue == 0:
+        return None
+    return values["sbc"] / revenue, (), ("sbc", "revenue")
+
+
+def _capex_intensity(values: dict[str, float]) -> ComputeResult:
+    revenue = values["revenue"]
+    if revenue == 0:
+        return None
+    return values["capex"] / revenue, (), ("capex", "revenue")
+
+
 def _revenue_per_share(values: dict[str, float]) -> ComputeResult:
     shares = values["diluted_shares"]
     if shares == 0:
@@ -135,6 +149,24 @@ DERIVED_METRIC_REGISTRY: dict[str, DerivedMetricDefinition] = {
         optional=(),
         compute=_rnd_intensity,
         derivation="research and development expense divided by revenue",
+    ),
+    "sbc_burden": DerivedMetricDefinition(
+        id="sbc_burden",
+        label="SBC burden",
+        unit="ratio",
+        required=("revenue", "sbc"),
+        optional=(),
+        compute=_sbc_burden,
+        derivation="stock-based compensation divided by revenue",
+    ),
+    "capex_intensity": DerivedMetricDefinition(
+        id="capex_intensity",
+        label="Capex intensity",
+        unit="ratio",
+        required=("revenue", "capex"),
+        optional=(),
+        compute=_capex_intensity,
+        derivation="capital expenditures divided by revenue",
     ),
     "revenue_per_share": DerivedMetricDefinition(
         id="revenue_per_share",

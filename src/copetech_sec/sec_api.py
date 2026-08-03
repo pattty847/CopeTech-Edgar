@@ -463,16 +463,18 @@ class SECDataFetcher:
         ticker: str,
         *,
         price_observations: List[Dict[str, Any]],
+        metric: str = "trailing_pe",
         split_events: List[Tuple[str, float]] | None = None,
         price_source: str = "caller",
         price_basis: str = "split_adjusted",
         refresh: bool = False,
         include_provenance: bool = True,
     ) -> Optional[Dict]:
-        """Return point-in-time trailing P/E on a caller-supplied price timeline."""
+        """Return a point-in-time trailing multiple on a caller-supplied price timeline."""
         return await self.financial_series.get_valuation_series(
             ticker,
             price_observations=price_observations,
+            metric=metric,
             split_events=split_events,
             price_source=price_source,
             price_basis=price_basis,

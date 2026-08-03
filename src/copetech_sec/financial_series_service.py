@@ -20,6 +20,22 @@ from .financial_series_store import FinancialSeriesStore
 
 FetchFacts = Callable[[str, bool], Awaitable[Optional[dict[str, Any]]]]
 
+# Market-cap multiples served by the generic trailing-multiple engine. The
+# denominator is a TTM series: a single base metric, or a derived composite
+# resolved from its components' TTM windows.
+TRAILING_MULTIPLE_METRICS: dict[str, dict[str, Any]] = {
+    "trailing_ps": {
+        "label": "Trailing P/S",
+        "denominator": "revenue",
+        "components": ("revenue",),
+    },
+    "trailing_pfcf": {
+        "label": "Trailing P/FCF",
+        "denominator": "fcf",
+        "components": ("operating_cash_flow", "capex"),
+    },
+}
+
 
 class FinancialSeriesService:
     def __init__(self, fetch_facts: FetchFacts, store_path: str | Path):
@@ -250,6 +266,7 @@ class FinancialSeriesService:
         symbol: str,
         *,
         price_observations: list[dict[str, Any]],
+        metric: str = "trailing_pe",
         split_events: list[tuple[str, float]] | None = None,
         price_source: str = "caller",
         price_basis: str = "split_adjusted",
@@ -261,6 +278,19 @@ class FinancialSeriesService:
         normalized = symbol.strip().upper()
         if not normalized:
             raise ValueError("symbol is required")
+        if metric in TRAILING_MULTIPLE_METRICS:
+            return await self._get_trailing_multiple_series(
+                normalized,
+                metric=metric,
+                price_observations=price_observations,
+                split_events=split_events,
+                price_source=price_source,
+                price_basis=price_basis,
+                refresh=refresh,
+                include_provenance=include_provenance,
+            )
+        if metric != "trailing_pe":
+            raise ValueError(f"unsupported valuation metric {metric!r}")
         loaded, source_warning = await self._refresh_metrics_and_load(
             normalized,
             metrics=("diluted_eps", "diluted_shares", "net_income"),
@@ -288,6 +318,92 @@ class FinancialSeriesService:
         )
         payload["rawFactCount"] = len(rows)
         payload["supportingRawFactCount"] = len(diluted_share_rows)
+        if source_warning:
+            payload["warnings"] = sorted(
+                set(payload.get("warnings") or []) | {source_warning}
+            )
+        return payload
+
+    async def _get_trailing_multiple_series(
+        self,
+        symbol: str,
+        *,
+        metric: str,
+        price_observations: list[dict[str, Any]],
+        split_events: list[tuple[str, float]] | None,
+        price_source: str,
+        price_basis: str,
+        refresh: bool,
+        include_provenance: bool,
+    ) -> dict[str, Any] | None:
+        from .valuation_series import (
+            build_share_windows,
+            derive_trailing_multiple_series,
+        )
+
+        spec = TRAILING_MULTIPLE_METRICS[metric]
+        share_metrics = ("diluted_shares", "net_income", "diluted_eps")
+        loaded, source_warning = await self._refresh_metrics_and_load(
+            symbol,
+            metrics=tuple(spec["components"]) + share_metrics,
+            refresh=refresh,
+        )
+        denominator_rows = [
+            row for component in spec["components"] for row in loaded[component]
+        ]
+        if not denominator_rows:
+            return None
+        if len(spec["components"]) == 1:
+            ttm_payload = resolve_financial_series(
+                loaded[spec["components"][0]],
+                symbol=symbol,
+                metric=spec["components"][0],
+                frequency="ttm",
+            )
+        else:
+            ttm_payload = resolve_derived_series(
+                {
+                    component: resolve_financial_series(
+                        loaded[component],
+                        symbol=symbol,
+                        metric=component,
+                        frequency="ttm",
+                    )
+                    for component in spec["components"]
+                    if loaded[component]
+                },
+                symbol=symbol,
+                metric=spec["denominator"],
+                frequency="ttm",
+                basis="canonical",
+                alignment="availability",
+            )
+        shares = build_share_windows(
+            loaded["diluted_shares"],
+            loaded["net_income"],
+            loaded["diluted_eps"],
+            symbol=symbol,
+        )
+        payload = derive_trailing_multiple_series(
+            price_observations,
+            ttm_payload["observations"],
+            shares,
+            symbol=symbol,
+            metric=metric,
+            label=spec["label"],
+            denominator_metric=spec["denominator"],
+            split_events=split_events,
+            price_source=price_source,
+            price_basis=price_basis,
+            include_provenance=include_provenance,
+        )
+        all_rows = [row for rows in loaded.values() for row in rows]
+        payload["retrievedAt"] = max(
+            (str(row.get("retrieved_at") or "") for row in all_rows),
+            default=None,
+        )
+        payload["rawFactCount"] = len(denominator_rows)
+        payload["supportingRawFactCount"] = len(loaded["diluted_shares"])
         if source_warning:
             payload["warnings"] = sorted(
                 set(payload.get("warnings") or []) | {source_warning}

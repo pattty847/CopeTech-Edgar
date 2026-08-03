@@ -14,6 +14,9 @@ class MetricDefinition:
     concepts: tuple[tuple[str, str], ...]
     valid_units: tuple[str, ...]
     aggregation: str
+    # Cash-flow-statement items are reported cumulatively in Q2/Q3 10-Qs, so
+    # standalone quarters must be derived by differencing year-to-date windows.
+    ytd_cadence: bool = False
 
 
 METRIC_REGISTRY: dict[str, MetricDefinition] = {
@@ -120,9 +123,8 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
         aggregation="sum",
     ),
     # Cash-flow-statement metrics: 10-Qs after Q1 report these only as
-    # year-to-date windows, which fall outside the quarterly duration band, so
-    # standalone quarters exist only for fiscal Q1 until YTD differencing lands.
-    # Annual and sparse quarterly observations are still correct as emitted.
+    # year-to-date windows, so ytd_cadence derives standalone Q2/Q3 by
+    # differencing successive cumulative windows.
     "operating_cash_flow": MetricDefinition(
         id="operating_cash_flow",
         label="Operating cash flow",
@@ -133,6 +135,7 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
         ),
         valid_units=("USD",),
         aggregation="sum",
+        ytd_cadence=True,
     ),
     "capex": MetricDefinition(
         id="capex",
@@ -145,6 +148,32 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
         ),
         valid_units=("USD",),
         aggregation="sum",
+        ytd_cadence=True,
+    ),
+    "sbc": MetricDefinition(
+        id="sbc",
+        label="Stock-based compensation",
+        fact_type="duration",
+        concepts=(
+            ("us-gaap", "ShareBasedCompensation"),
+            ("us-gaap", "AllocatedShareBasedCompensationExpense"),
+        ),
+        valid_units=("USD",),
+        aggregation="sum",
+        ytd_cadence=True,
+    ),
+    "dep_amort": MetricDefinition(
+        id="dep_amort",
+        label="Depreciation and amortization",
+        fact_type="duration",
+        concepts=(
+            ("us-gaap", "DepreciationDepletionAndAmortization"),
+            ("us-gaap", "DepreciationAmortizationAndAccretionNet"),
+            ("us-gaap", "DepreciationAndAmortization"),
+        ),
+        valid_units=("USD",),
+        aggregation="sum",
+        ytd_cadence=True,
     ),
 }
 
@@ -157,6 +186,7 @@ def list_supported_metrics() -> list[dict[str, Any]]:
             "factType": definition.fact_type,
             "validUnits": list(definition.valid_units),
             "aggregation": definition.aggregation,
+            "ytdCadence": definition.ytd_cadence,
             "concepts": [
                 {"taxonomy": taxonomy, "concept": concept}
                 for taxonomy, concept in definition.concepts
