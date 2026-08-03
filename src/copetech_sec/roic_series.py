@@ -34,6 +34,8 @@ ROIC_METRIC_INFO: dict[str, Any] = {
     "validUnits": ["ratio"],
     "aggregation": "composite",
     "derived": True,
+    # The UI reads this to clamp its frequency selector — ROIC is TTM-only.
+    "frequencies": ["ttm"],
     "components": [
         "operating_income",
         "tax_expense",
