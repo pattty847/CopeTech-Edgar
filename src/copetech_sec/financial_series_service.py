@@ -7,6 +7,12 @@ from pathlib import Path
 from typing import Any, Awaitable, Callable, Optional
 
 from .financial_metrics import list_supported_metrics
+from .derived_series import (
+    get_derived_definition,
+    is_derived_metric,
+    list_derived_metrics,
+    resolve_derived_series,
+)
 from .eps_series import resolve_diluted_eps_ttm
 from .financial_series import extract_financial_facts, resolve_financial_series
 from .financial_series_store import FinancialSeriesStore
@@ -22,7 +28,7 @@ class FinancialSeriesService:
 
     @staticmethod
     def supported_metrics() -> list[dict[str, Any]]:
-        return list_supported_metrics()
+        return list_supported_metrics() + list_derived_metrics()
 
     async def _refresh_and_load(
         self,
@@ -96,6 +102,19 @@ class FinancialSeriesService:
         normalized = symbol.strip().upper()
         if not normalized:
             raise ValueError("symbol is required")
+        if is_derived_metric(metric):
+            return await self._get_derived_series(
+                normalized,
+                metric=metric,
+                frequency=frequency,
+                basis=basis,
+                alignment=alignment,
+                as_of=as_of,
+                start=start,
+                end=end,
+                refresh=refresh,
+                include_provenance=include_provenance,
+            )
         canonical_eps_ttm = (
             metric == "diluted_eps"
             and frequency == "ttm"
@@ -151,6 +170,70 @@ class FinancialSeriesService:
         payload["rawFactCount"] = len(rows)
         if canonical_eps_ttm:
             payload["supportingRawFactCount"] = len(supporting_rows)
+        if source_warning:
+            payload["warnings"] = sorted(
+                set(payload.get("warnings") or []) | {source_warning}
+            )
+        if not include_provenance:
+            for observation in payload["observations"]:
+                observation.pop("sources", None)
+                observation.pop("availabilitySource", None)
+                observation.pop("selectedSource", None)
+        return payload
+
+    async def _get_derived_series(
+        self,
+        symbol: str,
+        *,
+        metric: str,
+        frequency: str,
+        basis: str,
+        alignment: str,
+        as_of: str | None,
+        start: str | None,
+        end: str | None,
+        refresh: bool,
+        include_provenance: bool,
+    ) -> dict[str, Any] | None:
+        definition = get_derived_definition(metric)
+        components = definition.required + definition.optional
+        loaded, source_warning = await self._refresh_metrics_and_load(
+            symbol,
+            metrics=components,
+            refresh=refresh,
+        )
+        all_rows = [row for rows in loaded.values() for row in rows]
+        if not all_rows:
+            return None
+        component_payloads = {
+            component: resolve_financial_series(
+                rows,
+                symbol=symbol,
+                metric=component,
+                frequency=frequency,
+                basis=basis,
+                alignment=alignment,
+                as_of=as_of,
+                start=start,
+                end=end,
+            )
+            for component, rows in loaded.items()
+            if rows
+        }
+        payload = resolve_derived_series(
+            component_payloads,
+            symbol=symbol,
+            metric=metric,
+            frequency=frequency,
+            basis=basis,
+            alignment=alignment,
+            as_of=as_of,
+        )
+        payload["retrievedAt"] = max(
+            (str(row.get("retrieved_at") or "") for row in all_rows),
+            default=None,
+        )
+        payload["rawFactCount"] = len(all_rows)
         if source_warning:
             payload["warnings"] = sorted(
                 set(payload.get("warnings") or []) | {source_warning}

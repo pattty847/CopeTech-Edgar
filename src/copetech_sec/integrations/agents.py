@@ -62,6 +62,13 @@ def _object_schema(
     }
 
 
+def _supported_metric_ids() -> list[str]:
+    from ..derived_series import DERIVED_METRIC_REGISTRY
+    from ..financial_metrics import METRIC_REGISTRY
+
+    return list(METRIC_REGISTRY) + list(DERIVED_METRIC_REGISTRY)
+
+
 _TICKER = {
     "type": "string",
     "description": "Public ticker symbol, such as AAPL or GOOGL.",
@@ -123,13 +130,13 @@ class EdgarAgentTools:
         ),
         AgentToolDefinition(
             "edgar.financials.series",
-            "Return an auditable point-in-time revenue or EPS series with filing provenance.",
+            "Return an auditable point-in-time financial series with filing provenance.",
             _object_schema(
                 {
                     "ticker": _TICKER,
                     "metric": {
                         "type": "string",
-                        "enum": ["revenue", "basic_eps", "diluted_eps"],
+                        "enum": _supported_metric_ids(),
                     },
                     "frequency": {
                         "type": "string",

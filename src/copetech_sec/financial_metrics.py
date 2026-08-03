@@ -75,6 +75,77 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
         valid_units=("shares",),
         aggregation="weighted_average",
     ),
+    "gross_profit": MetricDefinition(
+        id="gross_profit",
+        label="Gross profit",
+        fact_type="duration",
+        concepts=(
+            ("us-gaap", "GrossProfit"),
+        ),
+        valid_units=("USD",),
+        aggregation="sum",
+    ),
+    "cost_of_revenue": MetricDefinition(
+        id="cost_of_revenue",
+        label="Cost of revenue",
+        fact_type="duration",
+        concepts=(
+            ("us-gaap", "CostOfGoodsAndServicesSold"),
+            ("us-gaap", "CostOfRevenue"),
+            ("us-gaap", "CostOfGoodsSold"),
+            ("us-gaap", "CostOfServices"),
+        ),
+        valid_units=("USD",),
+        aggregation="sum",
+    ),
+    "operating_income": MetricDefinition(
+        id="operating_income",
+        label="Operating income",
+        fact_type="duration",
+        concepts=(
+            ("us-gaap", "OperatingIncomeLoss"),
+        ),
+        valid_units=("USD",),
+        aggregation="sum",
+    ),
+    "rnd_expense": MetricDefinition(
+        id="rnd_expense",
+        label="Research and development expense",
+        fact_type="duration",
+        concepts=(
+            ("us-gaap", "ResearchAndDevelopmentExpense"),
+            ("us-gaap", "ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost"),
+        ),
+        valid_units=("USD",),
+        aggregation="sum",
+    ),
+    # Cash-flow-statement metrics: 10-Qs after Q1 report these only as
+    # year-to-date windows, which fall outside the quarterly duration band, so
+    # standalone quarters exist only for fiscal Q1 until YTD differencing lands.
+    # Annual and sparse quarterly observations are still correct as emitted.
+    "operating_cash_flow": MetricDefinition(
+        id="operating_cash_flow",
+        label="Operating cash flow",
+        fact_type="duration",
+        concepts=(
+            ("us-gaap", "NetCashProvidedByUsedInOperatingActivities"),
+            ("us-gaap", "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations"),
+        ),
+        valid_units=("USD",),
+        aggregation="sum",
+    ),
+    "capex": MetricDefinition(
+        id="capex",
+        label="Capital expenditures",
+        fact_type="duration",
+        concepts=(
+            ("us-gaap", "PaymentsToAcquirePropertyPlantAndEquipment"),
+            ("us-gaap", "PaymentsToAcquireProductiveAssets"),
+            ("us-gaap", "PaymentsForCapitalImprovements"),
+        ),
+        valid_units=("USD",),
+        aggregation="sum",
+    ),
 }
 
 
