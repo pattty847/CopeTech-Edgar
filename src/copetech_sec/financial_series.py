@@ -12,7 +12,11 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Iterable
 
-from .financial_metrics import MetricDefinition, get_metric_definition
+from .financial_metrics import (
+    MetricDefinition,
+    concept_quality_flags,
+    get_metric_definition,
+)
 
 
 NORMALIZATION_VERSION = 3
@@ -63,6 +67,7 @@ def extract_financial_facts(
                     unit=unit,
                     retrieved_at=timestamp,
                     fact_type=definition.fact_type,
+                    concept_flags=concept_quality_flags(definition, concept),
                 )
                 if normalized is not None:
                     rows.append(normalized)
@@ -109,10 +114,16 @@ def resolve_financial_series(
             observations = []
             extra_warnings.add("ttm_not_applicable_for_instant_metric")
         elif frequency == "annual":
+            annual_windows = {
+                (row["period_start"], row["period_end"], row["unit"])
+                for row in candidates
+                if row["form"] in ANNUAL_FORMS
+            }
             observations = [
                 row
                 for row in instants
-                if row["availabilitySource"]["form"] in ANNUAL_FORMS
+                if (row["periodStart"], row["periodEnd"], row["unit"])
+                in annual_windows
             ]
         else:
             observations = instants
@@ -186,6 +197,7 @@ def _normalize_raw_fact(
     unit: str,
     retrieved_at: str,
     fact_type: str = "duration",
+    concept_flags: tuple[str, ...] = (),
 ) -> dict[str, Any] | None:
     form = str(entry.get("form") or "")
     start = str(entry.get("start") or "")
@@ -209,7 +221,7 @@ def _normalize_raw_fact(
         value = float(entry["val"])
     except (TypeError, ValueError):
         return None
-    quality_flags: list[str] = []
+    quality_flags = list(concept_flags)
     if form.endswith("/A"):
         quality_flags.append("amended_filing")
     return {
@@ -290,7 +302,9 @@ def _resolve_window(
         round(float(row["value"]), 6)
         for row in group
     }
-    flags = set(selected.get("quality_flags") or [])
+    flags = set(selected.get("quality_flags") or []) | set(
+        identity_source.get("quality_flags") or []
+    )
     if len(distinct_values) > 1:
         flags.add("conflicting_filing_values")
     if len({row["concept"] for row in group}) > 1:
@@ -432,14 +446,20 @@ def _add_derived_fourth_quarters(
         if window in existing_windows:
             continue
         value = float(annual_row["value"]) - sum(float(row["value"]) for row in contained)
-        flags = {"derived_q4"}
+        contributors = [annual_row, *contained]
+        flags = {
+            flag
+            for row in contributors
+            for flag in row.get("qualityFlags") or []
+        } | {"derived_q4"}
         if value < 0 and all(float(row["value"]) >= 0 for row in contained):
             flags.add("implausible_annual_residual")
+        latest = max(contributors, key=lambda row: row["availableAt"])
         output.append(
             {
                 "periodStart": fourth_start,
                 "periodEnd": annual_row["periodEnd"],
-                "availableAt": annual_row["availableAt"],
+                "availableAt": latest["availableAt"],
                 "value": value,
                 "unit": annual_row["unit"],
                 "frequency": "quarterly",
@@ -448,9 +468,12 @@ def _add_derived_fourth_quarters(
                 "reported": False,
                 "derived": True,
                 "derivation": "annual minus the three reported standalone quarters",
-                "confidence": 0.9 if len(flags) == 1 else 0.55,
+                "confidence": min(
+                    0.55 if "implausible_annual_residual" in flags else 0.9,
+                    *(float(row["confidence"]) for row in contributors),
+                ),
                 "qualityFlags": sorted(flags),
-                "availabilitySource": annual_row["availabilitySource"],
+                "availabilitySource": latest["availabilitySource"],
                 "selectedSource": annual_row["selectedSource"],
                 "sources": annual_row["sources"]
                 + [source for row in contained for source in row["sources"]],

@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import AsyncMock, Mock
 
 from copetech_sec.integrations.agents import EdgarAgentTools
+from copetech_sec.financial_series_service import FinancialSeriesService
 from copetech_sec.integrations.pandas import (
     financial_observations,
     institutional_holdings,
@@ -38,6 +39,15 @@ class AgentIntegrationTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertTrue(all(tool["sideEffect"] == "read_only" for tool in manifest))
         self.assertTrue(all(tool["inputSchema"]["additionalProperties"] is False for tool in manifest))
+
+        financial_tool = next(
+            tool for tool in manifest if tool["id"] == "edgar.financials.series"
+        )
+        metric_ids = financial_tool["inputSchema"]["properties"]["metric"]["enum"]
+        expected = [entry["id"] for entry in FinancialSeriesService.supported_metrics()]
+        self.assertEqual(metric_ids, expected)
+        self.assertEqual(len(metric_ids), len(set(metric_ids)))
+        self.assertIn("roic", metric_ids)
 
     async def test_invoke_distinguishes_not_found_from_failure(self):
         result = await self.tools.invoke(

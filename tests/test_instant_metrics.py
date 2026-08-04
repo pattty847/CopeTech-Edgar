@@ -126,6 +126,27 @@ class InstantMetricTests(unittest.TestCase):
         (observation,) = series["observations"]
         self.assertEqual(observation["periodEnd"], "2025-12-31")
 
+    def test_annual_frequency_keeps_year_end_restated_by_a_later_quarterly_filing(self):
+        payload = instant_series("StockholdersEquity", [100.0, 110.0, 120.0])
+        entries = payload["facts"]["us-gaap"]["StockholdersEquity"]["units"]["USD"]
+        entries.append(
+            instant_fact(
+                125.0,
+                "2025-12-31",
+                "2026-04-25",
+                "year-end-restated",
+                form="10-Q",
+                fp="Q1",
+            )
+        )
+
+        series = resolved(payload, "stockholders_equity", frequency="annual")
+
+        (observation,) = series["observations"]
+        self.assertEqual(observation["periodEnd"], "2025-12-31")
+        self.assertEqual(observation["value"], 125.0)
+        self.assertEqual(observation["availableAt"], "2026-04-25")
+
     def test_ttm_is_meaningless_for_instants(self):
         series = resolved(
             instant_series("StockholdersEquity", [100.0, 110.0, 120.0]),
@@ -229,6 +250,8 @@ class InstantValuationServiceTests(unittest.IsolatedAsyncioTestCase):
             "RevenueFromContractWithCustomerExcludingAssessedTax": [25.0] * 4,
             "NetCashProvidedByUsedInOperatingActivities": [30.0] * 4,
             "PaymentsToAcquirePropertyPlantAndEquipment": [5.0] * 4,
+            "OperatingIncomeLoss": [20.0] * 4,
+            "DepreciationDepletionAndAmortization": [5.0] * 4,
             "WeightedAverageNumberOfDilutedSharesOutstanding": [10.0] * 4,
         }
         built: dict = {"us-gaap": {}}
@@ -289,6 +312,13 @@ class InstantValuationServiceTests(unittest.IsolatedAsyncioTestCase):
         # EV = 400 + (110 − 10) = 500 over TTM revenue 100 → 5×
         self.assertAlmostEqual(observation["value"], 5.0)
         self.assertEqual(observation["adjustmentValue"], 100.0)
+
+    async def test_ev_ebitda_uses_ttm_operating_income_plus_depreciation(self):
+        series = await self._series("ev_ebitda")
+        (observation,) = series["observations"]
+        # EV 500 over TTM EBITDA: (20 + 5) × 4 = 100 → 5×.
+        self.assertAlmostEqual(observation["denominatorTtm"], 100.0)
+        self.assertAlmostEqual(observation["value"], 5.0)
 
 
 if __name__ == "__main__":

@@ -299,6 +299,44 @@ class FinancialSeriesNormalizationTests(unittest.TestCase):
         self.assertEqual(ttm["observations"][0]["value"], 100)
         self.assertEqual(ttm["observations"][0]["availableAt"], "2026-02-10")
 
+    def test_derived_q4_waits_for_later_quarter_restatement_and_keeps_its_flags(self):
+        rows = [
+            fact(value, start, end, filed, accession, form=form, fy=2025, fp=fp)
+            for value, start, end, filed, accession, form, fp in [
+                (10, "2025-01-01", "2025-03-31", "2025-04-25", "q1", "10-Q", "Q1"),
+                (12, "2025-01-01", "2025-03-31", "2026-03-01", "q1a", "10-Q/A", "Q1"),
+                (20, "2025-04-01", "2025-06-30", "2025-07-25", "q2", "10-Q", "Q2"),
+                (30, "2025-07-01", "2025-09-30", "2025-10-25", "q3", "10-Q", "Q3"),
+                (100, "2025-01-01", "2025-12-31", "2026-02-10", "fy", "10-K", "FY"),
+            ]
+        ]
+        extracted = extract_financial_facts(
+            company_facts(revenues=rows), symbol="TEST", metric="revenue"
+        )
+
+        current = resolve_financial_series(
+            extracted, symbol="TEST", metric="revenue", frequency="quarterly"
+        )
+        q4 = next(row for row in current["observations"] if row["fiscalPeriod"] == "Q4")
+        self.assertEqual(q4["value"], 38)
+        self.assertEqual(q4["availableAt"], "2026-03-01")
+        self.assertEqual(q4["availabilitySource"]["accessionNumber"], "q1a")
+        self.assertIn("amended_filing", q4["qualityFlags"])
+        self.assertIn("conflicting_filing_values", q4["qualityFlags"])
+
+        before_amendment = resolve_financial_series(
+            extracted,
+            symbol="TEST",
+            metric="revenue",
+            frequency="quarterly",
+            as_of="2026-02-15",
+        )
+        old_q4 = next(
+            row for row in before_amendment["observations"] if row["fiscalPeriod"] == "Q4"
+        )
+        self.assertEqual(old_q4["value"], 40)
+        self.assertEqual(old_q4["availableAt"], "2026-02-10")
+
     def test_does_not_derive_q4_from_noncontiguous_quarters(self):
         rows = [
             fact(

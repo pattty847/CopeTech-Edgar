@@ -237,11 +237,13 @@ def _latest_ttm_at(
     split_events: list[tuple[str, float]],
 ) -> dict[str, Any] | None:
     resolved = _resolve_windows([row for row in pairs if row["filed"] <= filed])
-    newly_selected = [row for row in resolved if row["filed"] == filed]
-    if not newly_selected:
+    if not resolved:
         return None
-    target_end = max(row["period_end"] for row in newly_selected)
-    target_candidates = [row for row in newly_selected if row["period_end"] == target_end]
+    # Recompute the latest economic window at every filing date. An amendment
+    # can change a prior-year YTD input used by today's TTM bridge even though
+    # the amended fact's own period is older than the current target window.
+    target_end = max(row["period_end"] for row in resolved)
+    target_candidates = [row for row in resolved if row["period_end"] == target_end]
     target = max(target_candidates, key=lambda row: int(row["duration_days"]))
     if _is_annual(target):
         return _annual_observation(target, split_events)

@@ -185,6 +185,66 @@ class TrailingPeSeriesTests(unittest.TestCase):
         self.assertIn("eps_split_adjusted", latest["qualityFlags"])
         self.assertIn("eps_ttm_reconstructed", latest["qualityFlags"])
 
+    def test_prior_ytd_amendment_recomputes_the_current_interim_ttm(self):
+        annual = _fact(
+            4,
+            "2024-01-01",
+            "2024-12-31",
+            "2025-02-15",
+            "annual",
+            form="10-K",
+            fp="FY",
+        )
+        prior_ytd = _fact(
+            2,
+            "2024-01-01",
+            "2024-06-30",
+            "2025-07-25",
+            "prior-ytd",
+            form="10-Q",
+            fp="Q2",
+        )
+        current_ytd = _fact(
+            3,
+            "2025-01-01",
+            "2025-06-30",
+            "2025-07-25",
+            "current-ytd",
+            form="10-Q",
+            fp="Q2",
+        )
+        amended_prior = {
+            **prior_ytd,
+            "val": 1,
+            "filed": "2025-08-15",
+            "accn": "prior-ytd-amended",
+            "form": "10-Q/A",
+        }
+        eps_entries = [annual, prior_ytd, current_ytd, amended_prior]
+        share_entries = [
+            {**entry, "val": 10}
+            for entry in eps_entries
+        ]
+        eps_rows, share_rows = _rows(eps_entries, share_entries)
+
+        payload = derive_trailing_pe_series(
+            eps_rows,
+            [
+                {"time": "2025-08-01", "close": 30},
+                {"time": "2025-09-01", "close": 30},
+            ],
+            symbol="TEST",
+            diluted_share_rows=share_rows,
+            split_events=[],
+        )
+
+        before, after = payload["observations"]
+        self.assertAlmostEqual(before["epsTtm"], 5.0, places=2)
+        self.assertAlmostEqual(after["epsTtm"], 6.0, places=2)
+        self.assertEqual(after["epsAvailableAt"], "2025-08-15")
+        self.assertAlmostEqual(before["value"], 6.0, places=2)
+        self.assertAlmostEqual(after["value"], 5.0, places=2)
+
     def test_share_count_change_does_not_create_a_false_positive_sofi_ttm(self):
         eps_rows, share_rows = _rows(
             [

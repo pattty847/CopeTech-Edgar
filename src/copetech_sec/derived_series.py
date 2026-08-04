@@ -14,7 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable
 
-from .financial_metrics import get_metric_definition
+from .financial_metrics import get_metric_definition, supported_frequencies
 
 # compute receives the component values present for one aligned window and
 # returns (value, extra_quality_flags, component_ids_actually_used), or None to
@@ -354,9 +354,25 @@ def list_derived_metrics() -> list[dict[str, Any]]:
             "validUnits": [definition.unit],
             "aggregation": "composite",
             "derived": True,
+            "frequencies": _supported_frequencies(definition),
             "components": sorted(definition.required + definition.optional),
         }
         for definition in DERIVED_METRIC_REGISTRY.values()
+    ]
+
+
+def _supported_frequencies(definition: DerivedMetricDefinition) -> list[str]:
+    component_frequencies = [
+        set(supported_frequencies(get_metric_definition(component)))
+        for component in definition.required
+    ]
+    if not component_frequencies:
+        return ["quarterly", "ttm", "annual"]
+    supported = set.intersection(*component_frequencies)
+    return [
+        frequency
+        for frequency in ("quarterly", "ttm", "annual")
+        if frequency in supported
     ]
 
 
@@ -432,7 +448,11 @@ def resolve_derived_series(
                 "availabilitySource": max(
                     used_rows, key=lambda row: row["availableAt"]
                 )["availabilitySource"],
-                "selectedSource": primary["selectedSource"],
+                # The first `used` component is the formula's numerator or
+                # primary value. Pointing this at the first *required* component
+                # mislabeled reported gross profit as revenue because revenue is
+                # required only to support the fallback calculation.
+                "selectedSource": used_rows[0]["selectedSource"],
                 "sources": [
                     source for row in used_rows for source in row.get("sources") or []
                 ],

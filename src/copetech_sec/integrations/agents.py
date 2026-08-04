@@ -63,10 +63,9 @@ def _object_schema(
 
 
 def _supported_metric_ids() -> list[str]:
-    from ..derived_series import DERIVED_METRIC_REGISTRY
-    from ..financial_metrics import METRIC_REGISTRY
+    from ..financial_series_service import FinancialSeriesService
 
-    return list(METRIC_REGISTRY) + list(DERIVED_METRIC_REGISTRY)
+    return [entry["id"] for entry in FinancialSeriesService.supported_metrics()]
 
 
 _TICKER = {

@@ -17,6 +17,10 @@ class MetricDefinition:
     # Cash-flow-statement items are reported cumulatively in Q2/Q3 10-Qs, so
     # standalone quarters must be derived by differencing year-to-date windows.
     ytd_cadence: bool = False
+    # Some fallback concepts are deliberately broader or narrower than the
+    # metric label. Preserve coverage, but make that semantic compromise travel
+    # with every selected fact instead of hiding it in registry order.
+    concept_quality_flags: tuple[tuple[str, tuple[str, ...]], ...] = ()
 
 
 METRIC_REGISTRY: dict[str, MetricDefinition] = {
@@ -100,6 +104,7 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
         ),
         valid_units=("USD",),
         aggregation="sum",
+        concept_quality_flags=(("CostOfServices", ("cost_of_services_may_not_equal_total_cost_of_revenue",)),),
     ),
     "operating_income": MetricDefinition(
         id="operating_income",
@@ -179,6 +184,7 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
         valid_units=("USD",),
         aggregation="sum",
         ytd_cadence=True,
+        concept_quality_flags=(("Depreciation", ("depreciation_only_may_understate_dep_amort",)),),
     ),
     "interest_expense": MetricDefinition(
         id="interest_expense",
@@ -192,6 +198,7 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
         ),
         valid_units=("USD",),
         aggregation="sum",
+        concept_quality_flags=(("InterestIncomeExpenseNet", ("net_interest_used_for_interest_expense",)),),
     ),
     "tax_expense": MetricDefinition(
         id="tax_expense",
@@ -234,6 +241,7 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
         ),
         valid_units=("USD",),
         aggregation="point_in_time",
+        concept_quality_flags=(("StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest", ("equity_includes_noncontrolling_interest",)),),
     ),
     "cash_equivalents": MetricDefinition(
         id="cash_equivalents",
@@ -245,6 +253,7 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
         ),
         valid_units=("USD",),
         aggregation="point_in_time",
+        concept_quality_flags=(("CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents", ("cash_includes_restricted_cash",)),),
     ),
     "short_term_investments": MetricDefinition(
         id="short_term_investments",
@@ -326,6 +335,7 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
         ),
         valid_units=("USD",),
         aggregation="point_in_time",
+        concept_quality_flags=(("AccountsPayableAndAccruedLiabilitiesCurrent", ("payables_include_accrued_liabilities",)),),
     ),
     "total_assets": MetricDefinition(
         id="total_assets",
@@ -354,6 +364,7 @@ def list_supported_metrics() -> list[dict[str, Any]]:
             "factType": definition.fact_type,
             "validUnits": list(definition.valid_units),
             "aggregation": definition.aggregation,
+            "frequencies": supported_frequencies(definition),
             "ytdCadence": definition.ytd_cadence,
             "concepts": [
                 {"taxonomy": taxonomy, "concept": concept}
@@ -362,6 +373,26 @@ def list_supported_metrics() -> list[dict[str, Any]]:
         }
         for definition in METRIC_REGISTRY.values()
     ]
+
+
+def supported_frequencies(definition: MetricDefinition) -> list[str]:
+    """Cadences the resolver can produce without returning a known-empty series."""
+
+    if definition.fact_type == "instant":
+        return ["quarterly", "annual"]
+    if definition.aggregation == "weighted_average" and definition.id != "diluted_eps":
+        return ["quarterly", "annual"]
+    return ["quarterly", "ttm", "annual"]
+
+
+def concept_quality_flags(
+    definition: MetricDefinition,
+    concept: str,
+) -> tuple[str, ...]:
+    return next(
+        (flags for candidate, flags in definition.concept_quality_flags if candidate == concept),
+        (),
+    )
 
 
 def get_metric_definition(metric: str) -> MetricDefinition:

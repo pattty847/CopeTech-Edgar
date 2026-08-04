@@ -160,6 +160,26 @@ class TrailingMultipleTests(unittest.TestCase):
         self.assertIsNone(observation["value"])
         self.assertIn("no_point_in_time_ttm_denominator", observation["qualityFlags"])
 
+    def test_negative_fcf_yield_is_plotted_instead_of_suppressed(self):
+        payload = self.payload()
+        denominator = revenue_ttm(payload)
+        denominator[0] = {**denominator[0], "value": -20.0}
+        series = derive_trailing_multiple_series(
+            [{"time": "2025-05-01", "close": 40.0}],
+            denominator,
+            self.shares(payload),
+            symbol="TEST",
+            metric="fcf_yield",
+            label="FCF yield",
+            denominator_metric="fcf",
+            invert=True,
+            split_events=[],
+        )
+        (observation,) = series["observations"]
+        # Negative free cash flow is a meaningful negative yield: -20 / 400.
+        self.assertAlmostEqual(observation["value"], -0.05)
+        self.assertNotIn("non_positive_ttm_denominator", observation["qualityFlags"])
+
     def test_missing_share_tags_fall_back_to_net_income_over_eps(self):
         payload = company_facts(
             {
@@ -251,6 +271,62 @@ class TrailingMultipleServiceTests(unittest.IsolatedAsyncioTestCase):
         (observation,) = series["observations"]
         # market cap 400 over TTM FCF (120 − 20) = 100 → 4×
         self.assertAlmostEqual(observation["value"], 4.0)
+
+    async def test_service_preserves_pre_amendment_denominator_for_older_prices(self):
+        payload = self.payload_with_revenue_restatement()
+
+        async def fetch_facts(symbol: str, use_cache: bool = True) -> dict:
+            return payload
+
+        with tempfile.TemporaryDirectory() as tmp:
+            service = FinancialSeriesService(fetch_facts, Path(tmp) / "store.sqlite3")
+            series = await service.get_valuation_series(
+                "TEST",
+                price_observations=[
+                    {"time": "2025-05-01", "close": 40.0},
+                    {"time": "2025-05-20", "close": 40.0},
+                ],
+                metric="trailing_ps",
+                split_events=[],
+            )
+
+        before, after = series["observations"]
+        self.assertEqual(before["denominatorTtm"], 100.0)
+        self.assertAlmostEqual(before["value"], 4.0)
+        self.assertEqual(after["denominatorTtm"], 125.0)
+        self.assertAlmostEqual(after["value"], 3.2)
+        self.assertLessEqual(before["denominatorAvailableAt"], before["timestamp"])
+        self.assertLessEqual(after["denominatorAvailableAt"], after["timestamp"])
+
+    @staticmethod
+    def payload_with_revenue_restatement() -> dict:
+        payload = company_facts(
+            {
+                "RevenueFromContractWithCustomerExcludingAssessedTax": (
+                    [25.0, 25.0, 25.0, 25.0],
+                    "USD",
+                ),
+                "WeightedAverageNumberOfDilutedSharesOutstanding": (
+                    [10.0, 10.0, 10.0, 10.0],
+                    "shares",
+                ),
+            }
+        )
+        revenue = payload["facts"]["us-gaap"][
+            "RevenueFromContractWithCustomerExcludingAssessedTax"
+        ]["units"]["USD"]
+        start, end, _filed = QUARTERS[0]
+        revenue.append(
+            fact(
+                50.0,
+                start,
+                end,
+                "2025-05-15",
+                "RevenueFromContractWithCustomerExcludingAssessedTax-amended",
+                form="10-Q/A",
+            )
+        )
+        return payload
 
 
 if __name__ == "__main__":

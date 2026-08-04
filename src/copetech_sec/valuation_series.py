@@ -276,18 +276,21 @@ def derive_trailing_multiple_series(
             adjusted_shares = float(share_window["value"]) * _split_factor_after(
                 shares_available, splits
             )
-            if ttm_value <= 0:
-                flags.add("non_positive_ttm_denominator")
-            elif adjusted_shares > 0 and not is_stale:
+            if adjusted_shares <= 0:
+                flags.add("non_positive_share_count")
+            elif not is_stale:
                 numerator = float(price["close"]) * adjusted_shares
                 if adjustment is not None:
                     numerator += float(adjustment["value"])
-                if invert:
-                    value = ttm_value / numerator if numerator > 0 else None
-                    if value is None:
-                        flags.add("non_positive_enterprise_value")
-                elif numerator <= 0:
+                if numerator <= 0:
                     flags.add("non_positive_enterprise_value")
+                elif invert:
+                    # A negative FCF multiple is not useful, but a negative FCF
+                    # *yield* is an economically meaningful result. Zero likewise
+                    # means a zero yield, not an unavailable observation.
+                    value = ttm_value / numerator
+                elif ttm_value <= 0:
+                    flags.add("non_positive_ttm_denominator")
                 else:
                     value = numerator / ttm_value
 

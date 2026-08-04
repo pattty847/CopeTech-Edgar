@@ -66,6 +66,39 @@ def resolved(payload: dict, symbol: str, metric: str, frequency: str = "quarterl
     )
 
 
+def component_payload(value: float, *, unit: str = "USD") -> dict:
+    source = {
+        "taxonomy": "us-gaap",
+        "concept": "FixtureConcept",
+        "form": "10-Q",
+        "filed": "2025-04-25",
+        "accessionNumber": "fixture",
+    }
+    return {
+        "cik": 1,
+        "entityName": "Fixture Corp",
+        "warnings": [],
+        "observations": [
+            {
+                "periodStart": "2025-01-01",
+                "periodEnd": "2025-03-31",
+                "availableAt": "2025-04-25",
+                "alignedAt": "2025-04-25",
+                "value": value,
+                "unit": unit,
+                "frequency": "quarterly",
+                "fiscalYear": 2025,
+                "fiscalPeriod": "Q1",
+                "confidence": 1.0,
+                "qualityFlags": [],
+                "availabilitySource": source,
+                "selectedSource": source,
+                "sources": [source],
+            }
+        ],
+    }
+
+
 class DerivedSeriesTests(unittest.TestCase):
     WINDOW = ("2025-01-01", "2025-03-31")
 
@@ -96,6 +129,10 @@ class DerivedSeriesTests(unittest.TestCase):
         self.assertAlmostEqual(observation["value"], 0.4)
         self.assertEqual(observation["unit"], "ratio")
         self.assertTrue(observation["derived"])
+        self.assertEqual(
+            observation["selectedSource"]["concept"],
+            "GrossProfit",
+        )
         self.assertNotIn(
             "gross_profit_derived_from_cost_of_revenue",
             observation["qualityFlags"],
@@ -121,6 +158,31 @@ class DerivedSeriesTests(unittest.TestCase):
         self.assertAlmostEqual(observation["value"], 0.35)
         self.assertIn(
             "gross_profit_derived_from_cost_of_revenue",
+            observation["qualityFlags"],
+        )
+
+    def test_first_available_fallback_keeps_its_semantic_warning(self):
+        payload = merge_facts(
+            self._quarter("CostOfServices", 60.0, "2025-04-20", "services"),
+            self._quarter("CostOfRevenue", 60.0, "2025-04-25", "cost-revenue"),
+        )
+        extracted = extract_financial_facts(
+            payload,
+            symbol="TEST",
+            metric="cost_of_revenue",
+        )
+        series = resolve_financial_series(
+            extracted,
+            symbol="TEST",
+            metric="cost_of_revenue",
+            frequency="quarterly",
+        )
+
+        (observation,) = series["observations"]
+        self.assertEqual(observation["availableAt"], "2025-04-20")
+        self.assertEqual(observation["selectedSource"]["concept"], "CostOfRevenue")
+        self.assertIn(
+            "cost_of_services_may_not_equal_total_cost_of_revenue",
             observation["qualityFlags"],
         )
 
@@ -231,6 +293,61 @@ class DerivedSeriesTests(unittest.TestCase):
         self.assertIn("gross_margin", listed)
         self.assertTrue(listed["gross_margin"]["derived"])
         self.assertIn("revenue", listed["gross_margin"]["components"])
+
+    def test_each_remaining_composite_formula_uses_consistent_units_and_signs(self):
+        cases = {
+            "fcf_margin": ({"operating_cash_flow": 90, "capex": 30, "revenue": 200}, 0.30),
+            "operating_margin": ({"operating_income": 50, "revenue": 200}, 0.25),
+            "rnd_intensity": ({"rnd_expense": 20, "revenue": 200}, 0.10),
+            "sbc_burden": ({"sbc": 10, "revenue": 200}, 0.05),
+            "capex_intensity": ({"capex": 30, "revenue": 200}, 0.15),
+            "ebitda": ({"operating_income": 50, "dep_amort": 15}, 65.0),
+            "invested_capital": (
+                {
+                    "stockholders_equity": 100,
+                    "debt_current": 10,
+                    "debt_noncurrent": 90,
+                    "cash_equivalents": 30,
+                    "short_term_investments": 20,
+                },
+                150.0,
+            ),
+        }
+        for metric, (values, expected) in cases.items():
+            with self.subTest(metric=metric):
+                series = resolve_derived_series(
+                    {component: component_payload(value) for component, value in values.items()},
+                    symbol="TEST",
+                    metric=metric,
+                    frequency="quarterly",
+                    basis="canonical",
+                    alignment="availability",
+                )
+                (observation,) = series["observations"]
+                self.assertAlmostEqual(observation["value"], expected)
+
+    def test_ratio_composites_decline_zero_divisors_instead_of_emitting_infinity(self):
+        cases = {
+            "gross_margin": {"revenue": 0, "gross_profit": 10},
+            "operating_margin": {"revenue": 0, "operating_income": 10},
+            "rnd_intensity": {"revenue": 0, "rnd_expense": 10},
+            "fcf_margin": {"revenue": 0, "operating_cash_flow": 10, "capex": 2},
+            "sbc_burden": {"revenue": 0, "sbc": 10},
+            "capex_intensity": {"revenue": 0, "capex": 10},
+            "revenue_per_share": {"revenue": 10, "diluted_shares": 0},
+            "interest_coverage": {"operating_income": 10, "interest_expense": 0},
+        }
+        for metric, values in cases.items():
+            with self.subTest(metric=metric):
+                series = resolve_derived_series(
+                    {component: component_payload(value) for component, value in values.items()},
+                    symbol="TEST",
+                    metric=metric,
+                    frequency="quarterly",
+                    basis="canonical",
+                    alignment="availability",
+                )
+                self.assertEqual(series["observations"], [])
 
 
 class DerivedSeriesServiceTests(unittest.IsolatedAsyncioTestCase):

@@ -164,6 +164,13 @@ class Phase4ServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("ebitda", ids)
         self.assertIn("interest_coverage", ids)
         self.assertIn("invested_capital", ids)
+        by_id = {entry["id"]: entry for entry in entries}
+        self.assertEqual(by_id["stockholders_equity"]["frequencies"], ["quarterly", "annual"])
+        self.assertEqual(by_id["diluted_shares"]["frequencies"], ["quarterly", "annual"])
+        self.assertEqual(by_id["revenue_per_share"]["frequencies"], ["quarterly", "annual"])
+        self.assertEqual(by_id["revenue"]["frequencies"], ["quarterly", "ttm", "annual"])
+        self.assertEqual(by_id["diluted_eps"]["frequencies"], ["quarterly", "ttm", "annual"])
+        self.assertEqual(by_id["roic"]["frequencies"], ["ttm"])
 
     async def test_interest_coverage_ttm(self):
         payload = self.facts_payload(
@@ -184,6 +191,30 @@ class Phase4ServiceTests(unittest.IsolatedAsyncioTestCase):
 
         (observation,) = series["observations"]
         self.assertAlmostEqual(observation["value"], 10.0)
+
+    async def test_net_interest_fallback_is_disclosed_on_coverage(self):
+        payload = self.facts_payload(
+            {
+                "OperatingIncomeLoss": [50.0] * 4,
+                "InterestIncomeExpenseNet": [5.0] * 4,
+            }
+        )
+
+        async def fetch(symbol, use_cache=True):
+            return payload
+
+        with tempfile.TemporaryDirectory() as tmp:
+            service = FinancialSeriesService(fetch, Path(tmp) / "s.db")
+            series = await service.get_series(
+                "TEST", metric="interest_coverage", frequency="ttm"
+            )
+
+        (observation,) = series["observations"]
+        self.assertAlmostEqual(observation["value"], 10.0)
+        self.assertIn(
+            "net_interest_used_for_interest_expense",
+            observation["qualityFlags"],
+        )
 
 
 if __name__ == "__main__":
