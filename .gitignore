@@ -22,3 +22,5 @@ data/
 analysis/phase0_thesis/*.duckdb
 analysis/phase0_thesis/*.csv
 scripts/_smoke_artifacts/
+analysis/financial_series_audit/.cache/
+analysis/financial_series_audit/output/
