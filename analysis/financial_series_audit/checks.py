@@ -336,6 +336,10 @@ def _concept_transition_findings(
 ) -> list[AuditFinding]:
     selected: list[tuple[str, str, str]] = []
     for row in sorted(observations, key=lambda item: str(item.get("periodEnd") or "")):
+        # Derived metrics already inherit and expose their component provenance.
+        # Audit concept changes on the reported inputs once, not again on every ratio.
+        if row.get("reported") is not True:
+            continue
         source = row.get("selectedSource")
         if not isinstance(source, Mapping):
             continue
@@ -345,24 +349,32 @@ def _concept_transition_findings(
         if taxonomy and concept and period_end:
             selected.append((period_end, taxonomy, concept))
 
-    findings: list[AuditFinding] = []
+    transitions: dict[tuple[str, str, str, str], list[tuple[str, str]]] = {}
     for previous, current in zip(selected, selected[1:]):
         if previous[1:] == current[1:]:
             continue
+        key = (previous[1], previous[2], current[1], current[2])
+        transitions.setdefault(key, []).append((previous[0], current[0]))
+
+    findings: list[AuditFinding] = []
+    for key, windows in transitions.items():
+        previous_taxonomy, previous_concept, current_taxonomy, current_concept = key
         findings.append(
             _finding(
                 "selected_concept_transition",
                 "warning",
-                "The selected taxonomy concept changes between adjacent periods.",
+                "The selected taxonomy concept changes across reported periods.",
                 symbol,
                 metric,
                 frequency,
-                current[0],
-                previousPeriodEnd=previous[0],
-                previousTaxonomy=previous[1],
-                previousConcept=previous[2],
-                currentTaxonomy=current[1],
-                currentConcept=current[2],
+                windows[0][1],
+                previousPeriodEnd=windows[0][0],
+                previousTaxonomy=previous_taxonomy,
+                previousConcept=previous_concept,
+                currentTaxonomy=current_taxonomy,
+                currentConcept=current_concept,
+                transitionCount=len(windows),
+                lastTransitionPeriodEnd=windows[-1][1],
             )
         )
     return findings

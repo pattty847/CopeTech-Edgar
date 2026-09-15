@@ -157,6 +157,29 @@ def test_selected_concept_transition_is_a_warning():
     assert codes(findings) == ["selected_concept_transition"]
     assert findings[0].severity == "warning"
     assert findings[0].context["previousConcept"] == "Revenues"
+    assert findings[0].context["transitionCount"] == 1
+
+
+def test_repeated_reported_transition_is_collapsed_and_derived_rows_are_ignored():
+    rows = [
+        observation(end="2021-12-31", concept="Revenues"),
+        observation(end="2022-12-31", concept="RevenueFromContractWithCustomerExcludingAssessedTax"),
+        observation(end="2023-12-31", concept="Revenues"),
+        observation(end="2024-12-31", concept="RevenueFromContractWithCustomerExcludingAssessedTax"),
+    ]
+    derived = observation(end="2025-12-31", concept="Revenues")
+    derived.update({"reported": False, "derived": True})
+
+    findings = check_financial_series(payload(*rows, derived, metric="revenue"))
+
+    assert len(findings) == 2
+    forward = next(
+        finding
+        for finding in findings
+        if finding.context["previousConcept"] == "Revenues"
+    )
+    assert forward.context["transitionCount"] == 2
+    assert forward.context["lastTransitionPeriodEnd"] == "2024-12-31"
 
 
 def test_balance_equation_mismatch_is_a_warning():
