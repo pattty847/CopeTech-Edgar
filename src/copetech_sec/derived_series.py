@@ -14,6 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from .debt_series import DEBT_COMPONENTS, invested_capital, net_debt
 from .financial_metrics import get_metric_definition, supported_frequencies
 
 # compute receives the component values present for one aligned window and
@@ -123,50 +124,6 @@ def _interest_coverage(values: dict[str, float]) -> ComputeResult:
         (),
         ("operating_income", "interest_expense"),
     )
-
-
-def _invested_capital(values: dict[str, float]) -> ComputeResult:
-    debt_components = [
-        component
-        for component in ("debt_current", "debt_noncurrent")
-        if component in values
-    ]
-    cash_components = [
-        component
-        for component in ("cash_equivalents", "short_term_investments")
-        if component in values
-    ]
-    debt = sum(values[component] for component in debt_components)
-    cash = sum(values[component] for component in cash_components)
-    flags: tuple[str, ...] = ()
-    if not debt_components:
-        flags = ("debt_concepts_missing_assumed_zero",)
-    return (
-        values["stockholders_equity"] + debt - cash,
-        flags,
-        tuple(["stockholders_equity"] + debt_components + cash_components),
-    )
-
-
-def _net_debt(values: dict[str, float]) -> ComputeResult:
-    debt_components = [
-        component
-        for component in ("debt_current", "debt_noncurrent")
-        if component in values
-    ]
-    cash_components = [
-        component
-        for component in ("cash_equivalents", "short_term_investments")
-        if component in values
-    ]
-    debt = sum(values[component] for component in debt_components)
-    cash = sum(values[component] for component in cash_components)
-    flags: tuple[str, ...] = ()
-    if not debt_components:
-        # Absence of debt tags usually means a debt-free balance sheet, but an
-        # issuer using nonstandard tags looks identical — say so out loud.
-        flags = ("debt_concepts_missing_assumed_zero",)
-    return debt - cash, flags, tuple(debt_components + cash_components)
 
 
 def _working_capital(values: dict[str, float]) -> ComputeResult:
@@ -291,8 +248,8 @@ DERIVED_METRIC_REGISTRY: dict[str, DerivedMetricDefinition] = {
         label="Invested capital",
         unit="USD",
         required=("stockholders_equity", "cash_equivalents"),
-        optional=("short_term_investments", "debt_current", "debt_noncurrent"),
-        compute=_invested_capital,
+        optional=("short_term_investments",) + DEBT_COMPONENTS,
+        compute=invested_capital,
         derivation=(
             "stockholders' equity plus debt minus cash and short-term investments"
             " at the same balance date (operating leases and goodwill untouched)"
@@ -303,11 +260,11 @@ DERIVED_METRIC_REGISTRY: dict[str, DerivedMetricDefinition] = {
         label="Net debt",
         unit="USD",
         required=("cash_equivalents",),
-        optional=("short_term_investments", "debt_current", "debt_noncurrent"),
-        compute=_net_debt,
+        optional=("short_term_investments",) + DEBT_COMPONENTS,
+        compute=net_debt,
         derivation=(
-            "current plus noncurrent debt minus cash and short-term investments,"
-            " joined on the same balance date"
+            "reported total debt, or current plus noncurrent debt when no total"
+            " exists, minus cash and short-term investments at the same balance date"
         ),
     ),
     "working_capital": DerivedMetricDefinition(
@@ -398,6 +355,10 @@ def resolve_derived_series(
         for payload in component_payloads.values()
         for warning in payload.get("warnings") or []
     }
+    if metric == "net_debt":
+        warnings.add("net_debt_not_comparable_for_financial_companies")
+        if not any(component in component_payloads for component in DEBT_COMPONENTS):
+            warnings.add("debt_concepts_missing")
     if frequency == "ttm":
         for component in definition.required:
             if get_metric_definition(component).aggregation == "weighted_average":

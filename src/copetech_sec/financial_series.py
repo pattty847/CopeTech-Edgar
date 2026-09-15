@@ -19,7 +19,7 @@ from .financial_metrics import (
 )
 
 
-NORMALIZATION_VERSION = 3
+NORMALIZATION_VERSION = 4
 QUARTER_MIN_DAYS = 70
 QUARTER_MAX_DAYS = 110
 # Cumulative (year-to-date) windows from Q2/Q3 filings: roughly six and nine
@@ -114,13 +114,13 @@ def resolve_financial_series(
             observations = []
             extra_warnings.add("ttm_not_applicable_for_instant_metric")
         elif frequency == "annual":
-            annual_windows = {
-                (row["period_start"], row["period_end"], row["unit"])
-                for row in candidates
-                if row["form"] in ANNUAL_FORMS
-            }
+            annual_windows = _instant_annual_windows(candidates)
             observations = [
-                row
+                {
+                    **row,
+                    "fiscalYear": _parse_date(row["periodEnd"]).year,
+                    "fiscalPeriod": "FY",
+                }
                 for row in instants
                 if (row["periodStart"], row["periodEnd"], row["unit"])
                 in annual_windows
@@ -181,6 +181,36 @@ def resolve_financial_series(
         "normalizationVersion": NORMALIZATION_VERSION,
         "observations": observations,
         "warnings": warnings,
+    }
+
+
+def _instant_annual_windows(
+    rows: list[dict[str, Any]],
+) -> set[tuple[str, str, str]]:
+    """Return actual fiscal year-end instants, not every comparison in a 10-K.
+
+    SEC Company Facts stamps a comparative balance with the fiscal metadata of
+    the filing that repeats it. An old date in a later 10-K is therefore not an
+    annual observation for that later fiscal year. Within each annual filing,
+    the latest eligible instant is the filing's balance-sheet date; transaction
+    dates and older comparisons stay out of the annual series.
+    """
+
+    by_filing: dict[tuple[str, Any], list[dict[str, Any]]] = {}
+    for row in rows:
+        fiscal_year = row.get("fiscal_year")
+        if (
+            row["form"] not in ANNUAL_FORMS
+            or row.get("fiscal_period") != "FY"
+            or fiscal_year is None
+            or str(fiscal_year) != str(_parse_date(row["period_end"]).year)
+        ):
+            continue
+        by_filing.setdefault((row["accession_number"], fiscal_year), []).append(row)
+    return {
+        (latest["period_start"], latest["period_end"], latest["unit"])
+        for group in by_filing.values()
+        for latest in [max(group, key=lambda row: row["period_end"])]
     }
 
 

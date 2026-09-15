@@ -179,6 +179,14 @@ revenue = await client.financials.series(
     alignment="availability",
 )
 
+# Aggregate debt wins over current/noncurrent components; missing debt stays unknown.
+net_debt = await client.financials.series(
+    "SOFI",
+    metric="net_debt",
+    frequency="annual",
+    alignment="availability",
+)
+
 # Historical trailing P/E on a split-adjusted price timeline
 pe = await client.financials.valuation(
     "NVDA",

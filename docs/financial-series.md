@@ -48,6 +48,21 @@ duration and resolved per economic window. Repeated comparative facts are
 deduplicated, later amendments win, and the earliest filing date carrying the
 selected value remains its availability date.
 
+Instant annual series keep only the latest eligible balance date from each
+annual filing. They do not treat every older comparison repeated in a 10-K as a
+new annual period. Annual fiscal labels identify the economic balance date,
+because Company Facts `fy` and `fp` describe the filing context and can belong
+to a later year for comparative facts.
+
+`net_debt` prefers a reported aggregate `total_debt` fact. It falls back to the
+sum of separately reported current and noncurrent debt only when no aggregate
+exists, so parent totals and their components are never added together. Missing
+debt facts produce no net-debt observation; absence is not treated as zero.
+The result is the generic formula `total debt - cash - short-term investments`.
+This metric is not comparable for financial companies, where deposits and
+other funding liabilities are part of operations rather than ordinary corporate
+leverage, and the payload carries that warning.
+
 Canonical quarterly revenue derives Q4 only when a compatible annual value and
 three standalone quarters exist:
 
@@ -127,8 +142,10 @@ Historical trailing P/E uses split-adjusted price with point-in-time TTM diluted
 EPS. Forward P/E remains out of scope because it requires timestamped consensus
 estimates.
 
-Current limitations include USD-only revenue, Company Facts rather than
-filing-level fallback, and no estimate/forward-metric source. Quality flags expose
+Current limitations include USD-only facts, Company Facts rather than
+filing-level fallback, and no estimate/forward-metric source. Company extension
+tags remain unavailable unless the SEC maps them into a standard taxonomy
+concept. Quality flags expose
 conflicting filing values, multiple available concepts, amendments, derived Q4s,
 split adjustments, and missing point-in-time TTM EPS instead of silently hiding
 them.
