@@ -27,14 +27,14 @@ def source(concept: str = "Assets", *, filed: str = "2025-02-01") -> dict:
 def observation(
     value: float = 100.0,
     *,
-    start: str = "2024-01-01",
+    start: str | None = None,
     end: str = "2024-12-31",
     unit: str = "USD",
     concept: str = "Assets",
 ) -> dict:
     selected = source(concept)
     return {
-        "periodStart": start,
+        "periodStart": start or f"{end[:4]}-01-01",
         "periodEnd": end,
         "availableAt": "2025-02-01",
         "value": value,
@@ -88,6 +88,18 @@ def test_duplicate_annual_period_end_and_economic_window_are_errors():
         "duplicate_annual_period_end",
     ]
     assert all(finding.severity == "error" for finding in findings)
+
+
+def test_duplicate_quarter_period_end_and_inverted_window_are_errors():
+    first = observation(start="2024-01-01", end="2024-03-31")
+    second = observation(start="2024-04-01", end="2024-03-31")
+
+    findings = check_financial_series(payload(first, second, frequency="quarterly"))
+
+    assert codes(findings) == [
+        "duplicate_period_end",
+        "invalid_economic_window",
+    ]
 
 
 def test_nonfinite_value_and_missing_provenance_are_errors():
@@ -147,6 +159,15 @@ def test_long_term_parent_and_its_children_are_never_combined():
     findings = check_financial_series(payload(row, metric="net_debt"))
 
     assert codes(findings) == ["aggregate_component_debt_double_count"]
+
+
+def test_alternative_debt_sources_are_not_treated_as_summed_inputs():
+    row = observation(125.0, concept="LongTermDebtAndCapitalLeaseObligations")
+    row["sources"].append(source("LongTermDebtNoncurrent"))
+
+    findings = check_financial_series(payload(row, metric="debt_noncurrent"))
+
+    assert codes(findings) == []
 
 
 def test_selected_concept_transition_is_a_warning():

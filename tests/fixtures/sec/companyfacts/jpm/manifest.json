@@ -1,0 +1,19 @@
+{
+  "acceptedConceptRegistrySha256": "3a9a66afcd8eb7cb488d0ffb8c178c209e387551d0016f13bdc4fb4c674b46d6",
+  "cik": 19617,
+  "conceptInventoryContentSha256": "bace1e4ed3ba2ce9338fc7101aaee6c18376989cff41137c4ef28deae85c7344",
+  "controlConcepts": [],
+  "entityName": "JPMORGAN CHASE & CO",
+  "fixtureContentSha256": "919d68c12d2071849b70c7ff1d9a78245032066ef0fbd506656eedb7ffbee23c",
+  "fixtureFactCount": 59,
+  "retrievedAt": "2026-09-15T05:58:12Z",
+  "schemaVersion": 1,
+  "sourceContentSha256": "d32c3bac8e1a2a0f698e62e6a4e34c2311b31ee7f7973ca0a5c605f00d6a38bc",
+  "sourceFactCount": 53686,
+  "sourceUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000019617.json",
+  "symbol": "JPM",
+  "targetPeriodEnds": [
+    "2025-12-31",
+    "2026-06-30"
+  ]
+}

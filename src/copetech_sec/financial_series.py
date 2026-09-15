@@ -19,7 +19,7 @@ from .financial_metrics import (
 )
 
 
-NORMALIZATION_VERSION = 5
+NORMALIZATION_VERSION = 6
 QUARTER_MIN_DAYS = 70
 QUARTER_MAX_DAYS = 110
 # Cumulative (year-to-date) windows from Q2/Q3 filings: roughly six and nine
@@ -300,7 +300,8 @@ def _resolve_duration_windows(
     for row in rows:
         # duration_days of 0 is a legitimate instant window — `or` would eat it.
         duration_days = row.get("duration_days")
-        if accepted(-1 if duration_days is None else int(duration_days)):
+        annual_form = cadence != "annual" or row.get("form") in ANNUAL_FORMS
+        if annual_form and accepted(-1 if duration_days is None else int(duration_days)):
             key = (row["period_start"], row["period_end"], row["unit"])
             grouped.setdefault(key, []).append(row)
     return [
@@ -473,7 +474,7 @@ def _add_derived_fourth_quarters(
             continue
         fourth_start = _next_day(contained[-1]["periodEnd"])
         window = (fourth_start, annual_row["periodEnd"])
-        if window in existing_windows:
+        if fourth_start > annual_row["periodEnd"] or window in existing_windows:
             continue
         value = float(annual_row["value"]) - sum(float(row["value"]) for row in contained)
         contributors = [annual_row, *contained]

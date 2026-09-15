@@ -1,0 +1,1 @@
+{"schemaVersion":1,"periods":[{"frequency":"annual","periodEnd":"2025-12-31","metrics":{"net_debt":{"value":-3246000000,"inputMetrics":["total_debt","cash_equivalents","short_term_investments"]}}},{"frequency":"quarterly","periodEnd":"2026-06-30","metrics":{"net_debt":{"value":6216000000,"inputMetrics":["total_debt","cash_equivalents","short_term_investments"]}}}]}

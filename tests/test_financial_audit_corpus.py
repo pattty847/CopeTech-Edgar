@@ -21,12 +21,13 @@ def test_canary_corpus_contains_the_reviewed_accounting_shapes() -> None:
     by_ticker = corpus_by_ticker()
 
     assert by_ticker["GOOGL"].cik == "0001652044"
+    assert by_ticker["DAL"].cik == "0000027904"
     assert by_ticker["BRK-B"].archetype == "multi_class_insurance_conglomerate"
     assert by_ticker["SOFI"].archetype == "non_bank_lender"
     assert by_ticker["JPM"].applicability_profile == "financial_company"
     assert by_ticker["O"].applicability_profile == "reit"
     assert by_ticker["TSM"].archetype == "foreign_20f_ifrs_adr"
-    assert by_ticker["SHOP"].archetype == "foreign_40f_ifrs"
+    assert by_ticker["SHOP"].archetype == "foreign_to_domestic_us_gaap_transition"
     assert by_ticker["COST"].archetype == "fifty_three_week_retail"
     assert by_ticker["CALM"].archetype == "small_cap_agriculture"
 
@@ -40,10 +41,7 @@ def test_unspecified_metric_applicability_is_optional() -> None:
         applicability_for(by_ticker["TSM"], "stockholders_equity")
         == "unsupported_taxonomy"
     )
-    assert (
-        applicability_for(by_ticker["SHOP"], "stockholders_equity")
-        == "unsupported_taxonomy"
-    )
+    assert applicability_for(by_ticker["SHOP"], "stockholders_equity") == "expected"
 
 
 def test_profiles_distinguish_expected_from_not_comparable_metrics() -> None:

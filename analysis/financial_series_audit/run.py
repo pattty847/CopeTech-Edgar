@@ -150,7 +150,15 @@ def _audit_matrix(
         findings.extend(
             check_financial_series(shaped, expected_unit=metric.get("expectedUnit"))
         )
-        if applicability == "expected" and metric["state"] == "unavailable":
+        blocked_by_external_input = (
+            metric["state"] == "unavailable"
+            and "split_history_unverified" in (metric.get("warnings") or [])
+        )
+        if (
+            applicability == "expected"
+            and metric["state"] == "unavailable"
+            and not blocked_by_external_input
+        ):
             findings.append(
                 AuditFinding(
                     code="expected_metric_unavailable",

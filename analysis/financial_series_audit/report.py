@@ -12,6 +12,7 @@ from typing import Any
 
 
 REPORT_SCHEMA_VERSION = 1
+MINIMUM_REVIEW_PERIOD_COVERAGE = 5
 
 
 def write_run_report(
@@ -114,7 +115,7 @@ def _manual_review_markdown(issuers: list[dict[str, Any]]) -> str:
 def _issuer_review(issuer: dict[str, Any]) -> list[str]:
     lines = [f"## {issuer['ticker']} — {issuer.get('entityName') or 'Unknown issuer'}", ""]
     for frequency in ("annual", "quarterly"):
-        period_end = _broadest_recent_period(issuer.get("metrics") or [], frequency)
+        period_end = _recent_review_period(issuer.get("metrics") or [], frequency)
         lines.extend([f"### {frequency.title()}", ""])
         if period_end is None:
             lines.extend(["No supported observation is available.", ""])
@@ -140,7 +141,7 @@ def _issuer_review(issuer: dict[str, Any]) -> list[str]:
             )
             if observation is None:
                 continue
-            source = observation.get("selectedSource") or {}
+            source = observation.get("availabilitySource") or observation.get("selectedSource") or {}
             filing = _filing_link(issuer.get("cik"), source.get("accessionNumber"))
             value = f"{observation.get('value')} {observation.get('unit') or ''}".strip()
             warnings = ", ".join(observation.get("qualityFlags") or []) or "—"
@@ -158,7 +159,7 @@ def _issuer_review(issuer: dict[str, Any]) -> list[str]:
     return lines
 
 
-def _broadest_recent_period(metrics: list[dict[str, Any]], frequency: str) -> str | None:
+def _recent_review_period(metrics: list[dict[str, Any]], frequency: str) -> str | None:
     counts = Counter(
         str(observation["periodEnd"])
         for metric in metrics
@@ -168,6 +169,13 @@ def _broadest_recent_period(metrics: list[dict[str, Any]], frequency: str) -> st
     )
     if not counts:
         return None
+    sufficiently_broad = [
+        period
+        for period, count in counts.items()
+        if count >= MINIMUM_REVIEW_PERIOD_COVERAGE
+    ]
+    if sufficiently_broad:
+        return max(sufficiently_broad)
     highest_coverage = max(counts.values())
     return max(period for period, count in counts.items() if count == highest_coverage)
 

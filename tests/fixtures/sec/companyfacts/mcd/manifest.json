@@ -1,0 +1,19 @@
+{
+  "acceptedConceptRegistrySha256": "3a9a66afcd8eb7cb488d0ffb8c178c209e387551d0016f13bdc4fb4c674b46d6",
+  "cik": 63908,
+  "conceptInventoryContentSha256": "e4de1602bbe6ee092853d1d6f5395ee530b13d832b8d1a0fbb3adf0ccda36134",
+  "controlConcepts": [],
+  "entityName": "McDONALD’S CORPORATION",
+  "fixtureContentSha256": "98601893caea79d7aaac918a6b4ea01a69e84a3e142ca065e8e4a1f49d1f7929",
+  "fixtureFactCount": 83,
+  "retrievedAt": "2026-09-15T05:57:59Z",
+  "schemaVersion": 1,
+  "sourceContentSha256": "4379c00352736ab2ca0c8ed4c5a2284a951e2aa8a184ea5396b913db6b8e1712",
+  "sourceFactCount": 23835,
+  "sourceUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000063908.json",
+  "symbol": "MCD",
+  "targetPeriodEnds": [
+    "2025-12-31",
+    "2026-06-30"
+  ]
+}

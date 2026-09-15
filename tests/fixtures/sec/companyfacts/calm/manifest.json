@@ -1,0 +1,19 @@
+{
+  "acceptedConceptRegistrySha256": "3a9a66afcd8eb7cb488d0ffb8c178c209e387551d0016f13bdc4fb4c674b46d6",
+  "cik": 16160,
+  "conceptInventoryContentSha256": "a84636b850708bde8a50f7d3f8b0034e3ea2cb5e66bb0047f42a6ee6ec0aed1f",
+  "controlConcepts": [],
+  "entityName": "Cal-Maine Foods, Inc.",
+  "fixtureContentSha256": "5be7eb674e4ce0ac9fa60805980ded088df8202f12fc975df5dee828370d2b12",
+  "fixtureFactCount": 72,
+  "retrievedAt": "2026-09-15T05:57:57Z",
+  "schemaVersion": 1,
+  "sourceContentSha256": "8319d91beee931602b1d87a505eb7791ca0ea59134a42d100b96a04cadc87d75",
+  "sourceFactCount": 16882,
+  "sourceUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000016160.json",
+  "symbol": "CALM",
+  "targetPeriodEnds": [
+    "2026-02-28",
+    "2026-05-30"
+  ]
+}

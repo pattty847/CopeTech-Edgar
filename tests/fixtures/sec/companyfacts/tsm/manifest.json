@@ -1,0 +1,19 @@
+{
+  "acceptedConceptRegistrySha256": "3a9a66afcd8eb7cb488d0ffb8c178c209e387551d0016f13bdc4fb4c674b46d6",
+  "cik": 1046179,
+  "conceptInventoryContentSha256": "38bff6ef17dee25735e8dedff89b7642df4f4062c65e7e8596a61b3c5d6a02c1",
+  "controlConcepts": [],
+  "entityName": "Taiwan Semiconductor Manufacturing Company Limited",
+  "fixtureContentSha256": "e53575882d213de7a374876d4e600b27647c7c7fe763ab0494ede3cf65af1033",
+  "fixtureFactCount": 7,
+  "retrievedAt": "2026-09-15T05:58:21Z",
+  "schemaVersion": 1,
+  "sourceContentSha256": "d39826bf49737592b6e460aff55b4fc52b3974d1d2862a3686b69e6d65b12b42",
+  "sourceFactCount": 5981,
+  "sourceUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001046179.json",
+  "symbol": "TSM",
+  "targetPeriodEnds": [
+    "2021-06-30",
+    "2024-12-31"
+  ]
+}

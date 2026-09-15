@@ -1,0 +1,1 @@
+{"schemaVersion":1,"periods":[{"frequency":"annual","periodEnd":"2025-12-31","metrics":{"revenue":{"value":11556000000,"concept":"Revenues"}},"unavailableMetrics":["net_debt"]},{"frequency":"quarterly","periodEnd":"2026-06-30","metrics":{"revenue":{"value":3583000000,"concept":"Revenues"}},"unavailableMetrics":["net_debt"]}]}

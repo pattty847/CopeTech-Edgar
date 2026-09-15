@@ -361,7 +361,7 @@ def resolve_derived_series(
         if not any(component in component_payloads for component in DEBT_COMPONENTS):
             warnings.add("debt_concepts_missing")
     if metric == "net_debt":
-        warnings.add("net_debt_not_comparable_for_financial_companies")
+        warnings.add("generic_net_debt_not_comparable_for_financial_companies")
     if frequency == "ttm":
         for component in definition.required:
             if get_metric_definition(component).aggregation == "weighted_average":
@@ -380,8 +380,6 @@ def resolve_derived_series(
             row = indexed.get(component, {}).get(window)
             if row is not None:
                 component_rows[component] = row
-        if metric in {"invested_capital", "net_debt"}:
-            component_rows = _deduplicate_debt_hierarchy(component_rows)
         computed = definition.compute(
             {component: float(row["value"]) for component, row in component_rows.items()}
         )
@@ -426,6 +424,12 @@ def resolve_derived_series(
             }
         )
     observations.sort(key=lambda row: (row["periodEnd"], row["availableAt"]))
+    if (
+        metric in {"invested_capital", "net_debt"}
+        and any(component in component_payloads for component in DEBT_COMPONENTS)
+        and not observations
+    ):
+        warnings.add("debt_hierarchy_incomplete")
     warnings |= {flag for row in observations for flag in row["qualityFlags"] if flag}
     any_payload = next(iter(component_payloads.values()), {})
     return {
@@ -444,31 +448,3 @@ def resolve_derived_series(
         "observations": observations,
         "warnings": sorted(warnings),
     }
-
-
-def _deduplicate_debt_hierarchy(
-    component_rows: dict[str, dict[str, Any]],
-) -> dict[str, dict[str, Any]]:
-    """Keep debt siblings, but remove children already included by a parent."""
-
-    rows = dict(component_rows)
-    total = rows.get("total_debt")
-    if total is not None:
-        rows.pop("long_term_debt", None)
-        rows.pop("debt_current", None)
-        rows.pop("debt_noncurrent", None)
-        rows.pop("short_term_borrowings", None)
-        return rows
-
-    if "long_term_debt" in rows:
-        rows.pop("debt_current", None)
-        rows.pop("debt_noncurrent", None)
-        return rows
-
-    current = rows.get("debt_current")
-    current_concept = str(
-        ((current or {}).get("selectedSource") or {}).get("concept") or ""
-    )
-    if current_concept == "DebtCurrent":
-        rows.pop("short_term_borrowings", None)
-    return rows

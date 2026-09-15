@@ -72,6 +72,12 @@ the source URL, retrieval time, raw and minimized hashes, accessions, and filter
 version. A concept index separately lists every raw concept so missing mappings do
 not disappear during minimization.
 
+The committed fixture corpus contains all 20 issuers from `corpus.py`. It includes
+independent expectations for ordinary US-GAAP issuers, financial companies, a
+REIT, a utility, a foreign-to-domestic reporting transition, and an unsupported
+IFRS monetary-data boundary. `tests/test_recorded_companyfacts.py` runs the same
+normalization and derivation code without SEC access.
+
 Independent manual expectations belong beside the fixture. Parser-produced output
 must not become its own expected answer.
 
@@ -87,6 +93,30 @@ PYTHONPATH=src .venv/bin/python -m analysis.financial_series_audit.record_fixtur
 ```
 
 Add independently transcribed expectations only after checking the primary filing.
+
+Run the complete recorded corpus with:
+
+```bash
+PYTHONPATH=src .venv/bin/python -m pytest tests/test_recorded_companyfacts.py -q
+```
+
+## Review findings
+
+The first 20-issuer review found several patterns that require explicit rules:
+
+- A debt parent can omit separate short-term borrowings, or represent only the
+  noncurrent portion despite its broad label.
+- A short-term debt parent must take precedence over its child components.
+- An incomplete debt hierarchy must produce an unavailable result, not zero.
+- A broad revenue concept must take precedence over a contract-revenue subtotal.
+- A rolling 12-month 10-Q fact is not an annual fact.
+- Balance-equation residuals can represent noncontrolling or temporary equity,
+  rather than an arithmetic error.
+- Generic net debt and some operating-company ratios are not comparable for banks,
+  lenders, and insurers without an explicit product policy.
+
+The production rules resolve the evidence-backed hierarchy cases. The audit keeps
+semantic and scope findings visible for manual review.
 
 ## Scope stop
 

@@ -40,23 +40,6 @@ class AuditFinding:
 
 
 _PROVENANCE_FIELDS = ("taxonomy", "concept", "filed", "accessionNumber")
-_AGGREGATE_DEBT_CONCEPTS = frozenset(
-    {
-        "DebtLongtermAndShorttermCombinedAmount",
-        "LongTermDebt",
-        "LongTermDebtAndCapitalLeaseObligations",
-    }
-)
-_COMPONENT_DEBT_CONCEPTS = frozenset(
-    {
-        "LongTermDebtCurrent",
-        "DebtCurrent",
-        "LongTermDebtAndCapitalLeaseObligationsCurrent",
-        "LongTermDebtNoncurrent",
-    }
-)
-
-
 def check_financial_series(
     payload: Mapping[str, Any],
     *,
@@ -91,6 +74,20 @@ def check_financial_series(
 
     for row in observations:
         period_end = _optional_string(row.get("periodEnd"))
+        period_start = _optional_string(row.get("periodStart"))
+        if period_start is not None and period_end is not None and period_start > period_end:
+            findings.append(
+                _finding(
+                    "invalid_economic_window",
+                    "error",
+                    "The observation starts after its period end.",
+                    symbol,
+                    metric,
+                    frequency,
+                    period_end,
+                    periodStart=period_start,
+                )
+            )
         value = row.get("value")
         if not _is_finite_number(value):
             findings.append(
@@ -174,7 +171,7 @@ def check_financial_series(
                 )
             )
 
-        if _mixes_debt_parent_and_components(row, valid_sources):
+        if _mixes_debt_parent_and_components(row):
             findings.append(
                 _finding(
                     "aggregate_component_debt_double_count",
@@ -265,12 +262,16 @@ def _duplicate_window_findings(
     findings: list[AuditFinding] = []
     by_window: dict[tuple[Any, Any], int] = {}
     by_annual_end: dict[Any, int] = {}
+    by_nonannual_end: dict[Any, int] = {}
     for row in observations:
         window = (row.get("periodStart"), row.get("periodEnd"))
         by_window[window] = by_window.get(window, 0) + 1
         if frequency == "annual":
             period_end = row.get("periodEnd")
             by_annual_end[period_end] = by_annual_end.get(period_end, 0) + 1
+        else:
+            period_end = row.get("periodEnd")
+            by_nonannual_end[period_end] = by_nonannual_end.get(period_end, 0) + 1
     for window, count in by_window.items():
         if count > 1:
             findings.append(
@@ -293,6 +294,20 @@ def _duplicate_window_findings(
                     "duplicate_annual_period_end",
                     "error",
                     "More than one annual observation uses the same period end.",
+                    symbol,
+                    metric,
+                    frequency,
+                    _optional_string(period_end),
+                    count=count,
+                )
+            )
+    for period_end, count in by_nonannual_end.items():
+        if count > 1:
+            findings.append(
+                _finding(
+                    "duplicate_period_end",
+                    "error",
+                    "More than one observation uses the same period end.",
                     symbol,
                     metric,
                     frequency,
@@ -393,20 +408,23 @@ def _valid_sources(raw_sources: Any) -> list[Mapping[str, Any]]:
 
 def _mixes_debt_parent_and_components(
     row: Mapping[str, Any],
-    sources: Sequence[Mapping[str, Any]],
 ) -> bool:
     input_metrics = set(_input_metrics(row))
-    debt_children = {"long_term_debt", "debt_current", "debt_noncurrent", "short_term_borrowings"}
-    if "total_debt" in input_metrics and input_metrics.intersection(debt_children):
-        return True
-    if "long_term_debt" in input_metrics and input_metrics.intersection(
-        {"debt_current", "debt_noncurrent"}
-    ):
-        return True
-    concepts = {str(source.get("concept") or "") for source in sources}
+    debt_children = {
+        "long_term_debt",
+        "debt_current",
+        "debt_noncurrent",
+        "short_term_borrowings",
+    }
     return bool(
-        concepts.intersection(_AGGREGATE_DEBT_CONCEPTS)
-        and concepts.intersection(_COMPONENT_DEBT_CONCEPTS)
+        (
+            "total_debt" in input_metrics
+            and input_metrics.intersection(debt_children)
+        )
+        or (
+            "long_term_debt" in input_metrics
+            and input_metrics.intersection({"debt_current", "debt_noncurrent"})
+        )
     )
 
 

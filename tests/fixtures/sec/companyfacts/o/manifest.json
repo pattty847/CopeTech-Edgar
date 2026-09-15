@@ -1,0 +1,19 @@
+{
+  "acceptedConceptRegistrySha256": "3a9a66afcd8eb7cb488d0ffb8c178c209e387551d0016f13bdc4fb4c674b46d6",
+  "cik": 726728,
+  "conceptInventoryContentSha256": "a64848b1d84e1c6a25e607a6dfcfedeea0ec72f6e05bf6536a66e1b6b44978fd",
+  "controlConcepts": [],
+  "entityName": "REALTY INCOME CORPORATION",
+  "fixtureContentSha256": "61e028f83fccd89372ca0776d49032fb25695d063e31a48d01b4eb7fcacd62b6",
+  "fixtureFactCount": 69,
+  "retrievedAt": "2026-09-15T05:58:09Z",
+  "schemaVersion": 1,
+  "sourceContentSha256": "32655d423ba62ec26eb8a2c94d89cb29ab8842db91e9741da17772e7bb12af8c",
+  "sourceFactCount": 21723,
+  "sourceUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000726728.json",
+  "symbol": "O",
+  "targetPeriodEnds": [
+    "2025-12-31",
+    "2026-06-30"
+  ]
+}

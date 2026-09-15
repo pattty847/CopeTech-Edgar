@@ -16,7 +16,7 @@
         "total_assets": {"value": 364980000000, "concept": "Assets"},
         "long_term_debt": {"value": 96662000000, "concept": "LongTermDebt"},
         "total_liabilities": {"value": 308030000000, "concept": "Liabilities"},
-        "net_debt": {"value": 41458000000, "inputMetrics": ["long_term_debt", "short_term_borrowings", "cash_equivalents", "short_term_investments"]}
+        "net_debt": {"value": 41458000000, "inputMetrics": ["long_term_debt", "commercial_paper", "cash_equivalents", "short_term_investments"]}
       }
     },
     {
@@ -30,7 +30,7 @@
         "total_assets": {"value": 344085000000, "concept": "Assets"},
         "long_term_debt": {"value": 94800000000, "concept": "LongTermDebt"},
         "total_liabilities": {"value": 277327000000, "concept": "Liabilities"},
-        "net_debt": {"value": 43020000000, "inputMetrics": ["long_term_debt", "short_term_borrowings", "cash_equivalents", "short_term_investments"]}
+        "net_debt": {"value": 43020000000, "inputMetrics": ["long_term_debt", "commercial_paper", "cash_equivalents", "short_term_investments"]}
       }
     }
   ]

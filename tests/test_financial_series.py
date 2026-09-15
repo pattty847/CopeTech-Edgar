@@ -107,6 +107,83 @@ class FinancialSeriesNormalizationTests(unittest.TestCase):
             observation["qualityFlags"],
         )
 
+    def test_generic_revenues_parent_wins_over_contract_revenue_subset(self):
+        annual = {
+            "start": "2025-01-01",
+            "end": "2025-12-31",
+            "filed": "2026-02-23",
+            "form": "10-K",
+            "fy": 2025,
+            "fp": "FY",
+        }
+        payload = company_facts(
+            revenues=[fact(371_444_000_000, accession="all-revenue", **annual)],
+            contract_revenue=[
+                fact(247_244_000_000, accession="contract-subset", **annual)
+            ],
+        )
+
+        series = resolve_financial_series(
+            extract_financial_facts(payload, symbol="BRK-B", metric="revenue"),
+            symbol="BRK-B",
+            metric="revenue",
+            frequency="annual",
+        )
+
+        (observation,) = series["observations"]
+        self.assertEqual(observation["value"], 371_444_000_000)
+        self.assertEqual(observation["selectedSource"]["concept"], "Revenues")
+
+    def test_rolling_twelve_month_10q_fact_is_not_an_annual_or_q4_source(self):
+        entries = [
+            fact(
+                21_187_000_000,
+                "2025-07-01",
+                "2025-09-30",
+                "2025-10-31",
+                "q3",
+                form="10-Q",
+                fy=2025,
+                fp="Q3",
+            ),
+            fact(
+                56_478_000_000,
+                "2025-01-01",
+                "2025-09-30",
+                "2025-10-31",
+                "ytd",
+                form="10-Q",
+                fy=2025,
+                fp="Q3",
+            ),
+            fact(
+                76_482_000_000,
+                "2024-10-01",
+                "2025-09-30",
+                "2025-10-31",
+                "rolling",
+                form="10-Q",
+                fy=2025,
+                fp="Q3",
+            ),
+        ]
+        rows = extract_financial_facts(
+            company_facts(revenues=entries), symbol="AMZN", metric="revenue"
+        )
+
+        annual = resolve_financial_series(
+            rows, symbol="AMZN", metric="revenue", frequency="annual"
+        )
+        quarterly = resolve_financial_series(
+            rows, symbol="AMZN", metric="revenue", frequency="quarterly"
+        )
+
+        self.assertEqual(annual["observations"], [])
+        self.assertEqual(
+            [(row["periodStart"], row["periodEnd"]) for row in quarterly["observations"]],
+            [("2025-07-01", "2025-09-30")],
+        )
+
     def test_diluted_eps_is_canonical_and_never_substitutes_basic_eps(self):
         diluted = fact(
             1.2,

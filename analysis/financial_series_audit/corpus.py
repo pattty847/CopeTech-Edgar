@@ -140,10 +140,15 @@ APPLICABILITY_PROFILES: Mapping[str, ApplicabilityProfile] = {
     ),
     # Only revenue currently has IFRS concepts, monetary facts are USD-only,
     # and 6-K interim reports are outside the financial-series form contract.
+    # DEI identity facts are taxonomy-neutral and remain optional.
     "foreign_ifrs_boundary": ApplicabilityProfile(
         id="foreign_ifrs_boundary",
-        optional=frozenset({"revenue"}),
+        optional=frozenset({"revenue", "shares_outstanding"}),
         default="unsupported_taxonomy",
+    ),
+    "foreign_to_domestic_us_gaap": ApplicabilityProfile(
+        id="foreign_to_domestic_us_gaap",
+        expected=_COMMON_REPORTED | _OPERATING_DERIVED,
     ),
 }
 
@@ -161,14 +166,14 @@ CANARY_CORPUS: tuple[CorpusIssuer, ...] = (
     CorpusIssuer("GM", "0001467858", "General Motors Company", "manufacturer_with_captive_finance", "inventory_company", "Consolidated debt includes captive-finance operations."),
     CorpusIssuer("CVX", "0000093410", "Chevron Corporation", "integrated_energy", "inventory_company", "Depletion, commodity inventory, and capital intensity."),
     CorpusIssuer("NEE", "0000753308", "NextEra Energy, Inc.", "regulated_utility", "operating_company", "Capital-intensive utility with sector-specific leverage."),
-    CorpusIssuer("DAL", "0000277948", "Delta Air Lines, Inc.", "lease_heavy_airline", "operating_company", "Debt extraction may omit operating lease liabilities."),
+    CorpusIssuer("DAL", "0000027904", "Delta Air Lines, Inc.", "lease_heavy_airline", "operating_company", "Debt extraction may omit operating lease liabilities."),
     CorpusIssuer("O", "0000726728", "Realty Income Corporation", "reit", "reit", "REIT earnings need FFO/AFFO context, which is outside the current registry."),
     CorpusIssuer("JPM", "0000019617", "JPMorgan Chase & Co.", "bank", "financial_company", "Bank balance-sheet model and non-comparable generic leverage metrics."),
     CorpusIssuer("SOFI", "0001818874", "SoFi Technologies, Inc.", "non_bank_lender", "financial_company", "Warehouse and securitization funding test aggregate debt selection."),
     CorpusIssuer("PGR", "0000080661", "The Progressive Corporation", "insurer", "financial_company", "Insurer accounting makes conventional working-capital and EV metrics unsuitable."),
     CorpusIssuer("BRK-B", "0001067983", "Berkshire Hathaway Inc.", "multi_class_insurance_conglomerate", "financial_company", "SEC-native hyphenated ticker; insurance and operating subsidiaries coexist."),
     CorpusIssuer("TSM", "0001046179", "Taiwan Semiconductor Manufacturing Company Limited", "foreign_20f_ifrs_adr", "foreign_ifrs_boundary", "20-F, IFRS, TWD monetary facts, and ADR share-basis boundary."),
-    CorpusIssuer("SHOP", "0001594805", "Shopify Inc.", "foreign_40f_ifrs", "foreign_ifrs_boundary", "40-F IFRS issuer; 6-K interim facts are unsupported."),
+    CorpusIssuer("SHOP", "0001594805", "Shopify Inc.", "foreign_to_domestic_us_gaap_transition", "foreign_to_domestic_us_gaap", "Historical 40-F issuer now reporting on 10-K/10-Q with US GAAP; old 6-K interim facts remain excluded."),
 )
 
 

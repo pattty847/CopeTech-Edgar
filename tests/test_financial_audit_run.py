@@ -47,6 +47,20 @@ def test_unavailable_not_comparable_metric_is_honest_without_warning():
     assert _audit_matrix(issuer, matrix) == []
 
 
+def test_expected_metric_blocked_by_external_split_history_is_not_called_missing():
+    issuer = corpus_by_ticker()["AAPL"]
+    metric = {
+        "metric": "diluted_eps",
+        "frequency": "ttm",
+        "state": "unavailable",
+        "expectedUnit": "USD/shares",
+        "observations": [],
+        "warnings": ["split_history_unverified"],
+    }
+
+    assert _audit_matrix(issuer, {"metrics": [metric], "valuations": []}) == []
+
+
 def test_live_runner_requires_truthful_sec_user_agent(monkeypatch, tmp_path):
     monkeypatch.delenv("SEC_API_USER_AGENT", raising=False)
 
