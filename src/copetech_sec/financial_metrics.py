@@ -29,6 +29,7 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
         label="Revenue",
         fact_type="duration",
         concepts=(
+            ("us-gaap", "RevenuesNetOfInterestExpense"),
             ("us-gaap", "RevenueFromContractWithCustomerExcludingAssessedTax"),
             ("us-gaap", "RevenueFromContractWithCustomerIncludingAssessedTax"),
             ("us-gaap", "Revenues"),
@@ -39,6 +40,12 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
         ),
         valid_units=("USD",),
         aggregation="sum",
+        concept_quality_flags=(
+            (
+                "RevenuesNetOfInterestExpense",
+                ("financial_company_revenue_not_comparable",),
+            ),
+        ),
     ),
     "diluted_eps": MetricDefinition(
         id="diluted_eps",

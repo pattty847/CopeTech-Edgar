@@ -39,12 +39,17 @@ def fact(
 
 
 def company_facts(
+    financial_revenue: list[dict] | None = None,
     contract_revenue: list[dict] | None = None,
     revenues: list[dict] | None = None,
     diluted_eps: list[dict] | None = None,
     basic_eps: list[dict] | None = None,
 ) -> dict:
     concepts = {}
+    if financial_revenue is not None:
+        concepts["RevenuesNetOfInterestExpense"] = {
+            "units": {"USD": financial_revenue}
+        }
     if contract_revenue is not None:
         concepts["RevenueFromContractWithCustomerExcludingAssessedTax"] = {
             "units": {"USD": contract_revenue}
@@ -67,6 +72,41 @@ def company_facts(
 
 
 class FinancialSeriesNormalizationTests(unittest.TestCase):
+    def test_financial_company_revenue_prefers_consolidated_net_revenue(self):
+        annual = {
+            "start": "2023-01-01",
+            "end": "2023-12-31",
+            "filed": "2024-03-15",
+            "form": "10-K",
+            "fy": 2023,
+            "fp": "FY",
+        }
+        payload = company_facts(
+            financial_revenue=[
+                fact(2_122_789_000, accession="financial-total", **annual)
+            ],
+            contract_revenue=[
+                fact(421_454_000, accession="contract-subset", **annual)
+            ],
+        )
+
+        rows = extract_financial_facts(payload, symbol="SOFI", metric="revenue")
+        series = resolve_financial_series(
+            rows, symbol="SOFI", metric="revenue", frequency="annual"
+        )
+
+        self.assertEqual(len(series["observations"]), 1)
+        observation = series["observations"][0]
+        self.assertEqual(observation["value"], 2_122_789_000)
+        self.assertEqual(
+            observation["selectedSource"]["concept"],
+            "RevenuesNetOfInterestExpense",
+        )
+        self.assertIn(
+            "financial_company_revenue_not_comparable",
+            observation["qualityFlags"],
+        )
+
     def test_diluted_eps_is_canonical_and_never_substitutes_basic_eps(self):
         diluted = fact(
             1.2,
