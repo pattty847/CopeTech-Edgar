@@ -297,24 +297,37 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
         valid_units=("USD",),
         aggregation="point_in_time",
     ),
+    "short_term_borrowings": MetricDefinition(
+        id="short_term_borrowings",
+        label="Short-term borrowings",
+        fact_type="instant",
+        concepts=(
+            ("us-gaap", "ShortTermBorrowings"),
+            ("us-gaap", "CommercialPaper"),
+        ),
+        valid_units=("USD",),
+        aggregation="point_in_time",
+    ),
+    "long_term_debt": MetricDefinition(
+        id="long_term_debt",
+        label="Long-term debt",
+        fact_type="instant",
+        concepts=(
+            ("us-gaap", "LongTermDebt"),
+            ("us-gaap", "LongTermDebtAndCapitalLeaseObligations"),
+        ),
+        valid_units=("USD",),
+        aggregation="point_in_time",
+    ),
     "total_debt": MetricDefinition(
         id="total_debt",
         label="Total debt",
         fact_type="instant",
         concepts=(
             ("us-gaap", "DebtLongtermAndShorttermCombinedAmount"),
-            ("us-gaap", "LongTermDebt"),
-            ("us-gaap", "LongTermDebtAndCapitalLeaseObligations"),
         ),
         valid_units=("USD",),
         aggregation="point_in_time",
-        concept_quality_flags=(
-            ("LongTermDebt", ("total_debt_may_exclude_short_term_borrowings",)),
-            (
-                "LongTermDebtAndCapitalLeaseObligations",
-                ("total_debt_may_exclude_short_term_borrowings",),
-            ),
-        ),
     ),
     "current_assets": MetricDefinition(
         id="current_assets",

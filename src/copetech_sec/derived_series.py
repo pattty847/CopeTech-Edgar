@@ -251,8 +251,9 @@ DERIVED_METRIC_REGISTRY: dict[str, DerivedMetricDefinition] = {
         optional=("short_term_investments",) + DEBT_COMPONENTS,
         compute=invested_capital,
         derivation=(
-            "stockholders' equity plus debt minus cash and short-term investments"
-            " at the same balance date (operating leases and goodwill untouched)"
+            "stockholders' equity plus reported all-debt aggregate, or long-term"
+            " debt plus separate short-term borrowings, minus cash and short-term"
+            " investments at the same balance date"
         ),
     ),
     "net_debt": DerivedMetricDefinition(
@@ -263,8 +264,9 @@ DERIVED_METRIC_REGISTRY: dict[str, DerivedMetricDefinition] = {
         optional=("short_term_investments",) + DEBT_COMPONENTS,
         compute=net_debt,
         derivation=(
-            "reported total debt, or current plus noncurrent debt when no total"
-            " exists, minus cash and short-term investments at the same balance date"
+            "reported all-debt aggregate, or long-term debt plus separate short-term"
+            " borrowings, or current plus noncurrent debt, minus cash and short-term"
+            " investments at the same balance date"
         ),
     ),
     "working_capital": DerivedMetricDefinition(
@@ -378,6 +380,8 @@ def resolve_derived_series(
             row = indexed.get(component, {}).get(window)
             if row is not None:
                 component_rows[component] = row
+        if metric in {"invested_capital", "net_debt"}:
+            component_rows = _deduplicate_debt_hierarchy(component_rows)
         computed = definition.compute(
             {component: float(row["value"]) for component, row in component_rows.items()}
         )
@@ -405,6 +409,7 @@ def resolve_derived_series(
                 "reported": False,
                 "derived": True,
                 "derivation": definition.derivation,
+                "inputMetrics": list(used),
                 "confidence": min(float(row["confidence"]) for row in used_rows),
                 "qualityFlags": flags,
                 "availabilitySource": max(
@@ -439,3 +444,31 @@ def resolve_derived_series(
         "observations": observations,
         "warnings": sorted(warnings),
     }
+
+
+def _deduplicate_debt_hierarchy(
+    component_rows: dict[str, dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    """Keep debt siblings, but remove children already included by a parent."""
+
+    rows = dict(component_rows)
+    total = rows.get("total_debt")
+    if total is not None:
+        rows.pop("long_term_debt", None)
+        rows.pop("debt_current", None)
+        rows.pop("debt_noncurrent", None)
+        rows.pop("short_term_borrowings", None)
+        return rows
+
+    if "long_term_debt" in rows:
+        rows.pop("debt_current", None)
+        rows.pop("debt_noncurrent", None)
+        return rows
+
+    current = rows.get("debt_current")
+    current_concept = str(
+        ((current or {}).get("selectedSource") or {}).get("concept") or ""
+    )
+    if current_concept == "DebtCurrent":
+        rows.pop("short_term_borrowings", None)
+    return rows

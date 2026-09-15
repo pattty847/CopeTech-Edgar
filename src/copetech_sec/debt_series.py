@@ -6,7 +6,13 @@ from typing import TypeAlias
 
 
 ComputeResult: TypeAlias = tuple[float, tuple[str, ...], tuple[str, ...]] | None
-DEBT_COMPONENTS = ("total_debt", "debt_current", "debt_noncurrent")
+DEBT_COMPONENTS = (
+    "total_debt",
+    "long_term_debt",
+    "debt_current",
+    "debt_noncurrent",
+    "short_term_borrowings",
+)
 
 
 def selected_debt_components(values: dict[str, float]) -> tuple[str, ...]:
@@ -14,6 +20,12 @@ def selected_debt_components(values: dict[str, float]) -> tuple[str, ...]:
 
     if "total_debt" in values:
         return ("total_debt",)
+    if "long_term_debt" in values:
+        return tuple(
+            component
+            for component in ("long_term_debt", "short_term_borrowings")
+            if component in values
+        )
     return tuple(component for component in DEBT_COMPONENTS[1:] if component in values)
 
 

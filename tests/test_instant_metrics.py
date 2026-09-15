@@ -292,11 +292,19 @@ class InstantCompositeTests(unittest.TestCase):
             instant_series("DebtLongtermAndShorttermCombinedAmount", [100.0, 100.0, 100.0]),
             instant_series("LongTermDebtCurrent", [10.0, 10.0, 10.0]),
             instant_series("LongTermDebtNoncurrent", [90.0, 90.0, 90.0]),
+            instant_series("CommercialPaper", [5.0, 5.0, 5.0]),
         )
         series = resolve_derived_series(
             {
                 metric: resolved(payload, metric)
-                for metric in ("cash_equivalents", "total_debt", "debt_current", "debt_noncurrent")
+                for metric in (
+                    "cash_equivalents",
+                    "total_debt",
+                    "long_term_debt",
+                    "debt_current",
+                    "debt_noncurrent",
+                    "short_term_borrowings",
+                )
             },
             symbol="TEST",
             metric="net_debt",
@@ -308,21 +316,79 @@ class InstantCompositeTests(unittest.TestCase):
         self.assertEqual([row["value"] for row in series["observations"]], [70.0] * 3)
         self.assertTrue(all(len(row["sources"]) == 2 for row in series["observations"]))
 
-    def test_multiple_total_debt_concepts_select_priority_instead_of_summing(self):
+    def test_long_term_debt_adds_separate_commercial_paper_without_children(self):
+        payload = merge(
+            instant_series("CashAndCashEquivalentsAtCarryingValue", [30.0] * 3),
+            instant_series("LongTermDebt", [100.0] * 3),
+            instant_series("LongTermDebtCurrent", [10.0] * 3),
+            instant_series("LongTermDebtNoncurrent", [90.0] * 3),
+            instant_series("CommercialPaper", [5.0] * 3),
+        )
+        series = resolve_derived_series(
+            {
+                metric: resolved(payload, metric)
+                for metric in (
+                    "cash_equivalents",
+                    "total_debt",
+                    "long_term_debt",
+                    "debt_current",
+                    "debt_noncurrent",
+                    "short_term_borrowings",
+                )
+            },
+            symbol="AAPL",
+            metric="net_debt",
+            frequency="quarterly",
+            basis="canonical",
+            alignment="availability",
+        )
+
+        self.assertEqual([row["value"] for row in series["observations"]], [75.0] * 3)
+        self.assertTrue(
+            all(
+                set(row["inputMetrics"])
+                == {"long_term_debt", "short_term_borrowings", "cash_equivalents"}
+                for row in series["observations"]
+            )
+        )
+
+    def test_debt_current_parent_already_includes_short_term_borrowings(self):
+        payload = merge(
+            instant_series("CashAndCashEquivalentsAtCarryingValue", [30.0] * 3),
+            instant_series("DebtCurrent", [15.0] * 3),
+            instant_series("LongTermDebtNoncurrent", [90.0] * 3),
+            instant_series("ShortTermBorrowings", [5.0] * 3),
+        )
+        series = resolve_derived_series(
+            {
+                metric: resolved(payload, metric)
+                for metric in (
+                    "cash_equivalents",
+                    "debt_current",
+                    "debt_noncurrent",
+                    "short_term_borrowings",
+                )
+            },
+            symbol="TEST",
+            metric="net_debt",
+            frequency="quarterly",
+            basis="canonical",
+            alignment="availability",
+        )
+
+        self.assertEqual([row["value"] for row in series["observations"]], [75.0] * 3)
+
+    def test_reported_total_debt_is_separate_from_long_term_debt(self):
         payload = merge(
             instant_series("DebtLongtermAndShorttermCombinedAmount", [100.0, 100.0, 100.0]),
             instant_series("LongTermDebt", [95.0, 95.0, 95.0]),
         )
 
-        series = resolved(payload, "total_debt")
+        total = resolved(payload, "total_debt")
+        long_term = resolved(payload, "long_term_debt")
 
-        self.assertEqual([row["value"] for row in series["observations"]], [100.0] * 3)
-        self.assertTrue(
-            all(
-                "multiple_concepts_available" in row["qualityFlags"]
-                for row in series["observations"]
-            )
-        )
+        self.assertEqual([row["value"] for row in total["observations"]], [100.0] * 3)
+        self.assertEqual([row["value"] for row in long_term["observations"]], [95.0] * 3)
 
     def test_working_capital_joins_on_the_balance_date(self):
         payload = merge(

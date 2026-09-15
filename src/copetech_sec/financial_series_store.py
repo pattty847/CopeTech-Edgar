@@ -230,6 +230,7 @@ class FinancialSeriesStore:
         metric: str,
         *,
         cik: str | None = None,
+        normalization_version: int | None = None,
     ) -> list[dict[str, Any]]:
         """Load the newest normalization for each immutable SEC fact identity.
 
@@ -265,12 +266,20 @@ class FinancialSeriesStore:
                     FROM financial_fact_versions
                     WHERE metric = ?
                       AND (symbol = ? OR (? != '' AND LTRIM(cik, '0') = ?))
+                      AND (? IS NULL OR normalization_version = ?)
                 )
                 SELECT * FROM ranked
                 WHERE version_rank = 1
                 ORDER BY period_end, filed, accession_number
                 """,
-                (metric, symbol.upper(), normalized_cik, normalized_cik),
+                (
+                    metric,
+                    symbol.upper(),
+                    normalized_cik,
+                    normalized_cik,
+                    normalization_version,
+                    normalization_version,
+                ),
             ) as cursor:
                 rows = await cursor.fetchall()
         output: list[dict[str, Any]] = []

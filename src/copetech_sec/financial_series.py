@@ -19,7 +19,7 @@ from .financial_metrics import (
 )
 
 
-NORMALIZATION_VERSION = 4
+NORMALIZATION_VERSION = 5
 QUARTER_MIN_DAYS = 70
 QUARTER_MAX_DAYS = 110
 # Cumulative (year-to-date) windows from Q2/Q3 filings: roughly six and nine

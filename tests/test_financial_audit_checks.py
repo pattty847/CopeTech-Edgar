@@ -133,6 +133,22 @@ def test_aggregate_and_component_debt_inputs_are_never_combined():
     assert codes(findings) == ["aggregate_component_debt_double_count"]
 
 
+def test_long_term_parent_and_its_children_are_never_combined():
+    row = observation(125.0, concept="LongTermDebt")
+    row.update(
+        {
+            "reported": False,
+            "derived": True,
+            "inputMetrics": ["long_term_debt", "debt_current", "debt_noncurrent"],
+            "sources": row["sources"] + [source("LongTermDebtCurrent")],
+        }
+    )
+
+    findings = check_financial_series(payload(row, metric="net_debt"))
+
+    assert codes(findings) == ["aggregate_component_debt_double_count"]
+
+
 def test_selected_concept_transition_is_a_warning():
     older = observation(end="2023-12-31", concept="Revenues")
     newer = observation(end="2024-12-31", concept="RevenueFromContractWithCustomerExcludingAssessedTax")

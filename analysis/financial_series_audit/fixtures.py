@@ -153,7 +153,6 @@ def build_concept_inventory(payload: dict[str, Any]) -> dict[str, Any]:
                     "taxonomy": taxonomy,
                     "concept": concept,
                     "label": concept_body.get("label"),
-                    "description": concept_body.get("description"),
                     "units": sorted(str(unit) for unit in units),
                     "forms": sorted(
                         {str(entry["form"]) for entry in entries if entry.get("form")}

@@ -562,6 +562,23 @@ class FinancialSeriesStoreTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(resolved[0]["normalization_version"], 2)
             self.assertEqual(resolved[0]["value"], 11)
 
+    async def test_load_can_exclude_obsolete_normalization_rows(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            store = FinancialSeriesStore(Path(tmpdir) / "facts.sqlite3")
+            version_one = self._normalized_row(value=10, normalization_version=1)
+            version_two = self._normalized_row(value=11, normalization_version=2)
+            await store.append_facts([version_one, version_two])
+
+            resolved = await store.load_facts(
+                "TEST",
+                "revenue",
+                normalization_version=1,
+            )
+
+            self.assertEqual(len(resolved), 1)
+            self.assertEqual(resolved[0]["normalization_version"], 1)
+            self.assertEqual(resolved[0]["value"], 10)
+
 
 if __name__ == "__main__":
     unittest.main()

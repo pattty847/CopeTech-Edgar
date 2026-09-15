@@ -4,7 +4,7 @@ This workflow tests the complete public fundamentals contract against a fixed se
 of accounting shapes. It prefers an explicit unavailable result to a value that
 the filing does not support.
 
-The audit covers all 44 public reported/derived metrics returned by
+The audit covers all 46 public reported/derived metrics returned by
 `FinancialSeriesService.supported_metrics()`. It records the seven valuation
 series as `external_input_missing`: real valuation output also needs a separately
 versioned split-adjusted price and split-event source, which this SEC-only audit
@@ -25,6 +25,10 @@ Applicability is deliberately conservative:
 
 An unspecified metric is optional. The audit never upgrades an unreviewed absence
 to a correctness failure.
+
+The production store reads only the current normalization version. Increment
+`NORMALIZATION_VERSION` whenever a registry mapping changes; old fact versions remain
+as immutable evidence but cannot leak obsolete concepts into current output.
 
 ## SEC access
 

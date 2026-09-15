@@ -384,7 +384,10 @@ def _mixes_debt_parent_and_components(
     sources: Sequence[Mapping[str, Any]],
 ) -> bool:
     input_metrics = set(_input_metrics(row))
-    if "total_debt" in input_metrics and input_metrics.intersection(
+    debt_children = {"long_term_debt", "debt_current", "debt_noncurrent", "short_term_borrowings"}
+    if "total_debt" in input_metrics and input_metrics.intersection(debt_children):
+        return True
+    if "long_term_debt" in input_metrics and input_metrics.intersection(
         {"debt_current", "debt_noncurrent"}
     ):
         return True
