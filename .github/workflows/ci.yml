@@ -6,6 +6,28 @@ on:
   pull_request:
 
 jobs:
+  fundamentals-fixtures:
+    # Stable required check for branch protection. The full matrix also runs this
+    # test, but this job gives fundamentals changes one explicit, grepable gate.
+    name: Fundamentals fixtures (20 issuers)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install project with dev extras
+        run: uv sync --extra dev
+
+      - name: Verify independently reviewed Company Facts fixtures
+        run: uv run python -m pytest tests/test_recorded_companyfacts.py -q
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -30,7 +52,7 @@ jobs:
       # would both flake in CI and risk hammering SEC's fair-access budget from shared
       # runners.
       - name: Run tests
-        run: uv run pytest tests/ -q
+        run: uv run python -m pytest tests/ -q
 
       - name: Reject whitespace errors
         run: git diff --check

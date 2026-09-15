@@ -118,9 +118,18 @@ The first 20-issuer review found several patterns that require explicit rules:
 The production rules resolve the evidence-backed hierarchy cases. The audit keeps
 semantic and scope findings visible for manual review.
 
-## Scope stop
+## Automation policy
 
-This directory implements acquisition, corpus analysis, review evidence, and
-hermetic fixture generation. It intentionally does not make the audit a required
-mapping-change or CI gate. Decide that policy only after reviewing real findings,
-coverage gaps, run cost, and false positives.
+The `Fundamentals fixtures (20 issuers)` CI job is the deterministic merge gate.
+It runs without network access and fails when an independently reviewed value,
+concept, unavailable state, hierarchy, or economic window changes.
+
+The separate `Fundamentals live audit` workflow refreshes the complete corpus once
+a week at no more than one SEC request per second. It also supports a manual run.
+The workflow requires the repository secret `SEC_API_USER_AGENT`, uploads the full
+review packet, and fails only for structural errors. Semantic warnings remain
+visible in the workflow summary and report but do not fail the job.
+
+When a taxonomy mapping changes, verify the source filing manually and update its
+independent fixture expectation in the same pull request. Do not approve a changed
+fixture only because it matches parser output.

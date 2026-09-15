@@ -20,10 +20,10 @@ inputs; project code and documentation remain subject to the repository's projec
 
 ## Company Facts
 
-`companyfacts/aapl` and `companyfacts/sofi` are minimized Company Facts recordings.
-Each fixture keeps one reviewed annual period, one reviewed quarter, comparative repeats,
-and explicit debt controls. `expected.json` contains values transcribed from the filing
-statements, rather than output copied from the parser.
+`companyfacts/` contains the 20 minimized recordings declared by the financial-series
+canary corpus. Each fixture keeps reviewed periods, comparative repeats, and relevant
+negative controls. `expected.json` contains values transcribed from filing statements,
+rather than output copied from the parser.
 
 - AAPL: fiscal 2024 and fiscal Q1 2025, accessions `0000320193-24-000123` and
   `0000320193-25-000008`.
@@ -32,3 +32,8 @@ statements, rather than output copied from the parser.
 
 The SOFI balance equation includes $320.374 million of temporary equity outside
 stockholders' equity. The fixture retains that concept as a negative control.
+
+The fixture gate covers AAPL, MSFT, GOOGL, META, AMZN, WMT, COST, CALM, MCD, GM,
+CVX, NEE, DAL, O, JPM, SOFI, PGR, BRK-B, TSM, and SHOP. The set deliberately spans
+ordinary operating companies, financial companies, a REIT, a utility, non-calendar
+years, 52/53-week reporting, IFRS, and a foreign-to-domestic reporting transition.
