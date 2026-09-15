@@ -384,6 +384,29 @@ class InstantCompositeTests(unittest.TestCase):
         self.assertEqual(series["observations"], [])
         self.assertIn("debt_concepts_missing", series["warnings"])
 
+    def test_invested_capital_without_debt_tags_is_unknown_not_zero(self):
+        payload = merge(
+            instant_series("StockholdersEquity", [100.0, 100.0, 100.0]),
+            instant_series(
+                "CashAndCashEquivalentsAtCarryingValue",
+                [30.0, 30.0, 30.0],
+            ),
+        )
+        series = resolve_derived_series(
+            {
+                "stockholders_equity": resolved(payload, "stockholders_equity"),
+                "cash_equivalents": resolved(payload, "cash_equivalents"),
+            },
+            symbol="TEST",
+            metric="invested_capital",
+            frequency="quarterly",
+            basis="canonical",
+            alignment="availability",
+        )
+
+        self.assertEqual(series["observations"], [])
+        self.assertIn("debt_concepts_missing", series["warnings"])
+
 
 class DebtPipelineTests(unittest.IsolatedAsyncioTestCase):
     async def test_sofi_2023_raw_facts_flow_through_store_and_service(self):

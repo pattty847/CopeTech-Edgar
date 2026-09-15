@@ -63,6 +63,9 @@ This metric is not comparable for financial companies, where deposits and
 other funding liabilities are part of operations rather than ordinary corporate
 leverage, and the payload carries that warning.
 
+`invested_capital` uses the same debt hierarchy and missing-data rule. It does
+not calculate equity minus cash when no supported debt fact is available.
+
 Canonical quarterly revenue derives Q4 only when a compatible annual value and
 three standalone quarters exist:
 

@@ -19,6 +19,9 @@ def selected_debt_components(values: dict[str, float]) -> tuple[str, ...]:
 
 def invested_capital(values: dict[str, float]) -> ComputeResult:
     debt_components = selected_debt_components(values)
+    if not debt_components:
+        # A missing debt concept is unknown. It is not evidence of a zero balance.
+        return None
     cash_components = tuple(
         component
         for component in ("cash_equivalents", "short_term_investments")
@@ -26,10 +29,9 @@ def invested_capital(values: dict[str, float]) -> ComputeResult:
     )
     debt = sum(values[component] for component in debt_components)
     cash = sum(values[component] for component in cash_components)
-    flags = () if debt_components else ("debt_concepts_missing_assumed_zero",)
     return (
         values["stockholders_equity"] + debt - cash,
-        flags,
+        (),
         ("stockholders_equity",) + debt_components + cash_components,
     )
 

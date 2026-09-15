@@ -355,10 +355,11 @@ def resolve_derived_series(
         for payload in component_payloads.values()
         for warning in payload.get("warnings") or []
     }
-    if metric == "net_debt":
-        warnings.add("net_debt_not_comparable_for_financial_companies")
+    if metric in {"invested_capital", "net_debt"}:
         if not any(component in component_payloads for component in DEBT_COMPONENTS):
             warnings.add("debt_concepts_missing")
+    if metric == "net_debt":
+        warnings.add("net_debt_not_comparable_for_financial_companies")
     if frequency == "ttm":
         for component in definition.required:
             if get_metric_definition(component).aggregation == "weighted_average":
