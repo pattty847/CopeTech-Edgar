@@ -14,7 +14,11 @@ from .derived_series import (
     resolve_derived_series,
 )
 from .eps_series import resolve_diluted_eps_ttm
-from .financial_series import extract_financial_facts, resolve_financial_series
+from .financial_series import (
+    NORMALIZATION_VERSION,
+    extract_financial_facts,
+    resolve_financial_series,
+)
 from .financial_revisions import (
     resolve_derived_revisions,
     resolve_financial_revisions,
@@ -114,7 +118,12 @@ class FinancialSeriesService:
         # Facts are keyed to the issuer, so read by CIK: a second ticker on the same CIK
         # (GOOG/GOOGL) never gets its own rows, because the first one already wrote them.
         cik = (facts or {}).get("cik")
-        return await self._store.load_facts(symbol, metric, cik=cik), source_warning
+        return await self._store.load_facts(
+            symbol,
+            metric,
+            cik=cik,
+            normalization_version=NORMALIZATION_VERSION,
+        ), source_warning
 
     async def _refresh_metrics_and_load(
         self,
@@ -140,7 +149,12 @@ class FinancialSeriesService:
             source_warning = "source_refresh_failed_using_persisted_facts"
         cik = (facts or {}).get("cik")
         loaded = {
-            metric: await self._store.load_facts(symbol, metric, cik=cik)
+            metric: await self._store.load_facts(
+                symbol,
+                metric,
+                cik=cik,
+                normalization_version=NORMALIZATION_VERSION,
+            )
             for metric in metrics
         }
         return loaded, source_warning

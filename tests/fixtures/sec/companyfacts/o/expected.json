@@ -1,0 +1,1 @@
+{"schemaVersion":1,"periods":[{"frequency":"annual","periodEnd":"2025-12-31","metrics":{"net_debt":{"value":25113905000,"inputMetrics":["long_term_debt","commercial_paper","cash_equivalents"]}}},{"frequency":"quarterly","periodEnd":"2026-06-30","metrics":{"net_debt":{"value":25938940000,"inputMetrics":["long_term_debt","commercial_paper","cash_equivalents"]}}}]}

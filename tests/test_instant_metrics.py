@@ -75,7 +75,14 @@ def instant_series(concept: str, values: list[float], taxonomy: str = "us-gaap",
             taxonomy: {
                 concept: (
                     [
-                        instant_fact(value, end, filed, f"{concept}-{index}", form=form)
+                        instant_fact(
+                            value,
+                            end,
+                            filed,
+                            f"{concept}-{index}",
+                            form=form,
+                            fp="FY" if form == "10-K" else "Q1",
+                        )
                         for index, (value, (end, filed, form)) in enumerate(
                             zip(values, BALANCE_DATES)
                         )
@@ -147,6 +154,65 @@ class InstantMetricTests(unittest.TestCase):
         self.assertEqual(observation["value"], 125.0)
         self.assertEqual(observation["availableAt"], "2026-04-25")
 
+    def test_annual_frequency_rejects_comparisons_and_transaction_dates(self):
+        payload = company_facts(
+            {
+                "us-gaap": {
+                    "StockholdersEquity": (
+                        [
+                            instant_fact(
+                                80,
+                                "2019-12-31",
+                                "2022-03-01",
+                                "fy21",
+                                form="10-K",
+                                fy=2021,
+                                fp="FY",
+                            ),
+                            instant_fact(
+                                0,
+                                "2020-07-09",
+                                "2021-03-17",
+                                "fy20",
+                                form="10-K",
+                                fy=2020,
+                                fp="FY",
+                            ),
+                            instant_fact(
+                                90,
+                                "2020-12-31",
+                                "2021-03-17",
+                                "fy20",
+                                form="10-K",
+                                fy=2020,
+                                fp="FY",
+                            ),
+                            instant_fact(
+                                100,
+                                "2021-12-31",
+                                "2022-03-01",
+                                "fy21",
+                                form="10-K",
+                                fy=2021,
+                                fp="FY",
+                            ),
+                        ],
+                        "USD",
+                    )
+                }
+            }
+        )
+
+        series = resolved(payload, "stockholders_equity", frequency="annual")
+
+        self.assertEqual(
+            [
+                (row["periodEnd"], row["fiscalYear"], row["fiscalPeriod"])
+                for row in series["observations"]
+            ],
+            [("2020-12-31", 2020, "FY"), ("2021-12-31", 2021, "FY")],
+        )
+
     def test_ttm_is_meaningless_for_instants(self):
         series = resolved(
             instant_series("StockholdersEquity", [100.0, 110.0, 120.0]),
@@ -171,6 +237,233 @@ class InstantMetricTests(unittest.TestCase):
 
 
 class InstantCompositeTests(unittest.TestCase):
+    def test_sofi_2023_uses_reported_aggregate_debt(self):
+        payload = merge(
+            instant_series(
+                "CashAndCashEquivalentsAtCarryingValue",
+                [30.0, 30.0, 3_085_020_000.0],
+            ),
+            instant_series(
+                "DebtLongtermAndShorttermCombinedAmount",
+                [40.0, 40.0, 5_233_416_000.0],
+            ),
+        )
+        series = resolve_derived_series(
+            {
+                "cash_equivalents": resolved(payload, "cash_equivalents", frequency="annual"),
+                "total_debt": resolved(payload, "total_debt", frequency="annual"),
+            },
+            symbol="SOFI",
+            metric="net_debt",
+            frequency="annual",
+            basis="canonical",
+            alignment="availability",
+        )
+
+        self.assertEqual(series["observations"][-1]["value"], 2_148_396_000.0)
+        self.assertEqual(
+            series["observations"][-1]["selectedSource"]["concept"],
+            "DebtLongtermAndShorttermCombinedAmount",
+        )
+
+    def test_long_term_maturities_without_short_term_debt_evidence_are_unknown(self):
+        payload = merge(
+            instant_series("CashAndCashEquivalentsAtCarryingValue", [30.0, 30.0, 30.0]),
+            instant_series("LongTermDebtCurrent", [10.0, 10.0, 10.0]),
+            instant_series("LongTermDebtNoncurrent", [90.0, 90.0, 90.0]),
+        )
+        series = resolve_derived_series(
+            {
+                metric: resolved(payload, metric)
+                for metric in (
+                    "cash_equivalents",
+                    "long_term_debt_current",
+                    "debt_noncurrent",
+                )
+            },
+            symbol="AAPL",
+            metric="net_debt",
+            frequency="quarterly",
+            basis="canonical",
+            alignment="availability",
+        )
+
+        self.assertEqual(series["observations"], [])
+        self.assertIn("debt_hierarchy_incomplete", series["warnings"])
+
+    def test_parent_total_wins_over_duplicate_debt_components(self):
+        payload = merge(
+            instant_series("CashAndCashEquivalentsAtCarryingValue", [30.0, 30.0, 30.0]),
+            instant_series("DebtLongtermAndShorttermCombinedAmount", [105.0, 105.0, 105.0]),
+            instant_series("LongTermDebtCurrent", [10.0, 10.0, 10.0]),
+            instant_series("LongTermDebtNoncurrent", [90.0, 90.0, 90.0]),
+            instant_series("CommercialPaper", [5.0, 5.0, 5.0]),
+        )
+        series = resolve_derived_series(
+            {
+                metric: resolved(payload, metric)
+                for metric in (
+                    "cash_equivalents",
+                    "total_debt",
+                    "long_term_debt",
+                    "debt_noncurrent",
+                    "long_term_debt_current",
+                    "commercial_paper",
+                )
+            },
+            symbol="TEST",
+            metric="net_debt",
+            frequency="quarterly",
+            basis="canonical",
+            alignment="availability",
+        )
+
+        self.assertEqual([row["value"] for row in series["observations"]], [75.0] * 3)
+        self.assertTrue(all(len(row["sources"]) == 2 for row in series["observations"]))
+
+    def test_long_term_debt_adds_separate_commercial_paper_without_children(self):
+        payload = merge(
+            instant_series("CashAndCashEquivalentsAtCarryingValue", [30.0] * 3),
+            instant_series("LongTermDebt", [100.0] * 3),
+            instant_series("LongTermDebtCurrent", [10.0] * 3),
+            instant_series("LongTermDebtNoncurrent", [90.0] * 3),
+            instant_series("CommercialPaper", [5.0] * 3),
+        )
+        series = resolve_derived_series(
+            {
+                metric: resolved(payload, metric)
+                for metric in (
+                    "cash_equivalents",
+                    "total_debt",
+                    "long_term_debt",
+                    "debt_noncurrent",
+                    "long_term_debt_current",
+                    "commercial_paper",
+                )
+            },
+            symbol="AAPL",
+            metric="net_debt",
+            frequency="quarterly",
+            basis="canonical",
+            alignment="availability",
+        )
+
+        self.assertEqual([row["value"] for row in series["observations"]], [75.0] * 3)
+        self.assertTrue(
+            all(
+                set(row["inputMetrics"])
+                == {"long_term_debt", "commercial_paper", "cash_equivalents"}
+                for row in series["observations"]
+            )
+        )
+
+    def test_debt_current_parent_already_includes_short_term_borrowings(self):
+        payload = merge(
+            instant_series("CashAndCashEquivalentsAtCarryingValue", [30.0] * 3),
+            instant_series("DebtCurrent", [15.0] * 3),
+            instant_series("LongTermDebtNoncurrent", [90.0] * 3),
+            instant_series("ShortTermBorrowings", [5.0] * 3),
+        )
+        series = resolve_derived_series(
+            {
+                metric: resolved(payload, metric)
+                for metric in (
+                    "cash_equivalents",
+                    "debt_current_total",
+                    "debt_noncurrent",
+                    "reported_short_term_borrowings",
+                )
+            },
+            symbol="TEST",
+            metric="net_debt",
+            frequency="quarterly",
+            basis="canonical",
+            alignment="availability",
+        )
+
+        self.assertEqual([row["value"] for row in series["observations"]], [75.0] * 3)
+
+    def test_reported_total_debt_is_separate_from_long_term_debt(self):
+        payload = merge(
+            instant_series("DebtLongtermAndShorttermCombinedAmount", [100.0, 100.0, 100.0]),
+            instant_series("LongTermDebt", [95.0, 95.0, 95.0]),
+        )
+
+        total = resolved(payload, "total_debt")
+        long_term = resolved(payload, "long_term_debt")
+
+        self.assertEqual([row["value"] for row in total["observations"]], [100.0] * 3)
+        self.assertEqual([row["value"] for row in long_term["observations"]], [95.0] * 3)
+
+    def test_long_term_debt_accepts_complete_standard_aggregate_and_notes(self):
+        for concept in (
+            "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities",
+            "NotesPayable",
+        ):
+            with self.subTest(concept=concept):
+                series = resolved(instant_series(concept, [100.0] * 3), "long_term_debt")
+                self.assertEqual([row["value"] for row in series["observations"]], [100.0] * 3)
+
+    def test_distinct_short_term_children_are_added_without_a_parent(self):
+        payload = merge(
+            instant_series("CashAndCashEquivalentsAtCarryingValue", [30.0] * 3),
+            instant_series("LongTermDebtCurrent", [10.0] * 3),
+            instant_series("LongTermDebtNoncurrent", [90.0] * 3),
+            instant_series("CommercialPaper", [5.0] * 3),
+            instant_series("OtherShortTermBorrowings", [2.0] * 3),
+        )
+        series = resolve_derived_series(
+            {
+                metric: resolved(payload, metric)
+                for metric in (
+                    "cash_equivalents",
+                    "long_term_debt_current",
+                    "debt_noncurrent",
+                    "commercial_paper",
+                    "other_short_term_borrowings",
+                )
+            },
+            symbol="NEE",
+            metric="net_debt",
+            frequency="quarterly",
+            basis="canonical",
+            alignment="availability",
+        )
+
+        self.assertEqual([row["value"] for row in series["observations"]], [77.0] * 3)
+
+    def test_combined_debt_tag_that_equals_long_term_children_adds_separate_short_debt(self):
+        payload = merge(
+            instant_series("CashAndCashEquivalentsAtCarryingValue", [30.0] * 3),
+            instant_series("DebtLongtermAndShorttermCombinedAmount", [100.0] * 3),
+            instant_series("LongTermDebtCurrent", [10.0] * 3),
+            instant_series("LongTermDebtNoncurrent", [90.0] * 3),
+            instant_series("ShortTermBorrowings", [5.0] * 3),
+        )
+        series = resolve_derived_series(
+            {
+                metric: resolved(payload, metric)
+                for metric in (
+                    "cash_equivalents",
+                    "total_debt",
+                    "long_term_debt_current",
+                    "debt_noncurrent",
+                    "reported_short_term_borrowings",
+                )
+            },
+            symbol="WMT",
+            metric="net_debt",
+            frequency="quarterly",
+            basis="canonical",
+            alignment="availability",
+        )
+
+        self.assertEqual([row["value"] for row in series["observations"]], [75.0] * 3)
+        self.assertEqual(
+            set(series["observations"][0]["inputMetrics"]),
+            {"total_debt", "reported_short_term_borrowings", "cash_equivalents"},
+        )
+
     def test_working_capital_joins_on_the_balance_date(self):
         payload = merge(
             instant_series("AssetsCurrent", [200.0, 210.0, 220.0]),
@@ -197,6 +490,7 @@ class InstantCompositeTests(unittest.TestCase):
             instant_series("ShortTermInvestments", [20.0, 20.0, 20.0]),
             instant_series("LongTermDebtCurrent", [10.0, 10.0, 10.0]),
             instant_series("LongTermDebtNoncurrent", [90.0, 90.0, 90.0]),
+            instant_series("ShortTermBorrowings", [0.0, 0.0, 0.0]),
         )
         series = resolve_derived_series(
             {
@@ -204,8 +498,9 @@ class InstantCompositeTests(unittest.TestCase):
                 for metric in (
                     "cash_equivalents",
                     "short_term_investments",
-                    "debt_current",
+                    "long_term_debt_current",
                     "debt_noncurrent",
+                    "reported_short_term_borrowings",
                 )
             },
             symbol="TEST",
@@ -216,7 +511,7 @@ class InstantCompositeTests(unittest.TestCase):
         )
         self.assertEqual([row["value"] for row in series["observations"]], [50.0] * 3)
 
-    def test_net_debt_without_debt_tags_is_flagged_not_silent(self):
+    def test_net_debt_without_debt_tags_is_unknown_not_zero(self):
         payload = instant_series(
             "CashAndCashEquivalentsAtCarryingValue", [30.0, 30.0, 30.0]
         )
@@ -228,13 +523,69 @@ class InstantCompositeTests(unittest.TestCase):
             basis="canonical",
             alignment="availability",
         )
-        self.assertEqual([row["value"] for row in series["observations"]], [-30.0] * 3)
-        self.assertTrue(
-            all(
-                "debt_concepts_missing_assumed_zero" in row["qualityFlags"]
-                for row in series["observations"]
-            )
+        self.assertEqual(series["observations"], [])
+        self.assertIn("debt_concepts_missing", series["warnings"])
+
+    def test_invested_capital_without_debt_tags_is_unknown_not_zero(self):
+        payload = merge(
+            instant_series("StockholdersEquity", [100.0, 100.0, 100.0]),
+            instant_series(
+                "CashAndCashEquivalentsAtCarryingValue",
+                [30.0, 30.0, 30.0],
+            ),
         )
+        series = resolve_derived_series(
+            {
+                "stockholders_equity": resolved(payload, "stockholders_equity"),
+                "cash_equivalents": resolved(payload, "cash_equivalents"),
+            },
+            symbol="TEST",
+            metric="invested_capital",
+            frequency="quarterly",
+            basis="canonical",
+            alignment="availability",
+        )
+
+        self.assertEqual(series["observations"], [])
+        self.assertIn("debt_concepts_missing", series["warnings"])
+
+
+class DebtPipelineTests(unittest.IsolatedAsyncioTestCase):
+    async def test_sofi_2023_raw_facts_flow_through_store_and_service(self):
+        payload = company_facts(
+            {
+                "us-gaap": {
+                    "CashAndCashEquivalentsAtCarryingValue": (
+                        [instant_fact(3_085_020_000, "2023-12-31", "2024-02-27", "0001818874-24-000026", form="10-K", fy=2023, fp="FY")],
+                        "USD",
+                    ),
+                    "DebtLongtermAndShorttermCombinedAmount": (
+                        [instant_fact(5_233_416_000, "2023-12-31", "2024-02-27", "0001818874-24-000026", form="10-K", fy=2023, fp="FY")],
+                        "USD",
+                    ),
+                    # This gross parent has dimensioned warehouse/securitization
+                    # children in the filing. It must not replace or augment the
+                    # net carrying amount above.
+                    "DebtInstrumentCarryingAmount": (
+                        [instant_fact(5_259_584_000, "2023-12-31", "2024-02-27", "0001818874-24-000026", form="10-K", fy=2023, fp="FY")],
+                        "USD",
+                    ),
+                }
+            }
+        )
+
+        async def fetch_facts(symbol: str, use_cache: bool = True) -> dict:
+            return payload
+
+        with tempfile.TemporaryDirectory() as tmp:
+            service = FinancialSeriesService(fetch_facts, Path(tmp) / "facts.sqlite3")
+            series = await service.get_series("SOFI", metric="net_debt", frequency="annual")
+
+        self.assertIsNotNone(series)
+        (observation,) = series["observations"]
+        self.assertEqual(observation["value"], 2_148_396_000)
+        self.assertEqual(observation["selectedSource"]["concept"], "DebtLongtermAndShorttermCombinedAmount")
+        self.assertNotIn("DebtInstrumentCarryingAmount", {source["concept"] for source in observation["sources"]})
 
 
 class InstantValuationServiceTests(unittest.IsolatedAsyncioTestCase):
@@ -271,7 +622,7 @@ class InstantValuationServiceTests(unittest.IsolatedAsyncioTestCase):
             payload,
             instant_series("StockholdersEquity", [100.0, 100.0, 100.0]),
             instant_series("CashAndCashEquivalentsAtCarryingValue", [10.0, 10.0, 10.0]),
-            instant_series("LongTermDebtNoncurrent", [110.0, 110.0, 110.0]),
+            instant_series("DebtLongtermAndShorttermCombinedAmount", [110.0, 110.0, 110.0]),
         )
 
     async def _series(self, metric: str) -> dict:
@@ -308,6 +659,10 @@ class InstantValuationServiceTests(unittest.IsolatedAsyncioTestCase):
     async def test_ev_s_adds_net_debt_to_the_market_cap(self):
         series = await self._series("ev_s")
         self.assertEqual(series["adjustmentMetric"], "net_debt")
+        self.assertIn(
+            "generic_net_debt_not_comparable_for_financial_companies",
+            series["warnings"],
+        )
         (observation,) = series["observations"]
         # EV = 400 + (110 − 10) = 500 over TTM revenue 100 → 5×
         self.assertAlmostEqual(observation["value"], 5.0)

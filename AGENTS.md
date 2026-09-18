@@ -65,6 +65,11 @@ uv run pytest tests/ -q
 ```
 
 The suite is pytest-based and fully hermetic (no network); it should stay that way.
+For fundamentals changes, run `tests/test_recorded_companyfacts.py` and
+`tests/test_fundamentals_review_regressions.py`. Do not weaken matrix-wide gates
+to make a numeric fixture pass, or generate expected values from parser output.
+See `docs/fundamentals-validation.md` for the distinction between execution,
+structural checks, and independent financial verification.
 `python -m unittest tests/test_form4_signals.py` does not work — `unittest` needs a module
 path, not a file path, and several test modules use pytest fixtures.
 

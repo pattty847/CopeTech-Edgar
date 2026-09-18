@@ -1,0 +1,28 @@
+{
+  "acceptedConceptRegistrySha256": "6421165288c4a1e579550a8ab012c614661de073e8b776f7e5c7c2e2cfcd4793",
+  "cik": 320193,
+  "conceptInventoryContentSha256": "454f1ceca58f13e3decb9c5387094ae26d5314d601962babfc8806919ec6af0a",
+  "controlConcepts": [
+    {
+      "concept": "LongTermDebtCurrent",
+      "taxonomy": "us-gaap"
+    },
+    {
+      "concept": "LongTermDebtNoncurrent",
+      "taxonomy": "us-gaap"
+    }
+  ],
+  "entityName": "Apple Inc.",
+  "fixtureContentSha256": "e95e8e888aaa41792577a42f16f59dded9783e528185c793dc19d727301dea30",
+  "fixtureFactCount": 172,
+  "retrievedAt": "2026-09-15T01:30:40Z",
+  "schemaVersion": 1,
+  "sourceContentSha256": "1032ae940eea6da49e17b98a06938cac0d7ac784822c88e6ee2383b83a9918c1",
+  "sourceFactCount": 25135,
+  "sourceUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000320193.json",
+  "symbol": "AAPL",
+  "targetPeriodEnds": [
+    "2024-09-28",
+    "2024-12-28"
+  ]
+}

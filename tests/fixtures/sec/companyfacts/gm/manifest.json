@@ -1,0 +1,19 @@
+{
+  "acceptedConceptRegistrySha256": "3a9a66afcd8eb7cb488d0ffb8c178c209e387551d0016f13bdc4fb4c674b46d6",
+  "cik": 1467858,
+  "conceptInventoryContentSha256": "4d8120cc2565d7cb2cf9ad563a089c2d29d74ffaac728d450f77c3d3b9c80f56",
+  "controlConcepts": [],
+  "entityName": "GENERAL MOTORS COMPANY",
+  "fixtureContentSha256": "e0a8448f583690d5229cad5431ffb79c56515138f6028c3a2da874bb0ef99452",
+  "fixtureFactCount": 96,
+  "retrievedAt": "2026-09-15T05:58:02Z",
+  "schemaVersion": 1,
+  "sourceContentSha256": "fbb600aceac58241707589665910a79776dae8f4040ef035b2bd2f8f8a830ac3",
+  "sourceFactCount": 23496,
+  "sourceUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001467858.json",
+  "symbol": "GM",
+  "targetPeriodEnds": [
+    "2025-12-31",
+    "2026-06-30"
+  ]
+}

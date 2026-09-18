@@ -1,0 +1,1014 @@
+{
+  "cik": 16160,
+  "entityName": "Cal-Maine Foods, Inc.",
+  "facts": {
+    "us-gaap": {
+      "AccountsPayableCurrent": {
+        "description": "Carrying value as of the balance sheet date of liabilities incurred (and for which invoices have typically been received) and payable to vendors for goods and services received that are used in an entity's business. Used to reflect the current portion of the liabilities (due within one year or within the normal operating cycle if longer).",
+        "label": "Accounts Payable, Current",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1I",
+              "fy": 2026,
+              "val": 106494000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2026Q2I",
+              "fy": 2026,
+              "val": 96106000
+            }
+          ]
+        }
+      },
+      "AccountsReceivableNetCurrent": {
+        "description": "Amount, after allowance for credit loss, of right to consideration from customer for product sold and service rendered in normal course of business, classified as current.",
+        "label": "Accounts Receivable, after Allowance for Credit Loss, Current",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1I",
+              "fy": 2026,
+              "val": 185176000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2026Q2I",
+              "fy": 2026,
+              "val": 136249000
+            }
+          ]
+        }
+      },
+      "AllocatedShareBasedCompensationExpense": {
+        "description": "Amount of expense for award under share-based payment arrangement. Excludes amount capitalized.",
+        "label": "Share-based Payment Arrangement, Expense",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 4000000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2025",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 5300000
+            }
+          ]
+        }
+      },
+      "Assets": {
+        "description": "Sum of the carrying amounts as of the balance sheet date of all assets that are recognized. Assets are probable future economic benefits obtained or controlled by an entity as a result of past transactions or events.",
+        "label": "Assets",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1I",
+              "fy": 2026,
+              "val": 3139261000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2026Q2I",
+              "fy": 2026,
+              "val": 3107570000
+            }
+          ]
+        }
+      },
+      "AssetsCurrent": {
+        "description": "Sum of the carrying amounts as of the balance sheet date of all assets that are expected to be realized in cash, sold, or consumed within one year (or the normal operating cycle, if longer). Assets are probable future economic benefits obtained or controlled by an entity as a result of past transactions or events.",
+        "label": "Assets, Current",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1I",
+              "fy": 2026,
+              "val": 1749486000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2026Q2I",
+              "fy": 2026,
+              "val": 1581542000
+            }
+          ]
+        }
+      },
+      "AvailableForSaleSecuritiesDebtSecuritiesCurrent": {
+        "description": "Amount of investment in debt security measured at fair value with change in fair value recognized in other comprehensive income (available-for-sale), classified as current.",
+        "label": "Debt Securities, Available-for-sale, Current",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1I",
+              "fy": 2026,
+              "val": 759768000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2026Q2I",
+              "fy": 2026,
+              "val": 816840000
+            }
+          ]
+        }
+      },
+      "CashAndCashEquivalentsAtCarryingValue": {
+        "description": "Amount of currency on hand as well as demand deposits with banks or financial institutions. Includes other kinds of accounts that have the general characteristics of demand deposits. Also includes short-term, highly liquid investments that are both readily convertible to known amounts of cash and so near their maturity that they present insignificant risk of changes in value because of changes in interest rates. Excludes cash and cash equivalents within disposal group and discontinued operation.",
+        "label": "Cash and Cash Equivalents, at Carrying Value",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1I",
+              "fy": 2026,
+              "val": 392159000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2026Q2I",
+              "fy": 2026,
+              "val": 107217000
+            }
+          ]
+        }
+      },
+      "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents": {
+        "description": "Amount of cash and cash equivalents, and cash and cash equivalents restricted to withdrawal or usage. Excludes amount for disposal group and discontinued operations. Cash includes, but is not limited to, currency on hand, demand deposits with banks or financial institutions, and other accounts with general characteristics of demand deposits. Cash equivalents include, but are not limited to, short-term, highly liquid investments that are both readily convertible to known amounts of cash and so near their maturity that they present insignificant risk of changes in value because of changes in interest rates.",
+        "label": "Cash, Cash Equivalents, Restricted Cash and Restricted Cash Equivalents",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1I",
+              "fy": 2026,
+              "val": 394046000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2026Q2I",
+              "fy": 2026,
+              "val": 113542000
+            }
+          ]
+        }
+      },
+      "CostOfGoodsAndServicesSold": {
+        "description": "The aggregate costs related to goods produced and sold and services rendered by an entity during the reporting period. This excludes costs incurred during the reporting period related to financial services rendered and other revenue generating activities.",
+        "label": "Cost of Goods and Services Sold",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 1721068000
+            },
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1",
+              "fy": 2026,
+              "start": "2025-11-30",
+              "val": 547668000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2025",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 2239583000
+            }
+          ]
+        }
+      },
+      "Depreciation": {
+        "description": "The amount of expense recognized in the current period that reflects the allocation of the cost of tangible assets over the assets' useful lives. Includes production and non-production related depreciation.",
+        "label": "Depreciation",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2025",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 116600000
+            }
+          ]
+        }
+      },
+      "DepreciationDepletionAndAmortization": {
+        "description": "The aggregate expense recognized in the current period that allocates the cost of tangible assets, intangible assets, or depleting assets to periods that benefit from use of the assets.",
+        "label": "Depreciation, Depletion and Amortization",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 90294000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2025",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 124342000
+            }
+          ]
+        }
+      },
+      "EarningsPerShareBasic": {
+        "description": "The amount of net income (loss) for the period per each share of common stock or unit outstanding during the reporting period.",
+        "label": "Earnings Per Share, Basic",
+        "units": {
+          "USD/shares": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 7.37
+            },
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1",
+              "fy": 2026,
+              "start": "2025-11-30",
+              "val": 1.07
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2025",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 6.65
+            }
+          ]
+        }
+      },
+      "EarningsPerShareDiluted": {
+        "description": "The amount of net income (loss) for the period available to each share of common stock or common unit outstanding during the reporting period and to each share or unit that would have been outstanding assuming the issuance of common shares or units for all dilutive potential common shares or units outstanding during the reporting period.",
+        "label": "Earnings Per Share, Diluted",
+        "units": {
+          "USD/shares": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 7.34
+            },
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1",
+              "fy": 2026,
+              "start": "2025-11-30",
+              "val": 1.06
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2025",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 6.63
+            }
+          ]
+        }
+      },
+      "GrossProfit": {
+        "description": "Aggregate revenue less cost of goods and services sold or operating expenses directly attributable to the revenue generation activity.",
+        "label": "Gross Profit",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 637983000
+            },
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1",
+              "fy": 2026,
+              "start": "2025-11-30",
+              "val": 119283000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2025",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 672049000
+            }
+          ]
+        }
+      },
+      "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest": {
+        "description": "Amount of income (loss) from continuing operations, including income (loss) from equity method investments, before deduction of income tax expense (benefit), and income (loss) attributable to noncontrolling interest.",
+        "label": "Income (Loss) from Continuing Operations before Income Taxes, Noncontrolling Interest",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 457530000
+            },
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1",
+              "fy": 2026,
+              "start": "2025-11-30",
+              "val": 58186000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2025",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 411004000
+            }
+          ]
+        }
+      },
+      "IncomeTaxExpenseBenefit": {
+        "description": "Amount of current income tax expense (benefit) and deferred income tax expense (benefit) pertaining to continuing operations.",
+        "label": "Income Tax Expense (Benefit)",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 104378000
+            },
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1",
+              "fy": 2026,
+              "start": "2025-11-30",
+              "val": 7068000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2025",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 92892000
+            }
+          ]
+        }
+      },
+      "InterestIncomeExpenseNet": {
+        "description": "The net amount of operating interest income (expense).",
+        "label": "Interest Income (Expense), Net",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 36384000
+            },
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1",
+              "fy": 2026,
+              "start": "2025-11-30",
+              "val": 11268000
+            }
+          ]
+        }
+      },
+      "InventoryNet": {
+        "description": "Amount after valuation and LIFO reserves of inventory expected to be sold, or consumed within one year or operating cycle, if longer.",
+        "label": "Inventory, Net",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1I",
+              "fy": 2026,
+              "val": 348910000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2026Q2I",
+              "fy": 2026,
+              "val": 375265000
+            }
+          ]
+        }
+      },
+      "Liabilities": {
+        "description": "Sum of the carrying amounts as of the balance sheet date of all liabilities that are recognized. Liabilities are probable future sacrifices of economic benefits arising from present obligations of an entity to transfer assets or provide services to other entities in the future.",
+        "label": "Liabilities",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1I",
+              "fy": 2026,
+              "val": 432129000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2026Q2I",
+              "fy": 2026,
+              "val": 467038000
+            }
+          ]
+        }
+      },
+      "LiabilitiesCurrent": {
+        "description": "Total obligations incurred as part of normal operations that are expected to be paid during the following twelve months or within one business cycle, if longer.",
+        "label": "Liabilities, Current",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1I",
+              "fy": 2026,
+              "val": 212978000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2026Q2I",
+              "fy": 2026,
+              "val": 205516000
+            }
+          ]
+        }
+      },
+      "NetCashProvidedByUsedInOperatingActivities": {
+        "description": "Amount of cash inflow (outflow) from operating activities, including discontinued operations. Operating activity cash flows include transactions, adjustments, and changes in value not defined as investing or financing activities.",
+        "label": "Net Cash Provided by (Used in) Operating Activities",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 476922000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2025",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 479753000
+            }
+          ]
+        }
+      },
+      "NetIncomeLoss": {
+        "description": "The portion of profit or loss for the period, net of income taxes, which is attributable to the parent.",
+        "label": "Net Income (Loss) Attributable to Parent",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 352558000
+            },
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1",
+              "fy": 2026,
+              "start": "2025-11-30",
+              "val": 50459000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2025",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 316682000
+            }
+          ]
+        }
+      },
+      "OperatingIncomeLoss": {
+        "description": "The net result for the period of deducting operating expenses from operating revenues.",
+        "label": "Operating Income (Loss)",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 408997000
+            },
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1",
+              "fy": 2026,
+              "start": "2025-11-30",
+              "val": 35944000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2025",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 350186000
+            }
+          ]
+        }
+      },
+      "PaymentsToAcquirePropertyPlantAndEquipment": {
+        "description": "The cash outflow associated with the acquisition of long-lived, physical assets that are used in the normal conduct of business to produce goods and services and not intended for resale; includes cash outflows to pay for construction of self-constructed assets.",
+        "label": "Payments to Acquire Property, Plant, and Equipment",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 123708000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2025",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 151220000
+            }
+          ]
+        }
+      },
+      "ProfitLoss": {
+        "description": "The consolidated profit or loss for the period, net of income taxes, including the portion attributable to the noncontrolling interest.",
+        "label": "Net Income (Loss), Including Portion Attributable to Noncontrolling Interest",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 353152000
+            },
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1",
+              "fy": 2026,
+              "start": "2025-11-30",
+              "val": 51118000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 318112000
+            },
+            {
+              "accn": "0001140361-26-033569",
+              "end": "2026-05-30",
+              "filed": "2026-08-18",
+              "form": "DEF 14A",
+              "fp": null,
+              "frame": "CY2025",
+              "fy": null,
+              "start": "2025-06-01",
+              "val": 318112000
+            }
+          ]
+        }
+      },
+      "ReceivablesNetCurrent": {
+        "description": "The total amount due to the entity within one year of the balance sheet date (or one operating cycle, if longer) from outside sources, including trade accounts receivable, notes and loans receivable, as well as any other types of receivables, net of allowances established for the purpose of reducing such receivables to an amount that approximates their net realizable value.",
+        "label": "Receivables, Net, Current",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2026Q2I",
+              "fy": 2026,
+              "val": 264431000
+            }
+          ]
+        }
+      },
+      "RevenueFromContractWithCustomerExcludingAssessedTax": {
+        "description": "Amount, excluding tax collected from customer, of revenue from satisfaction of performance obligation by transferring promised good or service to customer. Tax collected from customer is tax assessed by governmental authority that is both imposed on and concurrent with specific revenue-producing transaction, including, but not limited to, sales, use, value added and excise.",
+        "label": "Revenue from Contract with Customer, Excluding Assessed Tax",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 2359051000
+            },
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1",
+              "fy": 2026,
+              "start": "2025-11-30",
+              "val": 666951000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2025",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 2911632000
+            }
+          ]
+        }
+      },
+      "Revenues": {
+        "description": "Amount of revenue recognized from goods sold, services rendered, insurance premiums, or other activities that constitute an earning process. Includes, but is not limited to, investment and interest income before deduction of interest expense when recognized as a component of revenue, and sales and trading gain (loss).",
+        "label": "Revenues",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2025",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 2911632000
+            }
+          ]
+        }
+      },
+      "ShareBasedCompensation": {
+        "description": "Amount of noncash expense for share-based payment arrangement.",
+        "label": "Share-based Payment Arrangement, Noncash Expense",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2025",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 5757000
+            }
+          ]
+        }
+      },
+      "StockholdersEquity": {
+        "description": "Total of all stockholders' equity (deficit) items, net of receivables from officers, directors, owners, and affiliates of the entity which are attributable to the parent. The amount of the economic entity's stockholders' equity attributable to the parent excludes the amount of stockholders' equity which is allocable to that ownership interest in subsidiary equity which is not attributable to the parent (noncontrolling interest, minority interest). This excludes temporary equity and is sometimes called permanent equity.",
+        "label": "Stockholders' Equity Attributable to Parent",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1I",
+              "fy": 2026,
+              "val": 2700168000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2026Q2I",
+              "fy": 2026,
+              "val": 2632732000
+            }
+          ]
+        }
+      },
+      "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest": {
+        "description": "Amount of stockholders' equity (deficit), net of receivables from officers, directors, owners, and affiliates of the entity, attributable to both the parent and noncontrolling interests. Amount excludes temporary equity. Alternate caption for the concept is permanent equity.",
+        "label": "Stockholders' Equity, Including Portion Attributable to Noncontrolling Interest",
+        "units": {
+          "USD": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1I",
+              "fy": 2026,
+              "val": 2707132000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2026Q2I",
+              "fy": 2026,
+              "val": 2640532000
+            }
+          ]
+        }
+      },
+      "WeightedAverageNumberOfDilutedSharesOutstanding": {
+        "description": "The average number of shares or units issued and outstanding that are used in calculating diluted EPS or earnings per unit (EPU), determined based on the timing of issuance of shares or units in the period.",
+        "label": "Weighted Average Number of Shares Outstanding, Diluted",
+        "units": {
+          "shares": [
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 48003000
+            },
+            {
+              "accn": "0001562762-26-000046",
+              "end": "2026-02-28",
+              "filed": "2026-04-01",
+              "form": "10-Q",
+              "fp": "Q3",
+              "frame": "CY2026Q1",
+              "fy": 2026,
+              "start": "2025-11-30",
+              "val": 47414000
+            },
+            {
+              "accn": "0001562762-26-000080",
+              "end": "2026-05-30",
+              "filed": "2026-07-22",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": "CY2025",
+              "fy": 2026,
+              "start": "2025-06-01",
+              "val": 47781000
+            }
+          ]
+        }
+      }
+    }
+  }
+}

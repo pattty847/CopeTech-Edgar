@@ -31,6 +31,7 @@ FACT_CONTENT_FIELDS = (
     "frame",
     "concept_priority",
     "quality_flags",
+    "annual_period_end",
 )
 
 
@@ -127,6 +128,7 @@ class FinancialSeriesStore:
                     normalization_version INTEGER NOT NULL,
                     content_hash TEXT NOT NULL,
                     quality_flags TEXT NOT NULL,
+                    annual_period_end TEXT,
                     UNIQUE (
                         cik, metric, taxonomy, concept, unit, period_start,
                         period_end, accession_number, normalization_version,
@@ -143,6 +145,15 @@ class FinancialSeriesStore:
                 )
                 """
             )
+            async with db.execute("PRAGMA table_info(financial_fact_versions)") as cursor:
+                columns = {row[1] for row in await cursor.fetchall()}
+            if "annual_period_end" not in columns:
+                try:
+                    await db.execute("ALTER TABLE financial_fact_versions ADD COLUMN annual_period_end TEXT")
+                except aiosqlite.OperationalError as exc:
+                    # Another connection may have completed the same migration.
+                    if "duplicate column name" not in str(exc):
+                        raise
             await self._migrate_legacy_rows(db)
             await db.commit()
 
@@ -207,6 +218,7 @@ class FinancialSeriesStore:
                     row["normalization_version"],
                     content_hash,
                     json.dumps(sorted(row.get("quality_flags") or [])),
+                    row.get("annual_period_end"),
                 )
             )
         await db.executemany(
@@ -216,9 +228,9 @@ class FinancialSeriesStore:
                 concept_priority, value, unit, period_start, period_end,
                 duration_days, fiscal_year, fiscal_period, form, filed,
                 accession_number, frame, acquired_at, normalization_version,
-                content_hash, quality_flags
+                content_hash, quality_flags, annual_period_end
             ) VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
             """,
             values,
@@ -230,6 +242,7 @@ class FinancialSeriesStore:
         metric: str,
         *,
         cik: str | None = None,
+        normalization_version: int | None = None,
     ) -> list[dict[str, Any]]:
         """Load the newest normalization for each immutable SEC fact identity.
 
@@ -265,12 +278,20 @@ class FinancialSeriesStore:
                     FROM financial_fact_versions
                     WHERE metric = ?
                       AND (symbol = ? OR (? != '' AND LTRIM(cik, '0') = ?))
+                      AND (? IS NULL OR normalization_version = ?)
                 )
                 SELECT * FROM ranked
                 WHERE version_rank = 1
                 ORDER BY period_end, filed, accession_number
                 """,
-                (metric, symbol.upper(), normalized_cik, normalized_cik),
+                (
+                    metric,
+                    symbol.upper(),
+                    normalized_cik,
+                    normalized_cik,
+                    normalization_version,
+                    normalization_version,
+                ),
             ) as cursor:
                 rows = await cursor.fetchall()
         output: list[dict[str, Any]] = []

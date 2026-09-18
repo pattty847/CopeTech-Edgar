@@ -305,7 +305,7 @@ class DerivedSeriesTests(unittest.TestCase):
             "invested_capital": (
                 {
                     "stockholders_equity": 100,
-                    "debt_current": 10,
+                    "debt_current_total": 10,
                     "debt_noncurrent": 90,
                     "cash_equivalents": 30,
                     "short_term_investments": 20,

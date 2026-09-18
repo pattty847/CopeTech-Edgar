@@ -179,6 +179,14 @@ revenue = await client.financials.series(
     alignment="availability",
 )
 
+# Aggregate debt wins over current/noncurrent components; missing debt stays unknown.
+net_debt = await client.financials.series(
+    "SOFI",
+    metric="net_debt",
+    frequency="annual",
+    alignment="availability",
+)
+
 # Historical trailing P/E on a split-adjusted price timeline
 pe = await client.financials.valuation(
     "NVDA",
@@ -207,6 +215,8 @@ fund_class = await client.companies.funds.get("LACAX")
 
 See [Financial series](docs/financial-series.md) for the data contract,
 point-in-time semantics, source tradeoffs, and metric roadmap.
+See [Fundamentals validation](docs/fundamentals-validation.md) for measured test
+coverage and the remaining work toward broad, independently verified histories.
 
 ## HTTP API
 
