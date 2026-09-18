@@ -101,3 +101,63 @@ instant facts, minimized filing context, persisted schema migration, later debt
 decision evidence, historical revisions, resolver fault injection, required
 comparability warnings, and corruption outside the previous five-year audit cut.
 The original 20-issuer numeric expectations remain unchanged.
+
+## Full Company Facts audit — September 18, 2026
+
+Downloaded 20 complete Company Facts responses, one per pinned CIK, with request
+starts spaced at least one second apart. Total source size: 70,961,196 bytes;
+472,105 raw facts, with issuer-dependent coverage spanning 2004–2026. Raw responses
+and acquisition hashes are preserved outside git. All calculations run offline.
+
+At commit `108ab418`, the full matrix produced 64,380 observations across 2,280
+metric/frequency cases, with no resolver exceptions. The audit failed with 137
+structural findings and 424 warnings. These are finding counts, not unique bugs:
+
+| Structural finding | Count |
+| --- | ---: |
+| Duplicate nonannual period end | 88 |
+| Duplicate annual period end | 39 |
+| Duplicate exact economic window | 10 |
+
+| Issuer | Structural findings |
+| --- | ---: |
+| NEE | 95 |
+| COST | 26 |
+| MSFT | 8 |
+| SOFI | 4 |
+| BRK-B | 4 |
+
+Warnings comprised 255 concept transitions, 135 balance-equation residuals, and
+34 expected-but-unavailable metric/frequency cases. Other unavailable outputs
+include unsupported or optional metrics; absence is not automatically a defect.
+
+### Independently confirmed revenue defect
+
+The Microsoft September 2016 comparative income statement in its
+[September 2017 10-Q](https://www.sec.gov/Archives/edgar/data/789019/000156459017020171/msft-10q_20170930.htm)
+reports product revenue of $14.968B, service/other revenue of $6.960B, total revenue
+of $21.928B, and gross profit of $14.084B. The resolver preferred the product-only
+`SalesRevenueGoodsNet` over the available `SalesRevenueNet` total. Gross margin
+was consequently about 94.1% instead of 64.2% for that window.
+
+Normalization v8 corrects that precedence and adds a filing-backed regression.
+An as-of query at 2017-10-26 now matches the independently transcribed total and
+gross margin using the complete captured payload. This mapping fix does not
+resolve the historical period conflicts below.
+
+### Remaining merge blockers
+
+- MSFT, NEE, COST, and BRK-B have historical contexts with the same end date but
+  start dates differing by days. Some values match, others do not. Canonical
+  period reconciliation needs source-backed rules and as-of regression cases.
+- NEE's overlapping annual contexts also generate repeated Q4 windows. The Q4
+  generator must not emit the same derived window twice or choose among
+  conflicting annual inputs by iteration order.
+- SOFI's September 2020 contexts have different starts and materially different
+  share counts, income, and cash flow. Do not collapse these as date typos;
+  investigate historical entity/accounting continuity in the primary filings.
+- Expanded numeric oracles, sector semantics, custom-tag/IFRS/currency support,
+  and complete support-loss expectations remain unfinished as described above.
+
+Keep the PR on hold. Do not weaken the structural checks or discard conflicting
+observations merely to obtain a green full-history audit.

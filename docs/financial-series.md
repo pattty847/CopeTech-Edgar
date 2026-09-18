@@ -170,3 +170,7 @@ decision evidence. Later evidence must not backdate a newly justified total.
 Generic sector-sensitive formulas carry conditional comparability caveats on
 observations and payloads. These flags do not classify the issuer; they warn that
 the formula is unsuitable for the named business model without a product policy.
+
+Normalization version 8 additionally prefers total net sales (`SalesRevenueNet`)
+over the product-only subtotal (`SalesRevenueGoodsNet`). A filing-backed Microsoft
+2016 comparative regression checks both revenue and the resulting gross margin.

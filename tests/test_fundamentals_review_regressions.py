@@ -162,3 +162,34 @@ def test_existing_ledger_migrates_annual_context_without_losing_old_rows(tmp_pat
         assert await store.count_versions("TEST", "total_assets") == 2
         assert (await store.load_facts("TEST", "total_assets"))[0]["annual_period_end"] == "2024-01-28"
     asyncio.run(run())
+
+
+def test_msft_total_revenue_precedes_product_subtotal(tmp_path):
+    # Independently transcribed from the 2016 comparative income statement in:
+    # https://www.sec.gov/Archives/edgar/data/789019/000156459017020171/msft-10q_20170930.htm
+    # USD millions: product 14,968 + service/other 6,960 = total 21,928;
+    # total gross profit 14,084. Product revenue cannot be the denominator.
+    values = {
+        "SalesRevenueGoodsNet": 14_968_000_000,
+        "SalesRevenueNet": 21_928_000_000,
+        "GrossProfit": 14_084_000_000,
+    }
+    data = payload({
+        concept: [{
+            **fact(value, "2016-09-30", "2017-10-26", "0001564590-17-020171",
+                   fy=2018, start="2016-07-01", form="10-Q"),
+            "fp": "Q1",
+        }] for concept, value in values.items()
+    })
+    data["cik"] = 789019
+    async def run():
+        async def fetch(*args, **kwargs):
+            return data
+        service = FinancialSeriesService(fetch, tmp_path / "msft.sqlite")
+        revenue = await service.get_series("MSFT", metric="revenue", as_of="2017-10-26")
+        margin = await service.get_series("MSFT", metric="gross_margin", as_of="2017-10-26")
+        row, = revenue["observations"]
+        assert row["value"] == 21_928_000_000
+        assert row["selectedSource"]["concept"] == "SalesRevenueNet"
+        assert margin["observations"][0]["value"] == pytest.approx(14_084 / 21_928)
+    asyncio.run(run())
