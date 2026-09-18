@@ -215,6 +215,8 @@ fund_class = await client.companies.funds.get("LACAX")
 
 See [Financial series](docs/financial-series.md) for the data contract,
 point-in-time semantics, source tradeoffs, and metric roadmap.
+See [Fundamentals validation](docs/fundamentals-validation.md) for measured test
+coverage and the remaining work toward broad, independently verified histories.
 
 ## HTTP API
 

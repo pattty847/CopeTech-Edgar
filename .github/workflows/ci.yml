@@ -26,7 +26,17 @@ jobs:
         run: uv sync --extra dev
 
       - name: Verify independently reviewed Company Facts fixtures
+        env:
+          FUNDAMENTALS_COVERAGE_DIR: /tmp/fundamentals-coverage
         run: uv run python -m pytest tests/test_recorded_companyfacts.py -q
+
+      - name: Publish actual assertion coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fundamentals-assertion-coverage
+          path: /tmp/fundamentals-coverage/
+          if-no-files-found: error
 
   test:
     runs-on: ubuntu-latest

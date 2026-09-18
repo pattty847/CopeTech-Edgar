@@ -18,13 +18,6 @@ VALUATION_METRICS = (
     "ev_ebitda",
 )
 
-OBSERVATION_LIMITS = {
-    "annual": 5,
-    "quarterly": 12,
-    "ttm": 12,
-}
-
-
 async def build_metric_matrix(
     ticker: str,
     company_facts: dict[str, Any],
@@ -109,8 +102,6 @@ async def _resolve_metric(
         }
 
     observations = list(payload.get("observations") or [])
-    limit = OBSERVATION_LIMITS[frequency]
-    observations = observations[-limit:]
     return {
         "metric": metric,
         "frequency": frequency,

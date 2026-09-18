@@ -189,7 +189,8 @@ def _audit_matrix(
                 for row in metric.get("observations") or []
                 for flag in row.get("qualityFlags") or []
             }
-            if not any("not_comparable" in warning for warning in warnings):
+            condition = "reits" if issuer.applicability_profile == "reit" else "financial_companies"
+            if not any(f"not_comparable_for_{condition}" in warning for warning in warnings):
                 findings.append(
                     AuditFinding(
                         code="missing_comparability_warning",

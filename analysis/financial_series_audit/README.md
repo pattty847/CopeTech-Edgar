@@ -4,11 +4,19 @@ This workflow tests the complete public fundamentals contract against a fixed se
 of accounting shapes. It prefers an explicit unavailable result to a value that
 the filing does not support.
 
-The audit covers all 46 public reported/derived metrics returned by
+The audit executes all 46 public reported/derived metrics returned by
 `FinancialSeriesService.supported_metrics()`. It records the seven valuation
 series as `external_input_missing`: real valuation output also needs a separately
 versioned split-adjusted price and split-event source, which this SEC-only audit
 does not invent.
+
+Execution coverage is not independent value verification. The recorded corpus
+currently has 70 numeric assertions across 20 issuers; many metric/frequency
+combinations have no independently reviewed answer. See
+[`docs/fundamentals-validation.md`](../../docs/fundamentals-validation.md).
+All observations present in the input are checked; the audit no longer trims
+history to five annual or twelve quarterly/TTM observations. Minimized fixtures
+are still narrow recordings, not complete issuer histories.
 
 ## Corpus
 
@@ -123,6 +131,11 @@ semantic and scope findings visible for manual review.
 The `Fundamentals fixtures (20 issuers)` CI job is the deterministic merge gate.
 It runs without network access and fails when an independently reviewed value,
 concept, unavailable state, hierarchy, or economic window changes.
+It also verifies corpus identity and fixture hashes, requires the complete
+metric/frequency matrix, and rejects resolver exceptions, structural errors,
+and missing comparability disclosures anywhere in the matrix. CI uploads
+per-issuer assertion coverage, keeping unverified outputs visible. The gate
+does not claim that a successful calculation has been independently verified.
 
 The separate `Fundamentals live audit` workflow refreshes the complete corpus once
 a week at no more than one SEC request per second. It also supports a manual run.

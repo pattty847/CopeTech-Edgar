@@ -19,7 +19,7 @@ from .financial_metrics import (
 )
 
 
-NORMALIZATION_VERSION = 6
+NORMALIZATION_VERSION = 7
 QUARTER_MIN_DAYS = 70
 QUARTER_MAX_DAYS = 110
 # Cumulative (year-to-date) windows from Q2/Q3 filings: roughly six and nine
@@ -45,6 +45,7 @@ def extract_financial_facts(
 ) -> list[dict[str, Any]]:
     definition = _metric(metric)
     timestamp = retrieved_at or datetime.now(timezone.utc).isoformat()
+    annual_ends = _annual_filing_ends(facts_data) if definition.fact_type == "instant" else {}
     rows: list[dict[str, Any]] = []
     for concept_priority, (taxonomy, concept) in enumerate(definition.concepts):
         concept_data = (
@@ -70,6 +71,7 @@ def extract_financial_facts(
                     concept_flags=concept_quality_flags(definition, concept),
                 )
                 if normalized is not None:
+                    normalized["annual_period_end"] = annual_ends.get(normalized["accession_number"])
                     rows.append(normalized)
     return rows
 
@@ -118,7 +120,7 @@ def resolve_financial_series(
             observations = [
                 {
                     **row,
-                    "fiscalYear": _parse_date(row["periodEnd"]).year,
+                    "fiscalYear": annual_windows[(row["periodStart"], row["periodEnd"], row["unit"])],
                     "fiscalPeriod": "FY",
                 }
                 for row in instants
@@ -184,9 +186,41 @@ def resolve_financial_series(
     }
 
 
+def _annual_filing_ends(payload: dict[str, Any]) -> dict[str, str]:
+    """Infer report dates across the payload, rather than one sparse metric.
+
+    Annual duration contexts take precedence over instant contexts (which can
+    include post-year-end share counts). The recorder preserves this context
+    before minimizing facts. Fiscal-year labels are deliberately not dates.
+    """
+    durations: dict[str, str] = {}
+    instants: dict[str, str] = {}
+    for taxonomy in (payload.get("facts") or {}).values():
+        for concept in taxonomy.values():
+            for unit, entries in (concept.get("units") or {}).items():
+                for entry in entries:
+                    if entry.get("form") not in ANNUAL_FORMS or entry.get("fp") != "FY":
+                        continue
+                    accession, end = entry.get("accn"), entry.get("end")
+                    if not accession or not end:
+                        continue
+                    try:
+                        if _parse_date(end) > _parse_date(entry.get("filed")):
+                            continue
+                        if entry.get("start"):
+                            days = (_parse_date(end) - _parse_date(entry["start"])).days
+                            if ANNUAL_MIN_DAYS <= days <= ANNUAL_MAX_DAYS:
+                                durations[accession] = max(end, durations.get(accession, ""))
+                        elif unit not in {"shares", "pure"} and "/" not in unit:
+                            instants[accession] = max(end, instants.get(accession, ""))
+                    except (TypeError, ValueError):
+                        continue
+    return {**instants, **durations, **(payload.get("annualFilingEnds") or {})}
+
+
 def _instant_annual_windows(
     rows: list[dict[str, Any]],
-) -> set[tuple[str, str, str]]:
+) -> dict[tuple[str, str, str], Any]:
     """Return actual fiscal year-end instants, not every comparison in a 10-K.
 
     SEC Company Facts stamps a comparative balance with the fiscal metadata of
@@ -203,15 +237,20 @@ def _instant_annual_windows(
             row["form"] not in ANNUAL_FORMS
             or row.get("fiscal_period") != "FY"
             or fiscal_year is None
-            or str(fiscal_year) != str(_parse_date(row["period_end"]).year)
         ):
             continue
         by_filing.setdefault((row["accession_number"], fiscal_year), []).append(row)
-    return {
-        (latest["period_start"], latest["period_end"], latest["unit"])
-        for group in by_filing.values()
-        for latest in [max(group, key=lambda row: row["period_end"])]
-    }
+    windows: dict[tuple[str, str, str], Any] = {}
+    for group in sorted(by_filing.values(), key=lambda group: min(row["filed"] for row in group)):
+        latest = max(group, key=lambda row: row["period_end"])
+        # Context captured at extraction excludes historical-only disclosures in
+        # an otherwise current annual filing. Legacy direct callers fall back
+        # to the latest instant within their supplied filing facts.
+        end = latest.get("annual_period_end") or latest["period_end"]
+        for row in group:
+            if row["period_end"] == end:
+                windows.setdefault((row["period_start"], end, row["unit"]), row["fiscal_year"])
+    return windows
 
 
 def _normalize_raw_fact(

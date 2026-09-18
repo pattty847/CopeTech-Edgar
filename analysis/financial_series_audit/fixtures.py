@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from copetech_sec.financial_metrics import METRIC_REGISTRY
+from copetech_sec.financial_series import _annual_filing_ends
 
 
 ConceptKey = tuple[str, str]
@@ -122,6 +123,7 @@ def minimize_company_facts(
         "cik": payload.get("cik"),
         "entityName": payload.get("entityName"),
         "facts": minimized_facts,
+        "annualFilingEnds": _annual_filing_ends(payload),
     }
 
 

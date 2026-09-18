@@ -414,6 +414,8 @@ def _mixes_debt_parent_and_components(
         "long_term_debt",
         "debt_current",
         "debt_noncurrent",
+        "debt_current_total",
+        "long_term_debt_current",
         "short_term_borrowings",
     }
     return bool(
@@ -423,7 +425,7 @@ def _mixes_debt_parent_and_components(
         )
         or (
             "long_term_debt" in input_metrics
-            and input_metrics.intersection({"debt_current", "debt_noncurrent"})
+            and input_metrics.intersection({"debt_current", "debt_noncurrent", "long_term_debt_current", "debt_current_total"})
         )
     )
 

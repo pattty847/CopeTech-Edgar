@@ -54,6 +54,14 @@ def _long_term_children(values: dict[str, float]) -> tuple[str, ...]:
     return required if all(component in values for component in required) else ()
 
 
+def debt_decision_evidence(values: dict[str, float]) -> tuple[str, ...]:
+    """Non-arithmetic facts needed to justify adding debt outside an aggregate."""
+    selected = selected_debt_components(values)
+    if "total_debt" in selected and len(selected) > 1:
+        return _long_term_children(values)
+    return ()
+
+
 def _short_term_components(values: dict[str, float]) -> tuple[str, ...]:
     if "reported_short_term_borrowings" in values:
         return ("reported_short_term_borrowings",)

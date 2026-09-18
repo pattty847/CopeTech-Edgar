@@ -135,11 +135,10 @@ contributing SEC filing sources, and quality flags such as `eps_ttm_reconstructe
 
 ## Scope and roadmap
 
-The production registry currently includes USD revenue, diluted EPS, basic EPS,
-and weighted-average diluted shares.
-It is designed to add gross profit, operating income, net income, operating cash
-flow, capital expenditure, free cash flow, and carefully distinguished share-count
-metrics.
+The production registry currently exposes 46 fundamentals metrics (reported,
+derived, and ROIC) and 114 metric/frequency combinations. Valuation has seven
+additional price-dependent metrics. Registry presence is not proof that every
+metric is supported for every issuer; see [validation coverage](fundamentals-validation.md).
 
 Historical trailing P/E uses split-adjusted price with point-in-time TTM diluted
 EPS. Forward P/E remains out of scope because it requires timestamped consensus
@@ -152,3 +151,22 @@ concept. Quality flags expose
 conflicting filing values, multiple available concepts, amendments, derived Q4s,
 split adjustments, and missing point-in-time TTM EPS instead of silently hiding
 them.
+
+## Fiscal labels and decision evidence
+
+Normalization version 7 preserves issuer fiscal-year labels even when the fiscal
+year ends in the following calendar year. Extraction captures a shared annual
+filing-end context across concepts, preferring annual duration windows over
+instant dates. This prevents a sparse metric's transaction date from becoming
+the inferred year-end. The context is persisted and newly recorded minimized
+fixtures retain it. This is still inference from Company Facts: transition years,
+incomplete inputs, and authoritative filing report dates need filing-level support.
+
+Derived observations expose `inputMetrics` for arithmetic inputs and
+`evidenceMetrics` for all inputs needed to justify the answer, including debt
+hierarchy decisions. Availability, confidence, and source provenance include
+decision evidence. Later evidence must not backdate a newly justified total.
+
+Generic sector-sensitive formulas carry conditional comparability caveats on
+observations and payloads. These flags do not classify the issuer; they warn that
+the formula is unsuitable for the named business model without a product policy.
