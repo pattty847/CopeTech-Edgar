@@ -48,6 +48,24 @@ duration and resolved per economic window. Repeated comparative facts are
 deduplicated, later amendments win, and the earliest filing date carrying the
 selected value remains its availability date.
 
+Instant annual series keep only the latest eligible balance date from each
+annual filing. They do not treat every older comparison repeated in a 10-K as a
+new annual period. Annual fiscal labels identify the economic balance date,
+because Company Facts `fy` and `fp` describe the filing context and can belong
+to a later year for comparative facts.
+
+`net_debt` prefers a reported aggregate `total_debt` fact. It falls back to the
+sum of separately reported current and noncurrent debt only when no aggregate
+exists, so parent totals and their components are never added together. Missing
+debt facts produce no net-debt observation; absence is not treated as zero.
+The result is the generic formula `total debt - cash - short-term investments`.
+This metric is not comparable for financial companies, where deposits and
+other funding liabilities are part of operations rather than ordinary corporate
+leverage, and the payload carries that warning.
+
+`invested_capital` uses the same debt hierarchy and missing-data rule. It does
+not calculate equity minus cash when no supported debt fact is available.
+
 Canonical quarterly revenue derives Q4 only when a compatible annual value and
 three standalone quarters exist:
 
@@ -117,18 +135,42 @@ contributing SEC filing sources, and quality flags such as `eps_ttm_reconstructe
 
 ## Scope and roadmap
 
-The production registry currently includes USD revenue, diluted EPS, basic EPS,
-and weighted-average diluted shares.
-It is designed to add gross profit, operating income, net income, operating cash
-flow, capital expenditure, free cash flow, and carefully distinguished share-count
-metrics.
+The production registry currently exposes 46 fundamentals metrics (reported,
+derived, and ROIC) and 114 metric/frequency combinations. Valuation has seven
+additional price-dependent metrics. Registry presence is not proof that every
+metric is supported for every issuer; see [validation coverage](fundamentals-validation.md).
 
 Historical trailing P/E uses split-adjusted price with point-in-time TTM diluted
 EPS. Forward P/E remains out of scope because it requires timestamped consensus
 estimates.
 
-Current limitations include USD-only revenue, Company Facts rather than
-filing-level fallback, and no estimate/forward-metric source. Quality flags expose
+Current limitations include USD-only facts, Company Facts rather than
+filing-level fallback, and no estimate/forward-metric source. Company extension
+tags remain unavailable unless the SEC maps them into a standard taxonomy
+concept. Quality flags expose
 conflicting filing values, multiple available concepts, amendments, derived Q4s,
 split adjustments, and missing point-in-time TTM EPS instead of silently hiding
 them.
+
+## Fiscal labels and decision evidence
+
+Normalization version 7 preserves issuer fiscal-year labels even when the fiscal
+year ends in the following calendar year. Extraction captures a shared annual
+filing-end context across concepts, preferring annual duration windows over
+instant dates. This prevents a sparse metric's transaction date from becoming
+the inferred year-end. The context is persisted and newly recorded minimized
+fixtures retain it. This is still inference from Company Facts: transition years,
+incomplete inputs, and authoritative filing report dates need filing-level support.
+
+Derived observations expose `inputMetrics` for arithmetic inputs and
+`evidenceMetrics` for all inputs needed to justify the answer, including debt
+hierarchy decisions. Availability, confidence, and source provenance include
+decision evidence. Later evidence must not backdate a newly justified total.
+
+Generic sector-sensitive formulas carry conditional comparability caveats on
+observations and payloads. These flags do not classify the issuer; they warn that
+the formula is unsuitable for the named business model without a product policy.
+
+Normalization version 8 additionally prefers total net sales (`SalesRevenueNet`)
+over the product-only subtotal (`SalesRevenueGoodsNet`). A filing-backed Microsoft
+2016 comparative regression checks both revenue and the resulting gross margin.

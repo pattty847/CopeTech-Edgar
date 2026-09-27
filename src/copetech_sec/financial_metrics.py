@@ -21,6 +21,7 @@ class MetricDefinition:
     # metric label. Preserve coverage, but make that semantic compromise travel
     # with every selected fact instead of hiding it in registry order.
     concept_quality_flags: tuple[tuple[str, tuple[str, ...]], ...] = ()
+    public: bool = True
 
 
 METRIC_REGISTRY: dict[str, MetricDefinition] = {
@@ -29,16 +30,23 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
         label="Revenue",
         fact_type="duration",
         concepts=(
+            ("us-gaap", "RevenuesNetOfInterestExpense"),
+            ("us-gaap", "Revenues"),
             ("us-gaap", "RevenueFromContractWithCustomerExcludingAssessedTax"),
             ("us-gaap", "RevenueFromContractWithCustomerIncludingAssessedTax"),
-            ("us-gaap", "Revenues"),
-            ("us-gaap", "SalesRevenueGoodsNet"),
             ("us-gaap", "SalesRevenueNet"),
+            ("us-gaap", "SalesRevenueGoodsNet"),
             ("ifrs-full", "Revenue"),
             ("ifrs-full", "RevenueFromContractsWithCustomers"),
         ),
         valid_units=("USD",),
         aggregation="sum",
+        concept_quality_flags=(
+            (
+                "RevenuesNetOfInterestExpense",
+                ("financial_company_revenue_not_comparable",),
+            ),
+        ),
     ),
     "diluted_eps": MetricDefinition(
         id="diluted_eps",
@@ -290,6 +298,87 @@ METRIC_REGISTRY: dict[str, MetricDefinition] = {
         valid_units=("USD",),
         aggregation="point_in_time",
     ),
+    "short_term_borrowings": MetricDefinition(
+        id="short_term_borrowings",
+        label="Short-term borrowings",
+        fact_type="instant",
+        concepts=(
+            ("us-gaap", "ShortTermBorrowings"),
+            ("us-gaap", "CommercialPaper"),
+        ),
+        valid_units=("USD",),
+        aggregation="point_in_time",
+    ),
+    "debt_current_total": MetricDefinition(
+        id="debt_current_total",
+        label="Total current debt",
+        fact_type="instant",
+        concepts=(("us-gaap", "DebtCurrent"),),
+        valid_units=("USD",),
+        aggregation="point_in_time",
+        public=False,
+    ),
+    "long_term_debt_current": MetricDefinition(
+        id="long_term_debt_current",
+        label="Current maturities of long-term debt",
+        fact_type="instant",
+        concepts=(
+            ("us-gaap", "LongTermDebtCurrent"),
+            ("us-gaap", "LongTermDebtAndCapitalLeaseObligationsCurrent"),
+        ),
+        valid_units=("USD",),
+        aggregation="point_in_time",
+        public=False,
+    ),
+    "reported_short_term_borrowings": MetricDefinition(
+        id="reported_short_term_borrowings",
+        label="Reported total short-term borrowings",
+        fact_type="instant",
+        concepts=(("us-gaap", "ShortTermBorrowings"),),
+        valid_units=("USD",),
+        aggregation="point_in_time",
+        public=False,
+    ),
+    "commercial_paper": MetricDefinition(
+        id="commercial_paper",
+        label="Commercial paper",
+        fact_type="instant",
+        concepts=(("us-gaap", "CommercialPaper"),),
+        valid_units=("USD",),
+        aggregation="point_in_time",
+        public=False,
+    ),
+    "other_short_term_borrowings": MetricDefinition(
+        id="other_short_term_borrowings",
+        label="Other short-term borrowings",
+        fact_type="instant",
+        concepts=(("us-gaap", "OtherShortTermBorrowings"),),
+        valid_units=("USD",),
+        aggregation="point_in_time",
+        public=False,
+    ),
+    "long_term_debt": MetricDefinition(
+        id="long_term_debt",
+        label="Long-term debt",
+        fact_type="instant",
+        concepts=(
+            ("us-gaap", "LongTermDebt"),
+            ("us-gaap", "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities"),
+            ("us-gaap", "NotesPayable"),
+        ),
+        valid_units=("USD",),
+        aggregation="point_in_time",
+    ),
+    "total_debt": MetricDefinition(
+        id="total_debt",
+        label="Total debt",
+        fact_type="instant",
+        concepts=(
+            ("us-gaap", "DebtLongtermAndShorttermCombinedAmount"),
+        ),
+        valid_units=("USD",),
+        aggregation="point_in_time",
+    ),
     "current_assets": MetricDefinition(
         id="current_assets",
         label="Current assets",
@@ -372,6 +461,7 @@ def list_supported_metrics() -> list[dict[str, Any]]:
             ],
         }
         for definition in METRIC_REGISTRY.values()
+        if definition.public
     ]
 
 

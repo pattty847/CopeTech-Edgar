@@ -19,7 +19,7 @@ from .financial_metrics import (
 )
 
 
-NORMALIZATION_VERSION = 3
+NORMALIZATION_VERSION = 8
 QUARTER_MIN_DAYS = 70
 QUARTER_MAX_DAYS = 110
 # Cumulative (year-to-date) windows from Q2/Q3 filings: roughly six and nine
@@ -45,6 +45,7 @@ def extract_financial_facts(
 ) -> list[dict[str, Any]]:
     definition = _metric(metric)
     timestamp = retrieved_at or datetime.now(timezone.utc).isoformat()
+    annual_ends = _annual_filing_ends(facts_data) if definition.fact_type == "instant" else {}
     rows: list[dict[str, Any]] = []
     for concept_priority, (taxonomy, concept) in enumerate(definition.concepts):
         concept_data = (
@@ -70,6 +71,7 @@ def extract_financial_facts(
                     concept_flags=concept_quality_flags(definition, concept),
                 )
                 if normalized is not None:
+                    normalized["annual_period_end"] = annual_ends.get(normalized["accession_number"])
                     rows.append(normalized)
     return rows
 
@@ -114,13 +116,13 @@ def resolve_financial_series(
             observations = []
             extra_warnings.add("ttm_not_applicable_for_instant_metric")
         elif frequency == "annual":
-            annual_windows = {
-                (row["period_start"], row["period_end"], row["unit"])
-                for row in candidates
-                if row["form"] in ANNUAL_FORMS
-            }
+            annual_windows = _instant_annual_windows(candidates)
             observations = [
-                row
+                {
+                    **row,
+                    "fiscalYear": annual_windows[(row["periodStart"], row["periodEnd"], row["unit"])],
+                    "fiscalPeriod": "FY",
+                }
                 for row in instants
                 if (row["periodStart"], row["periodEnd"], row["unit"])
                 in annual_windows
@@ -182,6 +184,73 @@ def resolve_financial_series(
         "observations": observations,
         "warnings": warnings,
     }
+
+
+def _annual_filing_ends(payload: dict[str, Any]) -> dict[str, str]:
+    """Infer report dates across the payload, rather than one sparse metric.
+
+    Annual duration contexts take precedence over instant contexts (which can
+    include post-year-end share counts). The recorder preserves this context
+    before minimizing facts. Fiscal-year labels are deliberately not dates.
+    """
+    durations: dict[str, str] = {}
+    instants: dict[str, str] = {}
+    for taxonomy in (payload.get("facts") or {}).values():
+        for concept in taxonomy.values():
+            for unit, entries in (concept.get("units") or {}).items():
+                for entry in entries:
+                    if entry.get("form") not in ANNUAL_FORMS or entry.get("fp") != "FY":
+                        continue
+                    accession, end = entry.get("accn"), entry.get("end")
+                    if not accession or not end:
+                        continue
+                    try:
+                        if _parse_date(end) > _parse_date(entry.get("filed")):
+                            continue
+                        if entry.get("start"):
+                            days = (_parse_date(end) - _parse_date(entry["start"])).days
+                            if ANNUAL_MIN_DAYS <= days <= ANNUAL_MAX_DAYS:
+                                durations[accession] = max(end, durations.get(accession, ""))
+                        elif unit not in {"shares", "pure"} and "/" not in unit:
+                            instants[accession] = max(end, instants.get(accession, ""))
+                    except (TypeError, ValueError):
+                        continue
+    return {**instants, **durations, **(payload.get("annualFilingEnds") or {})}
+
+
+def _instant_annual_windows(
+    rows: list[dict[str, Any]],
+) -> dict[tuple[str, str, str], Any]:
+    """Return actual fiscal year-end instants, not every comparison in a 10-K.
+
+    SEC Company Facts stamps a comparative balance with the fiscal metadata of
+    the filing that repeats it. An old date in a later 10-K is therefore not an
+    annual observation for that later fiscal year. Within each annual filing,
+    the latest eligible instant is the filing's balance-sheet date; transaction
+    dates and older comparisons stay out of the annual series.
+    """
+
+    by_filing: dict[tuple[str, Any], list[dict[str, Any]]] = {}
+    for row in rows:
+        fiscal_year = row.get("fiscal_year")
+        if (
+            row["form"] not in ANNUAL_FORMS
+            or row.get("fiscal_period") != "FY"
+            or fiscal_year is None
+        ):
+            continue
+        by_filing.setdefault((row["accession_number"], fiscal_year), []).append(row)
+    windows: dict[tuple[str, str, str], Any] = {}
+    for group in sorted(by_filing.values(), key=lambda group: min(row["filed"] for row in group)):
+        latest = max(group, key=lambda row: row["period_end"])
+        # Context captured at extraction excludes historical-only disclosures in
+        # an otherwise current annual filing. Legacy direct callers fall back
+        # to the latest instant within their supplied filing facts.
+        end = latest.get("annual_period_end") or latest["period_end"]
+        for row in group:
+            if row["period_end"] == end:
+                windows.setdefault((row["period_start"], end, row["unit"]), row["fiscal_year"])
+    return windows
 
 
 def _normalize_raw_fact(
@@ -270,7 +339,8 @@ def _resolve_duration_windows(
     for row in rows:
         # duration_days of 0 is a legitimate instant window — `or` would eat it.
         duration_days = row.get("duration_days")
-        if accepted(-1 if duration_days is None else int(duration_days)):
+        annual_form = cadence != "annual" or row.get("form") in ANNUAL_FORMS
+        if annual_form and accepted(-1 if duration_days is None else int(duration_days)):
             key = (row["period_start"], row["period_end"], row["unit"])
             grouped.setdefault(key, []).append(row)
     return [
@@ -443,7 +513,7 @@ def _add_derived_fourth_quarters(
             continue
         fourth_start = _next_day(contained[-1]["periodEnd"])
         window = (fourth_start, annual_row["periodEnd"])
-        if window in existing_windows:
+        if fourth_start > annual_row["periodEnd"] or window in existing_windows:
             continue
         value = float(annual_row["value"]) - sum(float(row["value"]) for row in contained)
         contributors = [annual_row, *contained]

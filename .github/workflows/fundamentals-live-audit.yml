@@ -1,0 +1,97 @@
+name: Fundamentals live audit
+
+on:
+  # One low-rate refresh each week catches SEC revisions and taxonomy drift
+  # without putting live network behavior on the pull-request path.
+  schedule:
+    - cron: "23 13 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-company-facts:
+    name: Live Company Facts corpus
+    runs-on: ubuntu-latest
+    env:
+      SEC_API_USER_AGENT: ${{ secrets.SEC_API_USER_AGENT }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check live-audit configuration
+        id: configuration
+        shell: bash
+        run: |
+          if [[ -n "$SEC_API_USER_AGENT" ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "## Fundamentals live audit skipped" >> "$GITHUB_STEP_SUMMARY"
+            echo "Repository secret SEC_API_USER_AGENT is not configured." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Install uv
+        if: steps.configuration.outputs.configured == 'true'
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.12
+        if: steps.configuration.outputs.configured == 'true'
+        run: uv python install 3.12
+
+      - name: Install project with dev extras
+        if: steps.configuration.outputs.configured == 'true'
+        run: uv sync --extra dev
+
+      - name: Refresh and audit the 20-issuer corpus
+        if: steps.configuration.outputs.configured == 'true'
+        run: |
+          uv run python -m analysis.financial_series_audit.run \
+            --refresh \
+            --request-interval-seconds 1.0
+
+      - name: Publish review summary
+        if: always() && steps.configuration.outputs.configured == 'true'
+        shell: bash
+        run: |
+          latest="$(find analysis/financial_series_audit/output -mindepth 1 -maxdepth 1 -type d -print | sort | tail -1)"
+          if [[ -z "$latest" ]]; then
+            echo "## Fundamentals audit produced no report" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          uv run python - "$latest" >> "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json
+          from collections import Counter
+          from pathlib import Path
+          import sys
+
+          run_dir = Path(sys.argv[1])
+          payload = json.loads((run_dir / "findings.json").read_text())
+          findings = payload.get("findings", payload) if isinstance(payload, dict) else payload
+          severities = Counter(row["severity"] for row in findings)
+          warning_codes = Counter(
+              row["code"] for row in findings if row["severity"] == "warning"
+          )
+          print("## Fundamentals live audit")
+          print()
+          print(f"- Structural errors: {severities['error']}")
+          print(f"- Review warnings: {severities['warning']}")
+          print("- Warnings do not fail this workflow.")
+          if warning_codes:
+              print()
+              print("| Review finding | Count |")
+              print("| --- | ---: |")
+              for code, count in warning_codes.most_common():
+                  print(f"| `{code}` | {count} |")
+          PY
+
+      - name: Upload audit report
+        if: always() && steps.configuration.outputs.configured == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fundamentals-live-audit-${{ github.run_id }}
+          path: analysis/financial_series_audit/output/
+          if-no-files-found: warn
+          retention-days: 30

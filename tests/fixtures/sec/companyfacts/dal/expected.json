@@ -1,0 +1,1 @@
+{"schemaVersion":1,"periods":[{"frequency":"annual","periodEnd":"2025-12-31","metrics":{"revenue":{"value":63364000000,"concept":"RevenueFromContractWithCustomerExcludingAssessedTax"}}},{"frequency":"quarterly","periodEnd":"2026-06-30","metrics":{"revenue":{"value":19757000000,"concept":"RevenueFromContractWithCustomerExcludingAssessedTax"}}}]}

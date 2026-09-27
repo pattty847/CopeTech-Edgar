@@ -1,0 +1,19 @@
+{
+  "acceptedConceptRegistrySha256": "3a9a66afcd8eb7cb488d0ffb8c178c209e387551d0016f13bdc4fb4c674b46d6",
+  "cik": 1594805,
+  "conceptInventoryContentSha256": "eeded6501feabe87e9184c4f3db111d9753cd310fe94ddd41463c39718460720",
+  "controlConcepts": [],
+  "entityName": "Shopify Inc.",
+  "fixtureContentSha256": "ff8424bfbcab4018d2486299d268facccc255965d64197a16ff37141d9207253",
+  "fixtureFactCount": 79,
+  "retrievedAt": "2026-09-15T05:58:23Z",
+  "schemaVersion": 1,
+  "sourceContentSha256": "f8c5337244def84f8a90fd7dd29a7c5e3016ed80275fd6ad445c8d33cf97cf36",
+  "sourceFactCount": 5548,
+  "sourceUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001594805.json",
+  "symbol": "SHOP",
+  "targetPeriodEnds": [
+    "2025-12-31",
+    "2026-06-30"
+  ]
+}

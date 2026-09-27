@@ -1,0 +1,19 @@
+{
+  "acceptedConceptRegistrySha256": "3a9a66afcd8eb7cb488d0ffb8c178c209e387551d0016f13bdc4fb4c674b46d6",
+  "cik": 1326801,
+  "conceptInventoryContentSha256": "c34f56058e38ab3119af3acdb24df84e5a5d7482eddd383074439d98dadd61fa",
+  "controlConcepts": [],
+  "entityName": "Meta Platforms, Inc.",
+  "fixtureContentSha256": "d31a726853b3c79be0947f966c8f98f299a7816d66880686d948fd0ddcbb7458",
+  "fixtureFactCount": 93,
+  "retrievedAt": "2026-09-15T05:57:49Z",
+  "schemaVersion": 1,
+  "sourceContentSha256": "6e5b9f6b69558f8d3fd268b8a77516ceae0caaf22904b82bae72b111d4688bf0",
+  "sourceFactCount": 18053,
+  "sourceUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001326801.json",
+  "symbol": "META",
+  "targetPeriodEnds": [
+    "2025-12-31",
+    "2026-06-30"
+  ]
+}

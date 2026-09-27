@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "reviewedFilings": [
+    "https://www.sec.gov/Archives/edgar/data/1818874/000181887424000026/sofi-20231231.htm",
+    "https://www.sec.gov/Archives/edgar/data/1818874/000181887424000121/sofi-20240331.htm"
+  ],
+  "periods": [
+    {
+      "frequency": "annual",
+      "periodEnd": "2023-12-31",
+      "metrics": {
+        "cash_equivalents": {"value": 3085020000, "concept": "CashAndCashEquivalentsAtCarryingValue"},
+        "revenue": {"value": 2122789000, "concept": "RevenuesNetOfInterestExpense"},
+        "stockholders_equity": {"value": 5234612000, "concept": "StockholdersEquity"},
+        "total_assets": {"value": 30074858000, "concept": "Assets"},
+        "total_debt": {"value": 5233416000, "concept": "DebtLongtermAndShorttermCombinedAmount"},
+        "total_liabilities": {"value": 24519872000, "concept": "Liabilities"},
+        "net_debt": {"value": 2148396000, "inputMetrics": ["total_debt", "cash_equivalents"]}
+      }
+    },
+    {
+      "frequency": "quarterly",
+      "periodEnd": "2024-03-31",
+      "metrics": {
+        "cash_equivalents": {"value": 3693390000, "concept": "CashAndCashEquivalentsAtCarryingValue"},
+        "revenue": {"value": 644995000, "concept": "RevenuesNetOfInterestExpense"},
+        "stockholders_equity": {"value": 5825605000, "concept": "StockholdersEquity"},
+        "total_assets": {"value": 31305760000, "concept": "Assets"},
+        "total_debt": {"value": 2891317000, "concept": "DebtLongtermAndShorttermCombinedAmount"},
+        "total_liabilities": {"value": 25159781000, "concept": "Liabilities"},
+        "net_debt": {"value": -802073000, "inputMetrics": ["total_debt", "cash_equivalents"]}
+      }
+    }
+  ]
+}

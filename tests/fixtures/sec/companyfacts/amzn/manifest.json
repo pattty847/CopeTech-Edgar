@@ -1,0 +1,19 @@
+{
+  "acceptedConceptRegistrySha256": "3a9a66afcd8eb7cb488d0ffb8c178c209e387551d0016f13bdc4fb4c674b46d6",
+  "cik": 1018724,
+  "conceptInventoryContentSha256": "7e472834d4f60aadae250501509e713a3f6cd2291104e2d6fb4c0d89f393f423",
+  "controlConcepts": [],
+  "entityName": "AMAZON COM INC",
+  "fixtureContentSha256": "fb15f3a1cac096e64f02b35a08cc7ec10b232c39a28d0e3598ef554388681eb7",
+  "fixtureFactCount": 114,
+  "retrievedAt": "2026-09-15T05:57:50Z",
+  "schemaVersion": 1,
+  "sourceContentSha256": "7ad8b0933dbaad36230c307da7748d2e359ab077a14bae5236a85cd093be421b",
+  "sourceFactCount": 29761,
+  "sourceUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001018724.json",
+  "symbol": "AMZN",
+  "targetPeriodEnds": [
+    "2025-12-31",
+    "2026-06-30"
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "cik": 1046179,
+  "entityName": "Taiwan Semiconductor Manufacturing Company Limited",
+  "facts": {
+    "dei": {
+      "EntityCommonStockSharesOutstanding": {
+        "description": "Indicate number of shares or other units outstanding of each of registrant's classes of capital or common stock or other ownership interests, if and as stated on cover of related periodic report. Where multiple classes or units exist define each class/interest by adding class of stock items such as Common Class A [Member], Common Class B [Member] or Partnership Interest [Member] onto the Instrument [Domain] of the Entity Listings, Instrument.",
+        "label": "Entity Common Stock, Shares Outstanding",
+        "units": {
+          "shares": [
+            {
+              "accn": "0001193125-25-083423",
+              "end": "2024-12-31",
+              "filed": "2025-04-17",
+              "form": "20-F",
+              "fp": "FY",
+              "frame": "CY2024Q4I",
+              "fy": 2024,
+              "val": 25932733242
+            }
+          ]
+        }
+      }
+    },
+    "ifrs-full": {
+      "Revenue": {
+        "description": null,
+        "label": null,
+        "units": {
+          "TWD": [
+            {
+              "accn": "0001193125-21-301021",
+              "end": "2021-06-30",
+              "filed": "2021-10-18",
+              "form": "6-K",
+              "fp": null,
+              "fy": null,
+              "start": "2021-01-01",
+              "val": 734555400000
+            },
+            {
+              "accn": "0001193125-25-083423",
+              "end": "2024-12-31",
+              "filed": "2025-04-17",
+              "form": "20-F",
+              "fp": "FY",
+              "frame": "CY2024",
+              "fy": 2024,
+              "start": "2024-01-01",
+              "val": 2894307700000
+            }
+          ],
+          "USD": [
+            {
+              "accn": "0001193125-21-301021",
+              "end": "2021-06-30",
+              "filed": "2021-10-18",
+              "form": "6-K",
+              "fp": null,
+              "fy": null,
+              "start": "2021-01-01",
+              "val": 26318700000
+            },
+            {
+              "accn": "0001193125-25-083423",
+              "end": "2024-12-31",
+              "filed": "2025-04-17",
+              "form": "20-F",
+              "fp": "FY",
+              "frame": "CY2024",
+              "fy": 2024,
+              "start": "2024-01-01",
+              "val": 88268000000
+            }
+          ]
+        }
+      },
+      "RevenueFromContractsWithCustomers": {
+        "description": null,
+        "label": null,
+        "units": {
+          "TWD": [
+            {
+              "accn": "0001193125-21-301021",
+              "end": "2021-06-30",
+              "filed": "2021-10-18",
+              "form": "6-K",
+              "fp": null,
+              "fy": null,
+              "start": "2021-01-01",
+              "val": 734555400000
+            },
+            {
+              "accn": "0001193125-25-083423",
+              "end": "2024-12-31",
+              "filed": "2025-04-17",
+              "form": "20-F",
+              "fp": "FY",
+              "frame": "CY2024",
+              "fy": 2024,
+              "start": "2024-01-01",
+              "val": 2894307700000
+            }
+          ]
+        }
+      }
+    }
+  }
+}

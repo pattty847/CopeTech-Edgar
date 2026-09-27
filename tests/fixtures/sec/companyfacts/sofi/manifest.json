@@ -1,0 +1,28 @@
+{
+  "acceptedConceptRegistrySha256": "6421165288c4a1e579550a8ab012c614661de073e8b776f7e5c7c2e2cfcd4793",
+  "cik": 1818874,
+  "conceptInventoryContentSha256": "40009a9dd93653ee30799b8f9e23fef243291b6f8627e001a2625a96bc5ad630",
+  "controlConcepts": [
+    {
+      "concept": "DebtInstrumentCarryingAmount",
+      "taxonomy": "us-gaap"
+    },
+    {
+      "concept": "TemporaryEquityCarryingAmountAttributableToParent",
+      "taxonomy": "us-gaap"
+    }
+  ],
+  "entityName": "SoFi Technologies, Inc.",
+  "fixtureContentSha256": "319b3caa86ac616fbfaa0febb9791dce703641f18ef8ff4f35bf438059521376",
+  "fixtureFactCount": 158,
+  "retrievedAt": "2026-09-15T01:30:39Z",
+  "schemaVersion": 1,
+  "sourceContentSha256": "0df7a437e9ccf0fda7107034ef13e9ab71983dda78c28c4a4648499f0a0bea95",
+  "sourceFactCount": 10860,
+  "sourceUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001818874.json",
+  "symbol": "SOFI",
+  "targetPeriodEnds": [
+    "2023-12-31",
+    "2024-03-31"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "reviewedFilings": [
+    "https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/aapl-20240928.htm",
+    "https://www.sec.gov/Archives/edgar/data/320193/000032019325000008/aapl-20241228.htm"
+  ],
+  "periods": [
+    {
+      "frequency": "annual",
+      "periodEnd": "2024-09-28",
+      "metrics": {
+        "cash_equivalents": {"value": 29943000000, "concept": "CashAndCashEquivalentsAtCarryingValue"},
+        "revenue": {"value": 391035000000, "concept": "RevenueFromContractWithCustomerExcludingAssessedTax"},
+        "short_term_borrowings": {"value": 9967000000, "concept": "CommercialPaper"},
+        "stockholders_equity": {"value": 56950000000, "concept": "StockholdersEquity"},
+        "total_assets": {"value": 364980000000, "concept": "Assets"},
+        "long_term_debt": {"value": 96662000000, "concept": "LongTermDebt"},
+        "total_liabilities": {"value": 308030000000, "concept": "Liabilities"},
+        "net_debt": {"value": 41458000000, "inputMetrics": ["long_term_debt", "commercial_paper", "cash_equivalents", "short_term_investments"]}
+      }
+    },
+    {
+      "frequency": "quarterly",
+      "periodEnd": "2024-12-28",
+      "metrics": {
+        "cash_equivalents": {"value": 30299000000, "concept": "CashAndCashEquivalentsAtCarryingValue"},
+        "revenue": {"value": 124300000000, "concept": "RevenueFromContractWithCustomerExcludingAssessedTax"},
+        "short_term_borrowings": {"value": 1995000000, "concept": "CommercialPaper"},
+        "stockholders_equity": {"value": 66758000000, "concept": "StockholdersEquity"},
+        "total_assets": {"value": 344085000000, "concept": "Assets"},
+        "long_term_debt": {"value": 94800000000, "concept": "LongTermDebt"},
+        "total_liabilities": {"value": 277327000000, "concept": "Liabilities"},
+        "net_debt": {"value": 43020000000, "inputMetrics": ["long_term_debt", "commercial_paper", "cash_equivalents", "short_term_investments"]}
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "acceptedConceptRegistrySha256": "3a9a66afcd8eb7cb488d0ffb8c178c209e387551d0016f13bdc4fb4c674b46d6",
+  "cik": 753308,
+  "conceptInventoryContentSha256": "38dd122197a4f00b09eaf9d9aa2c98314fe37fa176762d3faf2c32961fa9e49c",
+  "controlConcepts": [],
+  "entityName": "NEXTERA ENERGY INC",
+  "fixtureContentSha256": "d6cedcd87c8b1a6fc239c38cd76369e7ff9efcaa5effaa524392c6f2fdaa72b1",
+  "fixtureFactCount": 69,
+  "retrievedAt": "2026-09-15T05:58:06Z",
+  "schemaVersion": 1,
+  "sourceContentSha256": "cc73619aaa65ba8105a223592d511f2e6e9cf220cd95d596e365d12ee07d2212",
+  "sourceFactCount": 26332,
+  "sourceUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000753308.json",
+  "symbol": "NEE",
+  "targetPeriodEnds": [
+    "2025-12-31",
+    "2026-03-31"
+  ]
+}

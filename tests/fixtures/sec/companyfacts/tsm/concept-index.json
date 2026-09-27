@@ -1,0 +1,5048 @@
+{
+  "cik": 1046179,
+  "concepts": [
+    {
+      "concept": "EntityCommonStockSharesOutstanding",
+      "factCount": 9,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": "Entity Common Stock, Shares Outstanding",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "dei",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "AccountingProfit",
+      "factCount": 24,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ActuarialAssumptionOfDiscountRates",
+      "factCount": 16,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "pure"
+      ]
+    },
+    {
+      "concept": "ActuarialAssumptionOfExpectedRatesOfSalaryIncreases",
+      "factCount": 16,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "pure"
+      ]
+    },
+    {
+      "concept": "ActuarialGainsLossesArisingFromChangesInDemographicAssumptionsNetDefinedBenefitLiabilityAsset",
+      "factCount": 8,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ActuarialGainsLossesArisingFromChangesInFinancialAssumptionsNetDefinedBenefitLiabilityAsset",
+      "factCount": 24,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ActuarialGainsLossesArisingFromExperienceAdjustmentsNetDefinedBenefitLiabilityAsset",
+      "factCount": 24,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "AdditionalAllowanceRecognisedInProfitOrLossAllowanceAccountForCreditLossesOfFinancialAssets",
+      "factCount": 2,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2016-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "AdditionalPaidinCapital",
+      "factCount": 19,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "AdditionsToRightofuseAssets",
+      "factCount": 17,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "AdjustedWeightedAverageShares",
+      "factCount": 11,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "AdjustmentsForCurrentTaxOfPriorPeriod",
+      "factCount": 26,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "AdjustmentsForDecreaseIncreaseInInventories",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "AdjustmentsForDecreaseIncreaseInOtherCurrentAssets",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "AdjustmentsForDecreaseIncreaseInOtherFinancialAssets",
+      "factCount": 4,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "AdjustmentsForDecreaseIncreaseInTradeAccountReceivable",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "AdjustmentsForDeferredTaxOfPriorPeriods",
+      "factCount": 1,
+      "firstPeriodEnd": "2024-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "AdjustmentsForGainLossOnDisposalOfInvestmentsInSubsidiariesJointVenturesAndAssociates",
+      "factCount": 5,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "AdjustmentsForIncreaseDecreaseInEmployeeBenefitLiabilities",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "AdjustmentsForIncreaseDecreaseInOtherCurrentLiabilities",
+      "factCount": 9,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "AdjustmentsForIncreaseDecreaseInTradeAccountPayable",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "AdjustmentsForIncreaseDecreaseInTradeAndOtherPayables",
+      "factCount": 11,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "AdjustmentsForProvisions",
+      "factCount": 7,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "AdjustmentsForSharebasedPayments",
+      "factCount": 24,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "AllowanceAccountForCreditLossesOfFinancialAssets",
+      "factCount": 30,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2023-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "AmortisationExpense",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "AmountsPayableRelatedPartyTransactions",
+      "factCount": 12,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ApplicableTaxRate",
+      "factCount": 6,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "pure"
+      ]
+    },
+    {
+      "concept": "Assets",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "BankingArrangementsClassifiedAsCashEquivalents",
+      "factCount": 13,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "BasicEarningsLossPerShare",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD/shares",
+        "USD/shares"
+      ]
+    },
+    {
+      "concept": "CapitalReserve",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "Cash",
+      "factCount": 18,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "CashAdvancesAndLoansMadeToOtherPartiesClassifiedAsInvestingActivities",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CashAndCashEquivalents",
+      "factCount": 54,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CashAndCashEquivalentsAmountContributedToFairValueOfPlanAssets",
+      "factCount": 16,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "CashAndCashEquivalentsClassifiedAsPartOfDisposalGroupHeldForSale",
+      "factCount": 1,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2014-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "CashFlowsFromLosingControlOfSubsidiariesOrOtherBusinessesClassifiedAsInvestingActivities",
+      "factCount": 1,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "CashFlowsFromUsedInFinancingActivities",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CashFlowsFromUsedInIncreaseDecreaseInCurrentBorrowings",
+      "factCount": 18,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CashFlowsFromUsedInInvestingActivities",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CashFlowsFromUsedInOperatingActivities",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CashFlowsFromUsedInOperations",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CashFlowsUsedInObtainingControlOfSubsidiariesOrOtherBusinessesClassifiedAsInvestingActivities",
+      "factCount": 1,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "CashOutflowForLeases",
+      "factCount": 17,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "CashReceiptsFromRepaymentOfAdvancesAndLoansMadeToOtherPartiesClassifiedAsInvestingActivities",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ChangesInPropertyPlantAndEquipment",
+      "factCount": 11,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ClosingForeignExchangeRate",
+      "factCount": 9,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "pure"
+      ]
+    },
+    {
+      "concept": "ComprehensiveIncome",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ComprehensiveIncomeAttributableToNoncontrollingInterests",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ComprehensiveIncomeAttributableToOwnersOfParent",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ContractLiabilities",
+      "factCount": 1,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "CorporateDebtInstrumentsHeld",
+      "factCount": 12,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "CostOfSales",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CumulativeGainLossOnDisposalOfInvestmentsInEquityInstrumentsDesignatedAsMeasuredAtFairValueThroughOtherComprehensiveIncome",
+      "factCount": 19,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "CurrentAccruedExpensesAndOtherCurrentLiabilities",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CurrentAssets",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CurrentBondsIssuedAndCurrentPortionOfNoncurrentBondsIssued",
+      "factCount": 17,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "CurrentDerivativeFinancialAssets",
+      "factCount": 3,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "CurrentDividendPayables",
+      "factCount": 20,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CurrentFinancialAssets",
+      "factCount": 8,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "CurrentFinancialAssetsAtAmortisedCost",
+      "factCount": 21,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CurrentFinancialAssetsAtFairValueThroughOtherComprehensiveIncome",
+      "factCount": 23,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CurrentFinancialAssetsAtFairValueThroughProfitOrLoss",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CurrentFinancialAssetsAtFairValueThroughProfitOrLossMandatorilyMeasuredAtFairValue",
+      "factCount": 4,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "CurrentFinancialAssetsAvailableforsale",
+      "factCount": 4,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CurrentFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncome",
+      "factCount": 15,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "CurrentFinancialLiabilities",
+      "factCount": 7,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2023-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "CurrentFinancialLiabilitiesAtFairValueThroughProfitOrLoss",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CurrentHeldtomaturityInvestments",
+      "factCount": 4,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CurrentLeaseLiabilities",
+      "factCount": 13,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "CurrentLiabilities",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CurrentPayablesForPurchaseOfNoncurrentAssets",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CurrentPortionOfLongtermBorrowings",
+      "factCount": 25,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CurrentRefundsProvision",
+      "factCount": 4,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CurrentTaxExpenseIncome",
+      "factCount": 26,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "CurrentTaxExpenseIncomeAndAdjustmentsForCurrentTaxOfPriorPeriods",
+      "factCount": 26,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "CurrentTaxLiabilitiesCurrent",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "CurrentTradeReceivables",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "DebtInstrumentsAmountContributedToFairValueOfPlanAssets",
+      "factCount": 16,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "DecreaseIncreaseThroughTaxOnSharebasedPaymentTransactions",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "DeductibleTemporaryDifferencesForWhichNoDeferredTaxAssetIsRecognised",
+      "factCount": 16,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxAssets",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxExpenseIncome",
+      "factCount": 26,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxExpenseIncomeRecognisedInProfitOrLoss",
+      "factCount": 1,
+      "firstPeriodEnd": "2024-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxExpenseIncomeRelatingToOriginationAndReversalOfTemporaryDifferences",
+      "factCount": 26,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxExpenseIncomeRelatingToTaxRateChangesOrImpositionOfNewTaxes",
+      "factCount": 6,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxLiabilities",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "DefinedBenefitObligationAtPresentValue",
+      "factCount": 16,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "DepreciationExpense",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "DepreciationRightofuseAssets",
+      "factCount": 17,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "DerivativeFinancialAssetsHeldForHedging",
+      "factCount": 4,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "DerivativeFinancialLiabilitiesHeldForHedging",
+      "factCount": 3,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "DescriptionOfDiscountRatesUsedInCurrentEstimateOfValueInUse",
+      "factCount": 17,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "pure"
+      ]
+    },
+    {
+      "concept": "DilutedEarningsLossPerShare",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD/shares",
+        "USD/shares"
+      ]
+    },
+    {
+      "concept": "DilutiveEffectOfShareOptionsOnNumberOfOrdinaryShares",
+      "factCount": 1,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "DividendsPaid",
+      "factCount": 26,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "DividendsPaidClassifiedAsFinancingActivities",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "DividendsPaidOrdinarySharesPerShare",
+      "factCount": 6,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD/shares"
+      ]
+    },
+    {
+      "concept": "DividendsReceivedClassifiedAsInvestingActivities",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "DividendsReceivedFromInvestmentsAccountedForUsingEquityMethodClassifiedAsInvestingActivities",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "DividendsRecognisedAsDistributionsToOwnersOfParent",
+      "factCount": 1,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "DividendsRecognisedAsDistributionsToOwnersPerShare",
+      "factCount": 78,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD/shares",
+        "USD/shares"
+      ]
+    },
+    {
+      "concept": "EffectOfExchangeRateChangesOnCashAndCashEquivalents",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "EmployeeBenefitsExpense",
+      "factCount": 6,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "Equity",
+      "factCount": 44,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "EquityAndLiabilities",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "EquityAttributableToOwnersOfParent",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "EquityInstrumentsAmountContributedToFairValueOfPlanAssets",
+      "factCount": 16,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "EstimateOfContributionsExpectedToBePaidToPlan",
+      "factCount": 8,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ExpenseFromSharebasedPaymentTransactionsInWhichGoodsOrServicesReceivedDidNotQualifyForRecognitionAsAssets",
+      "factCount": 9,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ExpenseRelatingToLeasesOfLowvalueAssetsForWhichRecognitionExemptionHasBeenUsed",
+      "factCount": 3,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2020-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ExpenseRelatingToShorttermLeasesForWhichRecognitionExemptionHasBeenUsed",
+      "factCount": 18,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ExpenseRelatingToVariableLeasePaymentsNotIncludedInMeasurementOfLeaseLiabilities",
+      "factCount": 8,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "FairValueOfFinancialAssetsReclassifiedAsMeasuredAtAmortisedCost",
+      "factCount": 1,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "FinanceCosts",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "FinanceIncome",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "FinancialAssets",
+      "factCount": 18,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "FinancialAssetsAtAmortisedCost",
+      "factCount": 15,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "FinancialAssetsAtFairValueThroughOtherComprehensiveIncome",
+      "factCount": 15,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "FinancialAssetsAtFairValueThroughProfitOrLoss",
+      "factCount": 4,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "FinancialAssetsAtFairValueThroughProfitOrLossClassifiedAsHeldForTrading",
+      "factCount": 3,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "FinancialAssetsAtFairValueThroughProfitOrLossDesignatedAsUponInitialRecognition",
+      "factCount": 3,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "FinancialAssetsAtFairValueThroughProfitOrLossMandatorilyMeasuredAtFairValue",
+      "factCount": 15,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "FinancialAssetsAvailableforsale",
+      "factCount": 3,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "FinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncome",
+      "factCount": 15,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "FinancialInstrumentsDesignatedAsHedgingInstrumentsAtFairValue",
+      "factCount": 12,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "FinancialLiabilities",
+      "factCount": 18,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "FinancialLiabilitiesAtAmortisedCost",
+      "factCount": 18,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "FinancialLiabilitiesAtFairValueThroughProfitOrLoss",
+      "factCount": 14,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "FinishedGoods",
+      "factCount": 18,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "GainLossOnHedgeIneffectivenessRecognisedInOtherComprehensiveIncome",
+      "factCount": 28,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "GainsLossesOnAvailableforsaleFinancialAssets",
+      "factCount": 7,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "GainsLossesOnCashFlowHedgesBeforeTax",
+      "factCount": 17,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "GainsLossesOnDisposalsOfInvestments",
+      "factCount": 6,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "GainsLossesOnDisposalsOfPropertyPlantAndEquipment",
+      "factCount": 23,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "GainsLossesOnExchangeDifferencesOnTranslationBeforeTax",
+      "factCount": 26,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "GainsLossesOnExchangeDifferencesOnTranslationRecognisedInProfitOrLoss",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "GainsLossesOnFinancialAssetsAtFairValueThroughProfitOrLossClassifiedAsHeldForTrading",
+      "factCount": 6,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "GainsLossesOnFinancialAssetsAtFairValueThroughProfitOrLossDesignatedAsUponInitialRecognition",
+      "factCount": 5,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "GainsLossesOnFinancialAssetsAtFairValueThroughProfitOrLossMandatorilyMeasuredAtFairValue",
+      "factCount": 20,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "GainsLossesOnFinancialAssetsReclassifiedOutOfAvailableforsaleFinancialAssetsRecognisedInOtherComprehensiveIncome",
+      "factCount": 1,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2016-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "GainsLossesOnHedgesOfNetInvestmentsInForeignOperationsBeforeTax",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "GainsLossesOnHedgingInstrument",
+      "factCount": 12,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2019-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "GainsLossesOnRemeasuringAvailableforsaleFinancialAssetsBeforeTax",
+      "factCount": 6,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "GainsLossesRecognisedWhenControlInSubsidiaryIsLost",
+      "factCount": 11,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2019-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "GainsOnDisposalsOfPropertyPlantAndEquipment",
+      "factCount": 8,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "GeneralAndAdministrativeExpense",
+      "factCount": 31,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "GovernmentDebtInstrumentsHeld",
+      "factCount": 13,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "GrossLoanCommitments",
+      "factCount": 16,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2021-06-30",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "EUR",
+        "USD"
+      ]
+    },
+    {
+      "concept": "GrossProfit",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "HeldtomaturityInvestments",
+      "factCount": 3,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ImpairmentLossOnFinancialAssets",
+      "factCount": 7,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ImpairmentLossRecognisedInProfitOrLossGoodwill",
+      "factCount": 18,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ImpairmentLossRecognisedInProfitOrLossIntangibleAssetsAndGoodwill",
+      "factCount": 5,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ImpairmentLossRecognisedInProfitOrLossIntangibleAssetsOtherThanGoodwill",
+      "factCount": 1,
+      "firstPeriodEnd": "2015-09-30",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2015-09-30",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ImpairmentLossRecognisedInProfitOrLossPropertyPlantAndEquipment",
+      "factCount": 4,
+      "firstPeriodEnd": "2015-09-30",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeFromSubleasingRightofuseAssets",
+      "factCount": 8,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxExpenseContinuingOperations",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxRelatingToAvailableforsaleFinancialAssetsOfOtherComprehensiveIncome",
+      "factCount": 6,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxRelatingToCashFlowHedgesOfOtherComprehensiveIncome",
+      "factCount": 9,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxRelatingToComponentsOfOtherComprehensiveIncomeThatWillBeReclassifiedToProfitOrLoss",
+      "factCount": 21,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxRelatingToComponentsOfOtherComprehensiveIncomeThatWillNotBeReclassifiedToProfitOrLoss",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxRelatingToInvestmentsInEquityInstrumentsOfOtherComprehensiveIncome",
+      "factCount": 11,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxRelatingToRemeasurementsOfDefinedBenefitPlansOfOtherComprehensiveIncome",
+      "factCount": 15,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxesPaidClassifiedAsOperatingActivities",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseInCashAndCashEquivalents",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseThroughAcquisitionOfSubsidiary",
+      "factCount": 5,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseThroughAppropriationOfRetainedEarnings",
+      "factCount": 26,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseThroughChangeInEquityOfSubsidiaries",
+      "factCount": 7,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseThroughChangesInOwnershipInterestsInSubsidiariesThatDoNotResultInLossOfControl",
+      "factCount": 26,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseThroughConversionOfConvertibleInstruments",
+      "factCount": 6,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseThroughDisposalOfSubsidiary",
+      "factCount": 6,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseThroughEffectOfChangesInForeignExchangeRatesLiabilitiesArisingFromFinancingActivities",
+      "factCount": 15,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseThroughExerciseOfOptions",
+      "factCount": 1,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseThroughFinancingCashFlowsLiabilitiesArisingFromFinancingActivities",
+      "factCount": 15,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseThroughNetExchangeDifferencesAllowanceAccountForCreditLossesOfFinancialAssets",
+      "factCount": 17,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2023-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseThroughOtherChangesLiabilitiesArisingFromFinancingActivities",
+      "factCount": 15,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseThroughSharebasedPaymentTransactions",
+      "factCount": 6,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseThroughTransactionsWithOwners",
+      "factCount": 21,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseThroughTreasuryShareTransactions",
+      "factCount": 4,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IncreaseThroughNewLeasesLiabilitiesArisingFromFinancingActivities",
+      "factCount": 9,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IntangibleAssetsAndGoodwill",
+      "factCount": 37,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "InterestCostsCapitalised",
+      "factCount": 9,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "InterestExpenseOnBonds",
+      "factCount": 26,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "InterestExpenseOnBorrowings",
+      "factCount": 26,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "InterestExpenseOnFinanceLeases",
+      "factCount": 1,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "InterestExpenseOnLeaseLiabilities",
+      "factCount": 17,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "InterestExpenseOnOtherFinancialLiabilities",
+      "factCount": 26,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "InterestIncomeForFinancialAssetsMeasuredAtAmortisedCost",
+      "factCount": 20,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "InterestIncomeOnAvailableforsaleFinancialAssets",
+      "factCount": 6,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "InterestIncomeOnCashAndCashEquivalents",
+      "factCount": 6,
+      "firstPeriodEnd": "2021-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "InterestIncomeOnDeposits",
+      "factCount": 20,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "InterestIncomeOnFinancialAssetsDesignatedAtFairValueThroughProfitOrLoss",
+      "factCount": 12,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "InterestIncomeOnHeldtomaturityInvestments",
+      "factCount": 6,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "InterestPaidClassifiedAsFinancingActivities",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "InterestReceivedClassifiedAsInvestingActivities",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "InterestRevenueForFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncome",
+      "factCount": 20,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "Inventories",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "InventoryWritedown2011",
+      "factCount": 4,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "InvestmentAccountedForUsingEquityMethod",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "IssueOfEquity",
+      "factCount": 6,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "IssuedCapital",
+      "factCount": 28,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "KeyManagementPersonnelCompensation",
+      "factCount": 26,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "KeyManagementPersonnelCompensationPostemploymentBenefits",
+      "factCount": 26,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "KeyManagementPersonnelCompensationSharebasedPayment",
+      "factCount": 6,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "KeyManagementPersonnelCompensationShorttermEmployeeBenefits",
+      "factCount": 26,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "LeaseCommitmentsForShorttermLeasesForWhichRecognitionExemptionHasBeenUsed",
+      "factCount": 1,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "LeaseLiabilities",
+      "factCount": 15,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "Liabilities",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "LiabilitiesArisingFromFinancingActivities",
+      "factCount": 22,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "LiabilitiesFromSharebasedPaymentTransactions2011",
+      "factCount": 5,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "LoansAndReceivables",
+      "factCount": 3,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "LongtermBorrowings",
+      "factCount": 17,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "LongtermDeposits",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "LossesOnDisposalsOfPropertyPlantAndEquipment",
+      "factCount": 4,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2019-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "MergerReserve",
+      "factCount": 19,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "MinimumLeasePaymentsPayableUnderNoncancellableOperatingLease",
+      "factCount": 4,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "NoncontrollingInterests",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "NoncurrentAssets",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "NoncurrentAssetsOtherThanFinancialInstrumentsDeferredTaxAssetsPostemploymentBenefitAssetsAndRightsArisingUnderInsuranceContracts",
+      "factCount": 16,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "NoncurrentFinancialAssetsAtAmortisedCost",
+      "factCount": 23,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "NoncurrentFinancialAssetsAtFairValueThroughProfitOrLossMandatorilyMeasuredAtFairValue",
+      "factCount": 6,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "NoncurrentFinancialAssetsAvailableforsale",
+      "factCount": 4,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "NoncurrentFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncome",
+      "factCount": 23,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "NoncurrentHeldtomaturityInvestments",
+      "factCount": 4,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "NoncurrentLeaseLiabilities",
+      "factCount": 20,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "NoncurrentLiabilities",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "NoncurrentPortionOfNoncurrentBondsIssued",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "NoncurrentPortionOfNoncurrentLoansReceived",
+      "factCount": 1,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2016-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "NoncurrentRecognisedLiabilitiesDefinedBenefitPlan",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "NumberOfOutstandingShareOptions",
+      "factCount": 1,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2014-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "Stock_options"
+      ]
+    },
+    {
+      "concept": "NumberOfShareOptionsExercisableInSharebasedPaymentArrangement",
+      "factCount": 16,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "pure",
+        "shares"
+      ]
+    },
+    {
+      "concept": "NumberOfShareOptionsExercisedInSharebasedPaymentArrangement",
+      "factCount": 1,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "Stock_options"
+      ]
+    },
+    {
+      "concept": "NumberOfSharesAuthorised",
+      "factCount": 19,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "NumberOfSharesIssuedAndFullyPaid",
+      "factCount": 19,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "OperatingExpenseExcludingCostOfSales",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "OperatingLeaseIncome",
+      "factCount": 1,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "OtherAdjustmentsToReconcileProfitLoss",
+      "factCount": 16,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherAssets",
+      "factCount": 4,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "OtherComprehensiveIncome",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherComprehensiveIncomeBeforeTaxAvailableforsaleFinancialAssets",
+      "factCount": 7,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherComprehensiveIncomeBeforeTaxCashFlowHedges",
+      "factCount": 4,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherComprehensiveIncomeBeforeTaxExchangeDifferencesOnTranslation",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherComprehensiveIncomeBeforeTaxGainsLossesOnRemeasurementsOfDefinedBenefitPlans",
+      "factCount": 32,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherComprehensiveIncomeThatWillBeReclassifiedToProfitOrLossNetOfTax",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherComprehensiveIncomeThatWillNotBeReclassifiedToProfitOrLossNetOfTax",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherCurrentAssets",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherCurrentFinancialAssets",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherCurrentNonfinancialAssets",
+      "factCount": 1,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "OtherDebtInstrumentsHeld",
+      "factCount": 4,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "OtherEmployeeExpense",
+      "factCount": 6,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "OtherGainsLosses",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherInflowsOutflowsOfCashClassifiedAsInvestingActivities",
+      "factCount": 3,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2016-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "OtherNoncurrentAssets",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherNoncurrentLiabilities",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherOperatingIncomeExpense",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherReserves",
+      "factCount": 45,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherTaxEffectsForReconciliationBetweenAccountingProfitAndTaxExpenseIncome",
+      "factCount": 26,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ParValuePerShare",
+      "factCount": 16,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD/shares"
+      ]
+    },
+    {
+      "concept": "PaymentsForDebtIssueCosts",
+      "factCount": 20,
+      "firstPeriodEnd": "2020-06-30",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "PaymentsOfFinanceLeaseLiabilitiesClassifiedAsFinancingActivities",
+      "factCount": 1,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "PaymentsOfLeaseLiabilitiesClassifiedAsFinancingActivities",
+      "factCount": 24,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "PlanAssetsAtFairValue",
+      "factCount": 16,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "PostemploymentBenefitExpenseDefinedBenefitPlans",
+      "factCount": 24,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "PostemploymentBenefitExpenseDefinedContributionPlans",
+      "factCount": 24,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "Prepayments",
+      "factCount": 4,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ProceedsFromChangesInOwnershipInterestsInSubsidiaries",
+      "factCount": 7,
+      "firstPeriodEnd": "2021-06-30",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProceedsFromContributionsOfNoncontrollingInterests",
+      "factCount": 1,
+      "firstPeriodEnd": "2021-06-30",
+      "forms": [
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2021-06-30",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ProceedsFromCurrentBorrowings",
+      "factCount": 12,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2019-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProceedsFromDisposalOrMaturityOfAvailableforsaleFinancialAssets",
+      "factCount": 7,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProceedsFromExerciseOfOptions",
+      "factCount": 1,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ProceedsFromIssueOfBondsNotesAndDebentures",
+      "factCount": 20,
+      "firstPeriodEnd": "2020-06-30",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProceedsFromIssuingShares",
+      "factCount": 18,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ProceedsFromNoncurrentBorrowings",
+      "factCount": 19,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProceedsFromSalesOfInvestmentsAccountedForUsingEquityMethod",
+      "factCount": 1,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ProceedsFromSalesOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProfitLoss",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProfitLossAttributableToNoncontrollingInterests",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProfitLossAttributableToOwnersOfParent",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProfitLossBeforeTax",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProfitLossFromContinuingOperationsAttributableToOrdinaryEquityHoldersOfParentEntity",
+      "factCount": 26,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ProfitLossFromContinuingOperationsAttributableToOrdinaryEquityHoldersOfParentEntityIncludingDilutiveEffects",
+      "factCount": 1,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ProfitLossFromOperatingActivities",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "PropertyPlantAndEquipment",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "PurchaseOfAvailableforsaleFinancialAssets",
+      "factCount": 7,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "PurchaseOfIntangibleAssetsClassifiedAsInvestingActivities",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "PurchaseOfInvestmentsOtherThanInvestmentsAccountedForUsingEquityMethod",
+      "factCount": 2,
+      "firstPeriodEnd": "2024-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "RawMaterials",
+      "factCount": 18,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ReceivablesFromTaxesOtherThanIncomeTax",
+      "factCount": 4,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ReclassificationAdjustmentsOnAvailableforsaleFinancialAssetsBeforeTax",
+      "factCount": 6,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ReclassificationAdjustmentsOnCashFlowHedgesBeforeTax",
+      "factCount": 23,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ReclassificationAdjustmentsOnChangeInValueOfTimeValueOfOptionsBeforeTax",
+      "factCount": 13,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2020-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ReclassificationAdjustmentsOnExchangeDifferencesOnTranslationBeforeTax",
+      "factCount": 3,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2016-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "RentalExpense",
+      "factCount": 9,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "RepaymentsOfBondsNotesAndDebentures",
+      "factCount": 34,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "RepaymentsOfNoncurrentBorrowings",
+      "factCount": 15,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ResearchAndDevelopmentExpense",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ReserveOfEquityComponentOfConvertibleInstruments",
+      "factCount": 19,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "RetainedEarnings",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ReturnOnPlanAssetsNetDefinedBenefitLiabilityAsset",
+      "factCount": 24,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "Revenue",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "RevenueFromContractsWithCustomers",
+      "factCount": 20,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "RevenueFromDividends",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "RevenueFromGovernmentGrants",
+      "factCount": 9,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "RevenueFromInterest",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "RevenueFromRoyalties",
+      "factCount": 3,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "RevenueFromSaleOfGoods",
+      "factCount": 3,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "RevenueFromSaleOfGoodsRelatedPartyTransactions",
+      "factCount": 12,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2020-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ReversalAllowanceAccountForCreditLossesOfFinancialAssets",
+      "factCount": 2,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2019-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "ReversalOfInventoryWritedown",
+      "factCount": 2,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "RightofuseAssets",
+      "factCount": 20,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "SalesAndMarketingExpense",
+      "factCount": 35,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethodThatWillBeReclassifiedToProfitOrLossBeforeTax",
+      "factCount": 4,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethodThatWillNotBeReclassifiedToProfitOrLossBeforeTax",
+      "factCount": 4,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ShareOfProfitLossOfAssociatesAccountedForUsingEquityMethod",
+      "factCount": 31,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ShareOfProfitLossOfAssociatesAndJointVenturesAccountedForUsingEquityMethod",
+      "factCount": 4,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "SharesReservedForIssueUnderOptionsAndContractsForSaleOfShares",
+      "factCount": 1,
+      "firstPeriodEnd": "2022-02-15",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2022-02-15",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "ShorttermBorrowings",
+      "factCount": 19,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "ShorttermInvestmentsClassifiedAsCashEquivalents",
+      "factCount": 17,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "SpareParts",
+      "factCount": 18,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "TaxBenefitArisingFromPreviouslyUnrecognisedTaxLossTaxCreditOrTemporaryDifferenceOfPriorPeriodUsedToReduceDeferredTaxExpense",
+      "factCount": 4,
+      "firstPeriodEnd": "2021-06-30",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "TaxEffectOfRevenuesExemptFromTaxation2011",
+      "factCount": 24,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "TaxExpenseIncomeAtApplicableTaxRate",
+      "factCount": 24,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "TemporaryDifferencesAssociatedWithInvestmentsInSubsidiariesBranchesAndAssociatesAndInterestsInJointVentures",
+      "factCount": 16,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "TradeAndOtherCurrentPayablesToRelatedParties",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "TradeAndOtherCurrentPayablesToTradeSuppliers",
+      "factCount": 27,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "WeightedAverageExercisePriceOfShareOptionsExercisedInSharebasedPaymentArrangement",
+      "factCount": 1,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "WeightedAverageExercisePriceOfShareOptionsOutstandingInSharebasedPaymentArrangement",
+      "factCount": 1,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2014-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "WeightedAverageLesseesIncrementalBorrowingRateAppliedToLeaseLiabilitiesRecognisedAtDateOfInitialApplicationOfIFRS16",
+      "factCount": 2,
+      "firstPeriodEnd": "2019-01-01",
+      "forms": [
+        "20-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2019-01-01",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "pure"
+      ]
+    },
+    {
+      "concept": "WeightedAverageShares",
+      "factCount": 25,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "WorkInProgress",
+      "factCount": 18,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "WritedownsReversalsOfInventories",
+      "factCount": 20,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD"
+      ]
+    },
+    {
+      "concept": "WritedownsReversalsOfPropertyPlantAndEquipment",
+      "factCount": 22,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "20-F",
+        "6-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "ifrs-full",
+      "units": [
+        "TWD",
+        "USD"
+      ]
+    },
+    {
+      "concept": "StockRepurchaseProgramNumberOfSharesAuthorizedToBeRepurchased",
+      "factCount": 1,
+      "firstPeriodEnd": "2024-06-05",
+      "forms": [
+        "20-F"
+      ],
+      "label": "",
+      "lastPeriodEnd": "2024-06-05",
+      "taxonomy": "srt",
+      "units": [
+        "shares"
+      ]
+    }
+  ],
+  "entityName": "Taiwan Semiconductor Manufacturing Company Limited",
+  "schemaVersion": 1
+}

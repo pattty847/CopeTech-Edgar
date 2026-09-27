@@ -5,7 +5,7 @@ A derived metric never touches raw facts. Each component is resolved through
 behavior are identical to base metrics, and composites are joined only on
 exactly matching ``(periodStart, periodEnd)`` windows. Point-in-time honesty is
 preserved by construction: an observation's ``availableAt`` is the latest
-``availableAt`` among the components its value actually used, its confidence is
+``availableAt`` among arithmetic inputs and evidence selecting the formula, its confidence is
 their minimum, and its quality flags are their union.
 """
 
@@ -14,14 +14,28 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from .debt_series import DEBT_COMPONENTS, debt_decision_evidence, invested_capital, net_debt
 from .financial_metrics import get_metric_definition, supported_frequencies
 
 # compute receives the component values present for one aligned window and
 # returns (value, extra_quality_flags, component_ids_actually_used), or None to
-# skip the window. Returning the used ids keeps availableAt honest when an
-# optional component is present but not needed.
+# skip the window. Debt selection adds decision evidence separately, so inputs
+# that establish a hierarchy are not accidentally added to its numeric total.
 ComputeResult = tuple[float, tuple[str, ...], tuple[str, ...]] | None
 Compute = Callable[[dict[str, float]], ComputeResult]
+
+# These are conditional limitations of the generic formulas, not an inference
+# that the requested issuer is a financial company or REIT. Keep the condition
+# explicit until issuer classification is available in the public API.
+COMPARABILITY_WARNINGS = {
+    metric: (f"generic_{metric}_not_comparable_for_financial_companies",)
+    for metric in (
+        "fcf", "fcf_margin", "gross_margin", "ebitda", "interest_coverage",
+        "invested_capital", "net_debt", "working_capital",
+    )
+}
+for _metric in ("gross_margin", "ebitda"):
+    COMPARABILITY_WARNINGS[_metric] += (f"generic_{_metric}_not_comparable_for_reits",)
 
 
 @dataclass(frozen=True)
@@ -123,50 +137,6 @@ def _interest_coverage(values: dict[str, float]) -> ComputeResult:
         (),
         ("operating_income", "interest_expense"),
     )
-
-
-def _invested_capital(values: dict[str, float]) -> ComputeResult:
-    debt_components = [
-        component
-        for component in ("debt_current", "debt_noncurrent")
-        if component in values
-    ]
-    cash_components = [
-        component
-        for component in ("cash_equivalents", "short_term_investments")
-        if component in values
-    ]
-    debt = sum(values[component] for component in debt_components)
-    cash = sum(values[component] for component in cash_components)
-    flags: tuple[str, ...] = ()
-    if not debt_components:
-        flags = ("debt_concepts_missing_assumed_zero",)
-    return (
-        values["stockholders_equity"] + debt - cash,
-        flags,
-        tuple(["stockholders_equity"] + debt_components + cash_components),
-    )
-
-
-def _net_debt(values: dict[str, float]) -> ComputeResult:
-    debt_components = [
-        component
-        for component in ("debt_current", "debt_noncurrent")
-        if component in values
-    ]
-    cash_components = [
-        component
-        for component in ("cash_equivalents", "short_term_investments")
-        if component in values
-    ]
-    debt = sum(values[component] for component in debt_components)
-    cash = sum(values[component] for component in cash_components)
-    flags: tuple[str, ...] = ()
-    if not debt_components:
-        # Absence of debt tags usually means a debt-free balance sheet, but an
-        # issuer using nonstandard tags looks identical — say so out loud.
-        flags = ("debt_concepts_missing_assumed_zero",)
-    return debt - cash, flags, tuple(debt_components + cash_components)
 
 
 def _working_capital(values: dict[str, float]) -> ComputeResult:
@@ -291,11 +261,12 @@ DERIVED_METRIC_REGISTRY: dict[str, DerivedMetricDefinition] = {
         label="Invested capital",
         unit="USD",
         required=("stockholders_equity", "cash_equivalents"),
-        optional=("short_term_investments", "debt_current", "debt_noncurrent"),
-        compute=_invested_capital,
+        optional=("short_term_investments",) + DEBT_COMPONENTS,
+        compute=invested_capital,
         derivation=(
-            "stockholders' equity plus debt minus cash and short-term investments"
-            " at the same balance date (operating leases and goodwill untouched)"
+            "stockholders' equity plus reported all-debt aggregate, or long-term"
+            " debt plus separate short-term borrowings, minus cash and short-term"
+            " investments at the same balance date"
         ),
     ),
     "net_debt": DerivedMetricDefinition(
@@ -303,11 +274,12 @@ DERIVED_METRIC_REGISTRY: dict[str, DerivedMetricDefinition] = {
         label="Net debt",
         unit="USD",
         required=("cash_equivalents",),
-        optional=("short_term_investments", "debt_current", "debt_noncurrent"),
-        compute=_net_debt,
+        optional=("short_term_investments",) + DEBT_COMPONENTS,
+        compute=net_debt,
         derivation=(
-            "current plus noncurrent debt minus cash and short-term investments,"
-            " joined on the same balance date"
+            "reported all-debt aggregate, or long-term debt plus separate short-term"
+            " borrowings, or current plus noncurrent debt, minus cash and short-term"
+            " investments at the same balance date"
         ),
     ),
     "working_capital": DerivedMetricDefinition(
@@ -398,6 +370,10 @@ def resolve_derived_series(
         for payload in component_payloads.values()
         for warning in payload.get("warnings") or []
     }
+    if metric in {"invested_capital", "net_debt"}:
+        if not any(component in component_payloads for component in DEBT_COMPONENTS):
+            warnings.add("debt_concepts_missing")
+    warnings.update(COMPARABILITY_WARNINGS.get(metric, ()))
     if frequency == "ttm":
         for component in definition.required:
             if get_metric_definition(component).aggregation == "weighted_average":
@@ -422,12 +398,18 @@ def resolve_derived_series(
         if computed is None:
             continue
         value, extra_flags, used = computed
-        used_rows = [component_rows[component] for component in used]
+        decision_evidence = (
+            debt_decision_evidence({component: float(row["value"]) for component, row in component_rows.items()})
+            if metric in {"net_debt", "invested_capital"} else ()
+        )
+        evidence = tuple(dict.fromkeys((*used, *decision_evidence)))
+        used_rows = [component_rows[component] for component in evidence]
         available_at = max(row["availableAt"] for row in used_rows)
         primary = component_rows[definition.required[0]]
         flags = sorted(
             {flag for row in used_rows for flag in row.get("qualityFlags") or []}
             | set(extra_flags)
+            | set(COMPARABILITY_WARNINGS.get(metric, ()))
         )
         observations.append(
             {
@@ -443,6 +425,8 @@ def resolve_derived_series(
                 "reported": False,
                 "derived": True,
                 "derivation": definition.derivation,
+                "inputMetrics": list(used),
+                "evidenceMetrics": list(evidence),
                 "confidence": min(float(row["confidence"]) for row in used_rows),
                 "qualityFlags": flags,
                 "availabilitySource": max(
@@ -459,6 +443,12 @@ def resolve_derived_series(
             }
         )
     observations.sort(key=lambda row: (row["periodEnd"], row["availableAt"]))
+    if (
+        metric in {"invested_capital", "net_debt"}
+        and any(component in component_payloads for component in DEBT_COMPONENTS)
+        and not observations
+    ):
+        warnings.add("debt_hierarchy_incomplete")
     warnings |= {flag for row in observations for flag in row["qualityFlags"] if flag}
     any_payload = next(iter(component_payloads.values()), {})
     return {

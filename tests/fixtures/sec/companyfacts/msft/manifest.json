@@ -1,0 +1,19 @@
+{
+  "acceptedConceptRegistrySha256": "3a9a66afcd8eb7cb488d0ffb8c178c209e387551d0016f13bdc4fb4c674b46d6",
+  "cik": 789019,
+  "conceptInventoryContentSha256": "b13e9fa425ff538eab342b0c06a03506f8c98bd1e9c501b9a386221302e12232",
+  "controlConcepts": [],
+  "entityName": "MICROSOFT CORPORATION",
+  "fixtureContentSha256": "aaba06227fd17e0ef0830274314f9715f22c9c92e1c3363331193a621a58d97d",
+  "fixtureFactCount": 79,
+  "retrievedAt": "2026-09-15T05:57:46Z",
+  "schemaVersion": 1,
+  "sourceContentSha256": "103d59aea7929985b2a887110fed8fcb9680b66b64a6d436a32c9799220db929",
+  "sourceFactCount": 32671,
+  "sourceUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000789019.json",
+  "symbol": "MSFT",
+  "targetPeriodEnds": [
+    "2026-03-31",
+    "2026-06-30"
+  ]
+}

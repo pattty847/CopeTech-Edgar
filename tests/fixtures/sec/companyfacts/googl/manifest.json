@@ -1,0 +1,19 @@
+{
+  "acceptedConceptRegistrySha256": "3a9a66afcd8eb7cb488d0ffb8c178c209e387551d0016f13bdc4fb4c674b46d6",
+  "cik": 1652044,
+  "conceptInventoryContentSha256": "c71d8c89f45fc24ddec69a07c476c4b3a82b4498283df6b82ec495fc8b8782cc",
+  "controlConcepts": [],
+  "entityName": "Alphabet Inc.",
+  "fixtureContentSha256": "b2c17e2f213ca7c6e4b0081cf888e89c6a3682b1c15cdc3f3978da877949d6ab",
+  "fixtureFactCount": 104,
+  "retrievedAt": "2026-09-15T05:57:47Z",
+  "schemaVersion": 1,
+  "sourceContentSha256": "67e9eb51a09725a55b786cc0a569efcfb9906ad170e445e4775bc2126e22ae7d",
+  "sourceFactCount": 20907,
+  "sourceUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001652044.json",
+  "symbol": "GOOGL",
+  "targetPeriodEnds": [
+    "2025-12-31",
+    "2026-06-30"
+  ]
+}

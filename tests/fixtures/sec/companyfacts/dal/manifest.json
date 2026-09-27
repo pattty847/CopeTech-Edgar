@@ -1,0 +1,19 @@
+{
+  "acceptedConceptRegistrySha256": "3a9a66afcd8eb7cb488d0ffb8c178c209e387551d0016f13bdc4fb4c674b46d6",
+  "cik": 27904,
+  "conceptInventoryContentSha256": "ef3a0de1e7dea2f94bebafe86c195d7cccdcaf50ebfd2c7d48e4fb58196a417f",
+  "controlConcepts": [],
+  "entityName": "DELTA AIR LINES, INC.",
+  "fixtureContentSha256": "232b8826029ffc40ac2d2fc966f23cb56aeb62d8db523afe7aef098d503cf3b3",
+  "fixtureFactCount": 85,
+  "retrievedAt": "2026-09-15T05:58:09Z",
+  "schemaVersion": 1,
+  "sourceContentSha256": "472c4ed203fd74879659097430fd163d1fba37d8ca8c890ef67aec7f05307d1c",
+  "sourceFactCount": 22122,
+  "sourceUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000027904.json",
+  "symbol": "DAL",
+  "targetPeriodEnds": [
+    "2025-12-31",
+    "2026-06-30"
+  ]
+}

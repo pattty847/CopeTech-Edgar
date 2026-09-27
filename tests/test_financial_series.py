@@ -39,12 +39,17 @@ def fact(
 
 
 def company_facts(
+    financial_revenue: list[dict] | None = None,
     contract_revenue: list[dict] | None = None,
     revenues: list[dict] | None = None,
     diluted_eps: list[dict] | None = None,
     basic_eps: list[dict] | None = None,
 ) -> dict:
     concepts = {}
+    if financial_revenue is not None:
+        concepts["RevenuesNetOfInterestExpense"] = {
+            "units": {"USD": financial_revenue}
+        }
     if contract_revenue is not None:
         concepts["RevenueFromContractWithCustomerExcludingAssessedTax"] = {
             "units": {"USD": contract_revenue}
@@ -67,6 +72,118 @@ def company_facts(
 
 
 class FinancialSeriesNormalizationTests(unittest.TestCase):
+    def test_financial_company_revenue_prefers_consolidated_net_revenue(self):
+        annual = {
+            "start": "2023-01-01",
+            "end": "2023-12-31",
+            "filed": "2024-03-15",
+            "form": "10-K",
+            "fy": 2023,
+            "fp": "FY",
+        }
+        payload = company_facts(
+            financial_revenue=[
+                fact(2_122_789_000, accession="financial-total", **annual)
+            ],
+            contract_revenue=[
+                fact(421_454_000, accession="contract-subset", **annual)
+            ],
+        )
+
+        rows = extract_financial_facts(payload, symbol="SOFI", metric="revenue")
+        series = resolve_financial_series(
+            rows, symbol="SOFI", metric="revenue", frequency="annual"
+        )
+
+        self.assertEqual(len(series["observations"]), 1)
+        observation = series["observations"][0]
+        self.assertEqual(observation["value"], 2_122_789_000)
+        self.assertEqual(
+            observation["selectedSource"]["concept"],
+            "RevenuesNetOfInterestExpense",
+        )
+        self.assertIn(
+            "financial_company_revenue_not_comparable",
+            observation["qualityFlags"],
+        )
+
+    def test_generic_revenues_parent_wins_over_contract_revenue_subset(self):
+        annual = {
+            "start": "2025-01-01",
+            "end": "2025-12-31",
+            "filed": "2026-02-23",
+            "form": "10-K",
+            "fy": 2025,
+            "fp": "FY",
+        }
+        payload = company_facts(
+            revenues=[fact(371_444_000_000, accession="all-revenue", **annual)],
+            contract_revenue=[
+                fact(247_244_000_000, accession="contract-subset", **annual)
+            ],
+        )
+
+        series = resolve_financial_series(
+            extract_financial_facts(payload, symbol="BRK-B", metric="revenue"),
+            symbol="BRK-B",
+            metric="revenue",
+            frequency="annual",
+        )
+
+        (observation,) = series["observations"]
+        self.assertEqual(observation["value"], 371_444_000_000)
+        self.assertEqual(observation["selectedSource"]["concept"], "Revenues")
+
+    def test_rolling_twelve_month_10q_fact_is_not_an_annual_or_q4_source(self):
+        entries = [
+            fact(
+                21_187_000_000,
+                "2025-07-01",
+                "2025-09-30",
+                "2025-10-31",
+                "q3",
+                form="10-Q",
+                fy=2025,
+                fp="Q3",
+            ),
+            fact(
+                56_478_000_000,
+                "2025-01-01",
+                "2025-09-30",
+                "2025-10-31",
+                "ytd",
+                form="10-Q",
+                fy=2025,
+                fp="Q3",
+            ),
+            fact(
+                76_482_000_000,
+                "2024-10-01",
+                "2025-09-30",
+                "2025-10-31",
+                "rolling",
+                form="10-Q",
+                fy=2025,
+                fp="Q3",
+            ),
+        ]
+        rows = extract_financial_facts(
+            company_facts(revenues=entries), symbol="AMZN", metric="revenue"
+        )
+
+        annual = resolve_financial_series(
+            rows, symbol="AMZN", metric="revenue", frequency="annual"
+        )
+        quarterly = resolve_financial_series(
+            rows, symbol="AMZN", metric="revenue", frequency="quarterly"
+        )
+
+        self.assertEqual(annual["observations"], [])
+        self.assertEqual(
+            [(row["periodStart"], row["periodEnd"]) for row in quarterly["observations"]],
+            [("2025-07-01", "2025-09-30")],
+        )
+
     def test_diluted_eps_is_canonical_and_never_substitutes_basic_eps(self):
         diluted = fact(
             1.2,
@@ -521,6 +638,23 @@ class FinancialSeriesStoreTests(unittest.IsolatedAsyncioTestCase):
             resolved = await store.load_facts("TEST", "revenue")
             self.assertEqual(resolved[0]["normalization_version"], 2)
             self.assertEqual(resolved[0]["value"], 11)
+
+    async def test_load_can_exclude_obsolete_normalization_rows(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            store = FinancialSeriesStore(Path(tmpdir) / "facts.sqlite3")
+            version_one = self._normalized_row(value=10, normalization_version=1)
+            version_two = self._normalized_row(value=11, normalization_version=2)
+            await store.append_facts([version_one, version_two])
+
+            resolved = await store.load_facts(
+                "TEST",
+                "revenue",
+                normalization_version=1,
+            )
+
+            self.assertEqual(len(resolved), 1)
+            self.assertEqual(resolved[0]["normalization_version"], 1)
+            self.assertEqual(resolved[0]["value"], 10)
 
 
 if __name__ == "__main__":

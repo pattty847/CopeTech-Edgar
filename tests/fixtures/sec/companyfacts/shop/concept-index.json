@@ -1,0 +1,5465 @@
+{
+  "cik": 1594805,
+  "concepts": [
+    {
+      "concept": "EntityPublicFloat",
+      "factCount": 4,
+      "firstPeriodEnd": "2024-06-28",
+      "forms": [
+        "10-K",
+        "10-K/A"
+      ],
+      "label": "Entity Public Float",
+      "lastPeriodEnd": "2025-06-30",
+      "taxonomy": "dei",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "FinancingReceivableBeforeAllowanceForCreditLossToTotalPercent",
+      "factCount": 14,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K",
+        "10-Q"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "srt",
+      "units": [
+        "pure"
+      ]
+    },
+    {
+      "concept": "StockRepurchaseProgramAuthorizedAmount1",
+      "factCount": 4,
+      "firstPeriodEnd": "2025-12-31",
+      "forms": [
+        "10-Q"
+      ],
+      "label": "",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "srt",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AccountsAndOtherReceivablesNetCurrent",
+      "factCount": 30,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Accounts and Other Receivables, Net, Current",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AccountsPayableAndAccruedLiabilitiesCurrent",
+      "factCount": 32,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Accounts Payable and Accrued Liabilities, Current",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AccountsPayableTradeCurrent",
+      "factCount": 20,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Accounts Payable, Trade, Current",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AccruedIncomeTaxesCurrent",
+      "factCount": 14,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Accrued Income Taxes, Current",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AccruedLiabilitiesAndOtherLiabilities",
+      "factCount": 4,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Accrued Liabilities and Other Liabilities",
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AccruedPayrollTaxesCurrent",
+      "factCount": 6,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Accrued Payroll Taxes, Current",
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AccumulatedDepreciationDepletionAndAmortizationPropertyPlantAndEquipment",
+      "factCount": 22,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Accumulated Depreciation, Depletion and Amortization, Property, Plant, and Equipment",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AccumulatedOtherComprehensiveIncomeLossNetOfTax",
+      "factCount": 30,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Accumulated Other Comprehensive Income (Loss), Net of Tax",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AdditionalPaidInCapital",
+      "factCount": 32,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Additional Paid in Capital",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AdjustmentsToAdditionalPaidInCapitalEquityComponentOfConvertibleDebt",
+      "factCount": 2,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Adjustments to Additional Paid in Capital, Equity Component of Convertible Debt",
+      "lastPeriodEnd": "2020-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AdjustmentsToAdditionalPaidInCapitalSharebasedCompensationRequisiteServicePeriodRecognitionValue",
+      "factCount": 43,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "APIC, Share-based Payment Arrangement, Increase for Cost Recognition",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AdjustmentsToAdditionalPaidInCapitalStockIssuedIssuanceCosts",
+      "factCount": 2,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Adjustments to Additional Paid in Capital, Stock Issued, Issuance Costs",
+      "lastPeriodEnd": "2020-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AdvertisingExpense",
+      "factCount": 25,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Advertising Expense",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AllocatedShareBasedCompensationExpense",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Share-based Payment Arrangement, Expense",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AllowanceForDoubtfulAccountsReceivable",
+      "factCount": 3,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Accounts Receivable, Allowance for Credit Loss",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AllowanceForDoubtfulAccountsReceivableCurrent",
+      "factCount": 4,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Accounts Receivable, Allowance for Credit Loss, Current",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AllowanceForDoubtfulAccountsReceivableWriteOffs",
+      "factCount": 2,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Accounts Receivable, Allowance for Credit Loss, Writeoff",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AllowanceForNotesAndLoansReceivableCurrent",
+      "factCount": 12,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Financing Receivable, Allowance for Credit Loss, Current",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AmortizationOfDebtDiscountPremium",
+      "factCount": 3,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Amortization of Debt Discount (Premium)",
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AmortizationOfFinancingCosts",
+      "factCount": 5,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Amortization of Debt Issuance Costs",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AmortizationOfFinancingCostsAndDiscounts",
+      "factCount": 6,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Amortization of Debt Issuance Costs and Discounts",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AmortizationOfIntangibleAssets",
+      "factCount": 35,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Amortization of Intangible Assets",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AntidilutiveSecuritiesExcludedFromComputationOfEarningsPerShareAmount",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Antidilutive Securities Excluded from Computation of Earnings Per Share, Amount",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "AssetImpairmentCharges",
+      "factCount": 8,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Asset Impairment Charges",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "Assets",
+      "factCount": 32,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Assets",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AssetsCurrent",
+      "factCount": 32,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Assets, Current",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AssetsNoncurrent",
+      "factCount": 32,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Assets, Noncurrent",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AvailableForSaleDebtSecuritiesAmortizedCostBasis",
+      "factCount": 8,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Debt Securities, Available-for-sale, Amortized Cost",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AvailableForSaleDebtSecuritiesGrossUnrealizedGain",
+      "factCount": 1,
+      "firstPeriodEnd": "2021-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Debt Securities, Available-for-sale, Unrealized Gain",
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AvailableForSaleSecuritiesDebtMaturitiesWithinOneYearAmortizedCost",
+      "factCount": 8,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Debt Securities, Available-for-Sale, Amortized Cost, Maturity, Allocated and Single Maturity Date, Year One",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "AvailableForSaleSecuritiesDebtSecurities",
+      "factCount": 2,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Debt Securities, Available-for-sale",
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "BusinessAcquisitionPurchasePriceAllocationGoodwillExpectedTaxDeductibleAmount",
+      "factCount": 2,
+      "firstPeriodEnd": "2019-10-17",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Business Acquisition, Goodwill, Expected Tax Deductible Amount",
+      "lastPeriodEnd": "2019-10-17",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "CapitalExpendituresIncurredButNotYetPaid",
+      "factCount": 17,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Capital Expenditures Incurred but Not yet Paid",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "CapitalizedContractCostNetCurrent",
+      "factCount": 8,
+      "firstPeriodEnd": "2021-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Capitalized Contract Cost, Net, Current",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "CashAndCashEquivalentsAtCarryingValue",
+      "factCount": 37,
+      "firstPeriodEnd": "2012-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Cash and Cash Equivalents, at Carrying Value",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "CashAndCashEquivalentsPeriodIncreaseDecrease",
+      "factCount": 9,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Cash and Cash Equivalents, Period Increase (Decrease)",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+      "factCount": 49,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Cash, Cash Equivalents, Restricted Cash and Restricted Cash Equivalents",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect",
+      "factCount": 32,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Cash, Cash Equivalents, Restricted Cash and Restricted Cash Equivalents, Period Increase (Decrease), Including Exchange Rate Effect",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "CommonStockSharesIssued",
+      "factCount": 2,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": "Common Stock, Shares, Issued",
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "CommonStockSharesOutstanding",
+      "factCount": 2,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": "Common Stock, Shares, Outstanding",
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "CommonStockValue",
+      "factCount": 32,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Common Stock, Value, Issued",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ComprehensiveIncomeNetOfTax",
+      "factCount": 49,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Comprehensive Income (Loss), Net of Tax, Attributable to Parent",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ContractWithCustomerLiability",
+      "factCount": 50,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Contract with Customer, Liability",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ContractWithCustomerLiabilityCurrent",
+      "factCount": 44,
+      "firstPeriodEnd": "2017-01-01",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Contract with Customer, Liability, Current",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ContractWithCustomerLiabilityIncreaseDecreaseForContractAcquiredInBusinessCombination",
+      "factCount": 4,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Contract with Customer, Liability, Increase (Decrease) for Contract Acquired in Business Combination",
+      "lastPeriodEnd": "2020-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ContractWithCustomerLiabilityNoncurrent",
+      "factCount": 44,
+      "firstPeriodEnd": "2017-01-01",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Contract with Customer, Liability, Noncurrent",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ContractWithCustomerLiabilityRevenueRecognized",
+      "factCount": 32,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Contract with Customer, Liability, Revenue Recognized",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ConvertibleDebtCurrent",
+      "factCount": 10,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K",
+        "10-Q"
+      ],
+      "label": "Convertible Debt, Current",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ConvertibleDebtNoncurrent",
+      "factCount": 10,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Convertible Debt, Noncurrent",
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "CostOfGoodsAndServicesSold",
+      "factCount": 34,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Cost of Goods and Services Sold",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "CostOfServices",
+      "factCount": 7,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Cost of Services (Deprecated 2018-01-31)",
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "CostOfServicesLicensesAndServices",
+      "factCount": 7,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Cost of Services, Licenses and Services (Deprecated 2018-01-31)",
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "CumulativeEffectOfNewAccountingPrincipleInPeriodOfAdoption",
+      "factCount": 1,
+      "firstPeriodEnd": "2019-01-01",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Cumulative Effect of New Accounting Principle in Period of Adoption (Deprecated 2020-01-31)",
+      "lastPeriodEnd": "2019-01-01",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "CurrentFederalTaxExpenseBenefit",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Current Federal Tax Expense (Benefit)",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "CurrentForeignTaxExpenseBenefit",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Current Foreign Tax Expense (Benefit)",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "CurrentIncomeTaxExpenseBenefit",
+      "factCount": 16,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Current Income Tax Expense (Benefit)",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "CurrentStateAndLocalTaxExpenseBenefit",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Current State and Local Tax Expense (Benefit)",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DebtSecuritiesAvailableForSaleChangeInPresentValueInterestIncome",
+      "factCount": 19,
+      "firstPeriodEnd": "2021-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Debt Securities, Available-for-sale, Change in Present Value, Interest Income",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredFederalIncomeTaxExpenseBenefit",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Deferred Federal Income Tax Expense (Benefit)",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredForeignIncomeTaxExpenseBenefit",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Deferred Foreign Income Tax Expense (Benefit)",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredIncomeTaxAssetsNet",
+      "factCount": 20,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Deferred Income Tax Assets, Net",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredIncomeTaxExpenseBenefit",
+      "factCount": 16,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Deferred Income Tax Expense (Benefit)",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredIncomeTaxLiabilities",
+      "factCount": 22,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Deferred Tax Liabilities, Gross",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredIncomeTaxLiabilitiesNet",
+      "factCount": 26,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Deferred Income Tax Liabilities, Net",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredRentCredit",
+      "factCount": 8,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Deferred Rent Credit",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredRentCreditCurrent",
+      "factCount": 8,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Deferred Rent Credit, Current",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredRentCreditNoncurrent",
+      "factCount": 8,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Deferred Rent Credit, Noncurrent",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredRevenueCurrent",
+      "factCount": 6,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Deferred Revenue, Current",
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredRevenueNoncurrent",
+      "factCount": 6,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Deferred Revenue, Noncurrent",
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredStateAndLocalIncomeTaxExpenseBenefit",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Deferred State and Local Income Tax Expense (Benefit)",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxAssetsGross",
+      "factCount": 20,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Deferred Tax Assets, Gross",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxAssetsLiabilitiesNet",
+      "factCount": 12,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Deferred Tax Assets, Net",
+      "lastPeriodEnd": "2023-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxAssetsNet",
+      "factCount": 22,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Deferred Tax Assets, Net of Valuation Allowance",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxAssetsOperatingLossCarryforwards",
+      "factCount": 22,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Deferred Tax Assets, Operating Loss Carryforwards",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxAssetsOperatingLossCarryforwardsNotSubjectToExpiration",
+      "factCount": 3,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Deferred Tax Assets, Operating Loss Carryforwards, Not Subject to Expiration",
+      "lastPeriodEnd": "2020-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxAssetsOperatingLossCarryforwardsSubjectToExpiration",
+      "factCount": 3,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Deferred Tax Assets, Operating Loss Carryforwards, Subject to Expiration",
+      "lastPeriodEnd": "2020-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxAssetsOther",
+      "factCount": 6,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Deferred Tax Assets, Other",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxAssetsStateTaxes",
+      "factCount": 4,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Deferred Tax Assets, State Taxes",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxAssetsTaxCreditCarryforwards",
+      "factCount": 8,
+      "firstPeriodEnd": "2021-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Deferred Tax Assets, Tax Credit Carryforwards",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxAssetsTaxCreditCarryforwardsResearch",
+      "factCount": 10,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Deferred Tax Assets, Tax Credit Carryforwards, Research",
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxAssetsTaxDeferredExpenseCompensationAndBenefitsShareBasedCompensationCost",
+      "factCount": 20,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Deferred Tax Assets, Tax Deferred Expense, Compensation and Benefits, Share-based Compensation Cost",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxAssetsTaxDeferredExpenseReservesAndAccruals",
+      "factCount": 22,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Deferred Tax Assets, Tax Deferred Expense, Reserves and Accruals",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxAssetsValuationAllowance",
+      "factCount": 22,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Deferred Tax Assets, Valuation Allowance",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxLiabilities",
+      "factCount": 10,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Deferred Tax Liabilities, Net",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxLiabilitiesDeferredExpenseCapitalizedSoftware",
+      "factCount": 22,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Deferred Tax Liabilities, Deferred Expense, Capitalized Software",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxLiabilitiesInvestments",
+      "factCount": 12,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Deferred Tax Liabilities, Investments",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxLiabilitiesLeasingArrangements",
+      "factCount": 10,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Deferred Tax Liabilities, Leasing Arrangements",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxLiabilitiesOther",
+      "factCount": 14,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Deferred Tax Liabilities, Other",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DeferredTaxLiabilitiesUndistributedForeignEarnings",
+      "factCount": 1,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Deferred Tax Liabilities, Undistributed Foreign Earnings",
+      "lastPeriodEnd": "2019-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DepositsAssetsCurrent",
+      "factCount": 22,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Deposits Assets, Current",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "Depreciation",
+      "factCount": 25,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Depreciation",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DepreciationDepletionAndAmortization",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Depreciation, Depletion and Amortization",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DerivativeAssetsCurrent",
+      "factCount": 22,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Derivative Asset, Current",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DerivativeInstrumentsAndHedgesLiabilities",
+      "factCount": 8,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Derivative Instruments and Hedges, Liabilities",
+      "lastPeriodEnd": "2019-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DerivativeLiabilitiesCurrent",
+      "factCount": 10,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Derivative Liability, Current",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "DisposalGroupNotDiscontinuedOperationLossGainOnWriteDown",
+      "factCount": 8,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Disposal Group, Not Discontinued Operation, Loss (Gain) on Write-down",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "EarningsPerShareBasic",
+      "factCount": 30,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Earnings Per Share, Basic",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD/shares"
+      ]
+    },
+    {
+      "concept": "EarningsPerShareBasicAndDiluted",
+      "factCount": 11,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Earnings Per Share, Basic and Diluted",
+      "lastPeriodEnd": "2019-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD/shares"
+      ]
+    },
+    {
+      "concept": "EarningsPerShareDiluted",
+      "factCount": 30,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Earnings Per Share, Diluted",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD/shares"
+      ]
+    },
+    {
+      "concept": "EffectOfExchangeRateOnCashAndCashEquivalents",
+      "factCount": 9,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Effect of Exchange Rate on Cash and Cash Equivalents",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+      "factCount": 32,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Effect of Exchange Rate on Cash, Cash Equivalents, Restricted Cash and Restricted Cash Equivalents",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "EffectiveIncomeTaxRateContinuingOperations",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Effective Income Tax Rate Reconciliation, Percent",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "pure"
+      ]
+    },
+    {
+      "concept": "EffectiveIncomeTaxRateReconciliationAtFederalStatutoryIncomeTaxRate",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Effective Income Tax Rate Reconciliation, at Federal Statutory Income Tax Rate, Percent",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "pure"
+      ]
+    },
+    {
+      "concept": "EffectiveIncomeTaxRateReconciliationCrossBorderOtherAmount",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "EffectiveIncomeTaxRateReconciliationCrossBorderOtherPercent",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "pure"
+      ]
+    },
+    {
+      "concept": "EffectiveIncomeTaxRateReconciliationNondeductibleExpenseOther",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Effective Income Tax Rate Reconciliation, Nondeductible Expense, Other, Percent",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "pure"
+      ]
+    },
+    {
+      "concept": "EffectiveIncomeTaxRateReconciliationTaxCredits",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Effective Income Tax Rate Reconciliation, Tax Credit, Percent",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "pure"
+      ]
+    },
+    {
+      "concept": "EmbeddedDerivativeLossOnEmbeddedDerivative",
+      "factCount": 7,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K",
+        "10-Q"
+      ],
+      "label": "Embedded Derivative, Loss on Embedded Derivative",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "EmployeeRelatedLiabilitiesCurrent",
+      "factCount": 16,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Employee-related Liabilities, Current",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "EmployeeServiceShareBasedCompensationAllocationOfRecognizedPeriodCostsCapitalizedAmount",
+      "factCount": 11,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Share-based Payment Arrangement, Amount Capitalized",
+      "lastPeriodEnd": "2019-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "EmployeeServiceShareBasedCompensationNonvestedAwardsTotalCompensationCostNotYetRecognized",
+      "factCount": 22,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Share-based Payment Arrangement, Nonvested Award, Cost Not yet Recognized, Amount",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "EquityMethodInvestments",
+      "factCount": 16,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Equity Method Investments",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "EquitySecuritiesFvNiCurrentAndNoncurrent",
+      "factCount": 20,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "EquitySecuritiesFvNiUnrealizedGain",
+      "factCount": 1,
+      "firstPeriodEnd": "2021-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Equity Securities, FV-NI, Unrealized Gain",
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "EquitySecuritiesWithoutReadilyDeterminableFairValueAmount",
+      "factCount": 3,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Equity Securities without Readily Determinable Fair Value, Amount",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "EquitySecuritiesWithoutReadilyDeterminableFairValueUpwardPriceAdjustmentCumulativeAmount",
+      "factCount": 1,
+      "firstPeriodEnd": "2021-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Equity Securities without Readily Determinable Fair Value, Upward Price Adjustment, Cumulative Amount",
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "FinancingReceivableAccruedInterestBeforeAllowanceForCreditLoss",
+      "factCount": 19,
+      "firstPeriodEnd": "2022-01-01",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Financing Receivable, Accrued Interest, before Allowance for Credit Loss",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "FinancingReceivableAllowanceForCreditLossWriteoffAfterRecovery",
+      "factCount": 4,
+      "firstPeriodEnd": "2025-06-30",
+      "forms": [
+        "10-Q"
+      ],
+      "label": "Financing Receivable, Allowance for Credit Loss, Writeoff, after Recovery",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "FinancingReceivableAllowanceForCreditLosses",
+      "factCount": 2,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Financing Receivable, Allowance for Credit Loss",
+      "lastPeriodEnd": "2016-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "FinancingReceivableOriginatedInCurrentFiscalYear",
+      "factCount": 14,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K",
+        "10-Q"
+      ],
+      "label": "Financing Receivable, Year One, Originated, Current Fiscal Year",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "FinancingReceivableOriginatedInFiscalYearBeforeLatestFiscalYear",
+      "factCount": 14,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K",
+        "10-Q"
+      ],
+      "label": "Financing Receivable, Year Two, Originated, Fiscal Year before Current Fiscal Year",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "FinancingReceivableOriginatedTwoYearsBeforeLatestFiscalYear",
+      "factCount": 2,
+      "firstPeriodEnd": "2026-03-31",
+      "forms": [
+        "10-Q"
+      ],
+      "label": "Financing Receivable, Year Three, Originated, Two Years before Current Fiscal Year",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "FinancingReceivablePercentPastDue1",
+      "factCount": 6,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Financing Receivable, Percent Past Due",
+      "lastPeriodEnd": "2023-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "pure"
+      ]
+    },
+    {
+      "concept": "FiniteLivedIntangibleAssetsAccumulatedAmortization",
+      "factCount": 28,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Finite-Lived Intangible Assets, Accumulated Amortization",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "FiniteLivedIntangibleAssetsAmortizationExpenseAfterYearFive",
+      "factCount": 4,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Finite-Lived Intangible Asset, Expected Amortization, after Year Five",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "FiniteLivedIntangibleAssetsAmortizationExpenseNextTwelveMonths",
+      "factCount": 14,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Finite-Lived Intangible Asset, Expected Amortization, Year One",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "FiniteLivedIntangibleAssetsAmortizationExpenseRemainderOfFiscalYear",
+      "factCount": 3,
+      "firstPeriodEnd": "2025-03-31",
+      "forms": [
+        "10-Q"
+      ],
+      "label": "Finite-Lived Intangible Asset, Expected Amortization, Remainder of Fiscal Year",
+      "lastPeriodEnd": "2025-09-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "FiniteLivedIntangibleAssetsAmortizationExpenseYearFive",
+      "factCount": 4,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Finite-Lived Intangible Asset, Expected Amortization, Year Five",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "FiniteLivedIntangibleAssetsAmortizationExpenseYearFour",
+      "factCount": 9,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Finite-Lived Intangible Asset, Expected Amortization, Year Four",
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "FiniteLivedIntangibleAssetsAmortizationExpenseYearThree",
+      "factCount": 14,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Finite-Lived Intangible Asset, Expected Amortization, Year Three",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "FiniteLivedIntangibleAssetsAmortizationExpenseYearTwo",
+      "factCount": 14,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Finite-Lived Intangible Asset, Expected Amortization, Year Two",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "FiniteLivedIntangibleAssetsGross",
+      "factCount": 16,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Finite-Lived Intangible Assets, Gross",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "FiniteLivedIntangibleAssetsNet",
+      "factCount": 22,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Finite-Lived Intangible Assets, Net",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ForeignCurrencyTransactionGainLossBeforeTax",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Foreign Currency Transaction Gain (Loss), before Tax",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ForeignCurrencyTransactionGainLossUnrealized",
+      "factCount": 38,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Foreign Currency Transaction Gain (Loss), Unrealized",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ForeignCurrencyTransactionLossBeforeTax",
+      "factCount": 3,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": "Foreign Currency Transaction Loss, before Tax",
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "GainLossOnDispositionOfAssets1",
+      "factCount": 3,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": "Gain (Loss) on Disposition of Assets",
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "GainLossOnSaleOfPropertyPlantEquipment",
+      "factCount": 4,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Gain (Loss) on Disposition of Property Plant Equipment",
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "GainLossOnTerminationOfLease",
+      "factCount": 2,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Gain (Loss) on Termination of Lease",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "GeneralAndAdministrativeExpense",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "General and Administrative Expense",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "Goodwill",
+      "factCount": 45,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Goodwill",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "GoodwillAcquiredDuringPeriod",
+      "factCount": 10,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K",
+        "10-Q"
+      ],
+      "label": "Goodwill, Acquired During Period",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "GoodwillImpairmentLoss",
+      "factCount": 22,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Goodwill, Impairment Loss",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "GrossProfit",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Gross Profit",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ImpairmentOfLeasehold",
+      "factCount": 10,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Impairment of Leasehold",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncentiveFromLessor",
+      "factCount": 4,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Incentive from Lessor",
+      "lastPeriodEnd": "2016-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeLossAttributableToParent",
+      "factCount": 29,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Income (Loss) Attributable to Parent, before Tax",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Income (Loss) from Continuing Operations before Income Taxes, Domestic",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Income (Loss) from Continuing Operations before Income Taxes, Noncontrolling Interest",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesForeign",
+      "factCount": 12,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Income (Loss) from Continuing Operations before Income Taxes, Foreign",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
+      "factCount": 3,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": "Income (Loss) from Continuing Operations before Equity Method Investments, Income Taxes, Noncontrolling Interest",
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeLossFromEquityMethodInvestments",
+      "factCount": 24,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Income (Loss) from Equity Method Investments",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxExpenseBenefit",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Income Tax Expense (Benefit)",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxPaidFederalAfterRefundReceived",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxPaidStateAndLocalAfterRefundReceived",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": null,
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxReceivable",
+      "factCount": 6,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Income Taxes Receivable",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxReconciliationChangeInDeferredTaxAssetsValuationAllowance",
+      "factCount": 22,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Effective Income Tax Rate Reconciliation, Change in Deferred Tax Assets Valuation Allowance, Amount",
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxReconciliationChangeInEnactedTaxRate",
+      "factCount": 3,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": "Effective Income Tax Rate Reconciliation, Change in Enacted Tax Rate, Amount",
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxReconciliationDispositionOfBusiness",
+      "factCount": 5,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Effective Income Tax Rate Reconciliation, Disposition of Business, Amount",
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxReconciliationForeignIncomeTaxRateDifferential",
+      "factCount": 22,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Effective Income Tax Rate Reconciliation, Foreign Income Tax Rate Differential, Amount",
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxReconciliationIncomeTaxExpenseBenefitAtFederalStatutoryIncomeTaxRate",
+      "factCount": 25,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Effective Income Tax Rate Reconciliation at Federal Statutory Income Tax Rate, Amount",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxReconciliationNondeductibleExpense",
+      "factCount": 13,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Effective Income Tax Rate Reconciliation, Nondeductible Expense, Amount",
+      "lastPeriodEnd": "2020-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxReconciliationNondeductibleExpenseOther",
+      "factCount": 8,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Effective Income Tax Rate Reconciliation, Nondeductible Expense, Other, Amount",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxReconciliationNondeductibleExpenseResearchAndDevelopment",
+      "factCount": 8,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Effective Income Tax Rate Reconciliation, Nondeductible Expense, Research and Development, Amount",
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxReconciliationNondeductibleExpenseShareBasedCompensationCost",
+      "factCount": 13,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Effective Income Tax Rate Reconciliation, Nondeductible Expense, Share-based Payment Arrangement, Amount",
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxReconciliationOtherAdjustments",
+      "factCount": 22,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Effective Income Tax Rate Reconciliation, Other Adjustments, Amount",
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxReconciliationRepatriationOfForeignEarnings",
+      "factCount": 5,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Effective Income Tax Rate Reconciliation, Repatriation of Foreign Earnings, Amount",
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxReconciliationStateAndLocalIncomeTaxes",
+      "factCount": 7,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Effective Income Tax Rate Reconciliation, State and Local Income Taxes, Amount",
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxReconciliationTaxCredits",
+      "factCount": 19,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Effective Income Tax Rate Reconciliation, Tax Credit, Amount",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxReconciliationTaxCreditsResearch",
+      "factCount": 3,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": "Effective Income Tax Rate Reconciliation, Tax Credit, Research, Amount",
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxesPaidNet",
+      "factCount": 28,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Income Taxes Paid, Net",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncomeTaxesReceivable",
+      "factCount": 6,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Income Taxes Receivable, Current",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseInAccountsAndOtherReceivables",
+      "factCount": 22,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Increase (Decrease) in Accounts and Other Receivables",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseInAccountsPayableAndAccruedLiabilities",
+      "factCount": 25,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Increase (Decrease) in Accounts Payable and Accrued Liabilities",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseInAccruedIncomeTaxesPayable",
+      "factCount": 8,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Increase (Decrease) in Income Taxes Payable",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseInContractWithCustomerLiability",
+      "factCount": 18,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Increase (Decrease) in Contract with Customer, Liability",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseInDeferredIncomeTaxes",
+      "factCount": 32,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Increase (Decrease) in Deferred Income Taxes",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseInDeferredRevenue",
+      "factCount": 7,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Increase (Decrease) in Deferred Revenue",
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseInFinanceReceivables",
+      "factCount": 22,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Increase (Decrease) in Finance Receivables",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseInOtherCurrentAssets",
+      "factCount": 19,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Increase (Decrease) in Other Current Assets",
+      "lastPeriodEnd": "2023-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseInOtherOperatingAssets",
+      "factCount": 6,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Increase (Decrease) in Other Operating Assets",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseInOtherOperatingCapitalNet",
+      "factCount": 19,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-Q",
+        "20-F"
+      ],
+      "label": "Increase (Decrease) in Other Operating Assets and Liabilities, Net",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseInReceivables",
+      "factCount": 3,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": "Increase (Decrease) in Receivables",
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncreaseDecreaseInTradingSecurities",
+      "factCount": 2,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Increase (Decrease) in Debt Securities, Trading, and Equity Securities, FV-NI",
+      "lastPeriodEnd": "2020-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IncrementalCommonSharesAttributableToShareBasedPaymentArrangements",
+      "factCount": 4,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Incremental Common Shares Attributable to Dilutive Effect of Share-based Payment Arrangements",
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "IntangibleAssetsGrossExcludingGoodwill",
+      "factCount": 12,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Intangible Assets, Gross (Excluding Goodwill)",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "IntangibleAssetsNetExcludingGoodwill",
+      "factCount": 16,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Intangible Assets, Net (Excluding Goodwill)",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "InterestAndFeeIncomeLoansAndLeases",
+      "factCount": 20,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K",
+        "10-Q"
+      ],
+      "label": "Interest and Fee Income, Loans and Leases",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "InterestExpense",
+      "factCount": 6,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Interest Expense",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "InterestExpenseDebt",
+      "factCount": 5,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Interest Expense, Debt",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "InterestExpenseDebtExcludingAmortization",
+      "factCount": 5,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Interest Expense, Debt, Excluding Amortization",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "InterestIncomeExpenseNonoperatingNet",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Interest Income (Expense), Nonoperating, Net",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "InterestOnConvertibleDebtNetOfTax",
+      "factCount": 11,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Interest on Convertible Debt, Net of Tax",
+      "lastPeriodEnd": "2025-03-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "InterestPaidNet",
+      "factCount": 12,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Interest Paid, Excluding Capitalized Interest, Operating Activities",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "InterestReceivableCurrent",
+      "factCount": 6,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Interest Receivable, Current",
+      "lastPeriodEnd": "2020-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "InventoryNet",
+      "factCount": 10,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Inventory, Net",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LeaseAndRentalExpense",
+      "factCount": 10,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Operating Leases, Rent Expense",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LeaseCost",
+      "factCount": 15,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Lease, Cost",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LeaseIncentivePayableCurrent",
+      "factCount": 1,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Lease Incentive, Payable, Current",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LeaseIncentivePayableCurrentAndNoncurrent",
+      "factCount": 1,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Lease Incentive, Payable",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LesseeOperatingLeaseLiabilityPaymentsDue",
+      "factCount": 4,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Lessee, Operating Lease, Liability, to be Paid",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LesseeOperatingLeaseLiabilityPaymentsDueAfterYearFive",
+      "factCount": 4,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Lessee, Operating Lease, Liability, to be Paid, after Year Five",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LesseeOperatingLeaseLiabilityPaymentsDueNextTwelveMonths",
+      "factCount": 4,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Lessee, Operating Lease, Liability, to be Paid, Year One",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LesseeOperatingLeaseLiabilityPaymentsDueYearFive",
+      "factCount": 4,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Lessee, Operating Lease, Liability, to be Paid, Year Five",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LesseeOperatingLeaseLiabilityPaymentsDueYearFour",
+      "factCount": 4,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Lessee, Operating Lease, Liability, to be Paid, Year Four",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LesseeOperatingLeaseLiabilityPaymentsDueYearThree",
+      "factCount": 4,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Lessee, Operating Lease, Liability, to be Paid, Year Three",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LesseeOperatingLeaseLiabilityPaymentsDueYearTwo",
+      "factCount": 4,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Lessee, Operating Lease, Liability, to be Paid, Year Two",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LesseeOperatingLeaseLiabilityUndiscountedExcessAmount",
+      "factCount": 4,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Lessee, Operating Lease, Liability, Undiscounted Excess Amount",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LessorOperatingLeasePaymentsToBeReceivedFourYears",
+      "factCount": 2,
+      "firstPeriodEnd": "2024-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Lessor, Operating Lease, Payment to be Received, Year Four",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LessorOperatingLeasePaymentsToBeReceivedNextTwelveMonths",
+      "factCount": 4,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Lessor, Operating Lease, Payment to be Received, Year One",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LessorOperatingLeasePaymentsToBeReceivedThreeYears",
+      "factCount": 2,
+      "firstPeriodEnd": "2024-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Lessor, Operating Lease, Payment to be Received, Year Three",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LessorOperatingLeasePaymentsToBeReceivedTwoYears",
+      "factCount": 2,
+      "firstPeriodEnd": "2024-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Lessor, Operating Lease, Payment to be Received, Year Two",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LiabilitiesAndStockholdersEquity",
+      "factCount": 32,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Liabilities and Equity",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LiabilitiesCurrent",
+      "factCount": 32,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Liabilities, Current",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LiabilitiesNoncurrent",
+      "factCount": 32,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Liabilities, Noncurrent",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LicenseAndServicesRevenue",
+      "factCount": 7,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "License and Services Revenue (Deprecated 2018-01-31)",
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LitigationSettlementExpense",
+      "factCount": 1,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Litigation Settlement, Expense",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LossContingencyAccrualAtCarryingValue",
+      "factCount": 1,
+      "firstPeriodEnd": "2022-09-30",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Loss Contingency Accrual",
+      "lastPeriodEnd": "2022-09-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LossContingencyAccrualCarryingValuePeriodIncreaseDecrease",
+      "factCount": 1,
+      "firstPeriodEnd": "2024-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Loss Contingency Accrual, Period Increase (Decrease)",
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "LossContingencyNumberOfPlaintiffs",
+      "factCount": 2,
+      "firstPeriodEnd": "2021-12-01",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Loss Contingency, Number of Plaintiffs",
+      "lastPeriodEnd": "2021-12-01",
+      "taxonomy": "us-gaap",
+      "units": [
+        "parent_company"
+      ]
+    },
+    {
+      "concept": "LossContingencyPatentsFoundInfringedNumber",
+      "factCount": 4,
+      "firstPeriodEnd": "2022-08-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Loss Contingency, Patents Found Infringed, Number",
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "patent"
+      ]
+    },
+    {
+      "concept": "MarketableSecuritiesCurrent",
+      "factCount": 32,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Marketable Securities, Current",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "MarketableSecuritiesNoncurrent",
+      "factCount": 14,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K",
+        "10-Q"
+      ],
+      "label": "Marketable Securities, Noncurrent",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "NetCashProvidedByUsedInFinancingActivities",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Net Cash Provided by (Used in) Financing Activities",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "NetCashProvidedByUsedInInvestingActivities",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Net Cash Provided by (Used in) Investing Activities",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "NetCashProvidedByUsedInOperatingActivities",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Net Cash Provided by (Used in) Operating Activities",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "NetIncomeLoss",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Net Income (Loss) Attributable to Parent",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "NetIncomeLossAttributableToParentDiluted",
+      "factCount": 11,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Net Income (Loss) Attributable to Parent, Diluted",
+      "lastPeriodEnd": "2025-03-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "NoncashOrPartNoncashAcquisitionNetNonmonetaryAssetsAcquiredLiabilitiesAssumed1",
+      "factCount": 3,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": "Noncash or Part Noncash Acquisition, Net Nonmonetary Assets Acquired (Liabilities Assumed)",
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "NonoperatingIncomeExpense",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Nonoperating Income (Expense)",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "NotesAndLoansReceivableNetCurrent",
+      "factCount": 37,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Financing Receivable, after Allowance for Credit Loss, Current",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "NotesReceivableGross",
+      "factCount": 20,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Financing Receivable, before Allowance for Credit Loss",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "NumberOfOperatingSegments",
+      "factCount": 17,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Number of Operating Segments",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "segment"
+      ]
+    },
+    {
+      "concept": "NumberOfReportableSegments",
+      "factCount": 17,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Number of Reportable Segments",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "segment"
+      ]
+    },
+    {
+      "concept": "NumberOfReportingUnits",
+      "factCount": 5,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Number of Reporting Units",
+      "lastPeriodEnd": "2019-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "reporting_unit"
+      ]
+    },
+    {
+      "concept": "OperatingExpenses",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Operating Expenses",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OperatingIncomeLoss",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Operating Income (Loss)",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OperatingLeaseCost",
+      "factCount": 15,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Operating Lease, Cost",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OperatingLeaseImpairmentLoss",
+      "factCount": 9,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Operating Lease, Impairment Loss",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OperatingLeaseLiability",
+      "factCount": 4,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Operating Lease, Liability",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OperatingLeaseLiabilityCurrent",
+      "factCount": 24,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Operating Lease, Liability, Current",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OperatingLeaseLiabilityNoncurrent",
+      "factCount": 24,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Operating Lease, Liability, Noncurrent",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OperatingLeasePayments",
+      "factCount": 13,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Operating Lease, Payments",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OperatingLeaseRightOfUseAsset",
+      "factCount": 23,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Operating Lease, Right-of-Use Asset",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OperatingLeaseWeightedAverageDiscountRatePercent",
+      "factCount": 13,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Operating Lease, Weighted Average Discount Rate, Percent",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "pure"
+      ]
+    },
+    {
+      "concept": "OperatingLeasesFutureMinimumPaymentsDue",
+      "factCount": 4,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Operating Leases, Future Minimum Payments Due",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OperatingLeasesFutureMinimumPaymentsDueCurrent",
+      "factCount": 4,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Operating Leases, Future Minimum Payments Due, Next Twelve Months",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OperatingLeasesFutureMinimumPaymentsDueInFiveYears",
+      "factCount": 4,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Operating Leases, Future Minimum Payments, Due in Five Years",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OperatingLeasesFutureMinimumPaymentsDueInFourYears",
+      "factCount": 4,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Operating Leases, Future Minimum Payments, Due in Four Years",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OperatingLeasesFutureMinimumPaymentsDueInThreeYears",
+      "factCount": 4,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Operating Leases, Future Minimum Payments, Due in Three Years",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OperatingLeasesFutureMinimumPaymentsDueInTwoYears",
+      "factCount": 4,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Operating Leases, Future Minimum Payments, Due in Two Years",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OperatingLeasesFutureMinimumPaymentsDueThereafter",
+      "factCount": 4,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Operating Leases, Future Minimum Payments, Due Thereafter",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OperatingLossCarryforwards",
+      "factCount": 12,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Operating Loss Carryforwards",
+      "lastPeriodEnd": "2020-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherAccruedLiabilitiesCurrent",
+      "factCount": 16,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Other Accrued Liabilities, Current",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherAssetImpairmentCharges",
+      "factCount": 16,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Other Asset Impairment Charges",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherAssetsCurrent",
+      "factCount": 14,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Other Assets, Current",
+      "lastPeriodEnd": "2024-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherAssetsNoncurrent",
+      "factCount": 14,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K",
+        "10-Q"
+      ],
+      "label": "Other Assets, Noncurrent",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherComprehensiveIncomeLossCashFlowHedgeGainLossAfterReclassificationBeforeTax",
+      "factCount": 3,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Other Comprehensive Income (Loss), Cash Flow Hedge, Gain (Loss), after Reclassification, before Tax",
+      "lastPeriodEnd": "2020-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherComprehensiveIncomeLossCashFlowHedgeGainLossAfterReclassificationBeforeTaxParent",
+      "factCount": 28,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Other Comprehensive Income (Loss), Cash Flow Hedge, Gain (Loss), after Reclassification, before Tax, Parent",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherComprehensiveIncomeLossCashFlowHedgeGainLossAfterReclassificationTax",
+      "factCount": 3,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Other Comprehensive Income (Loss), Cash Flow Hedge, Gain (Loss), after Reclassification, Tax",
+      "lastPeriodEnd": "2020-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherComprehensiveIncomeLossCashFlowHedgeGainLossAfterReclassificationTaxParent",
+      "factCount": 28,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Other Comprehensive Income (Loss), Cash Flow Hedge, Gain (Loss), after Reclassification, Tax, Parent",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherComprehensiveIncomeLossNetOfTaxPortionAttributableToParent",
+      "factCount": 28,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Other Comprehensive Income (Loss), Net of Tax, Portion Attributable to Parent",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherComprehensiveIncomeUnrealizedGainLossOnDerivativesArisingDuringPeriodNetOfTax",
+      "factCount": 7,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Other Comprehensive Income (Loss), Unrealized Gain (Loss) on Derivatives Arising During Period, Net of Tax",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherComprehensiveIncomeUnrealizedGainLossOnDerivativesArisingDuringPeriodTax",
+      "factCount": 1,
+      "firstPeriodEnd": "2018-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Other Comprehensive Income (Loss), Unrealized Gain (Loss) on Derivatives Arising During Period, Tax",
+      "lastPeriodEnd": "2018-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherCostOfServices",
+      "factCount": 7,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Other Cost of Services (Deprecated 2018-01-31)",
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "OtherEmployeeRelatedLiabilitiesCurrent",
+      "factCount": 6,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Other Employee-related Liabilities, Current",
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "PaymentsForProceedsFromOtherInvestingActivities",
+      "factCount": 22,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Payments for (Proceeds from) Other Investing Activities",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "PaymentsForRepurchaseOfCommonStock",
+      "factCount": 6,
+      "firstPeriodEnd": "2025-03-31",
+      "forms": [
+        "10-Q"
+      ],
+      "label": "Payments for Repurchase of Common Stock",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "PaymentsOfStockIssuanceCosts",
+      "factCount": 12,
+      "firstPeriodEnd": "2018-02-28",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Payments of Stock Issuance Costs",
+      "lastPeriodEnd": "2021-02-28",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "PaymentsToAcquireAvailableForSaleSecuritiesDebt",
+      "factCount": 1,
+      "firstPeriodEnd": "2021-07-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Payments to Acquire Debt Securities, Available-for-sale",
+      "lastPeriodEnd": "2021-07-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Payments to Acquire Businesses, Net of Cash Acquired",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "PaymentsToAcquireEquityMethodInvestments",
+      "factCount": 2,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Payments to Acquire Equity Method Investments",
+      "lastPeriodEnd": "2020-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "PaymentsToAcquireFinanceReceivables",
+      "factCount": 26,
+      "firstPeriodEnd": "2020-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Payments to Acquire Finance Receivables",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "PaymentsToAcquireIntangibleAssets",
+      "factCount": 15,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Payments to Acquire Intangible Assets",
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "PaymentsToAcquireLoansHeldForInvestment",
+      "factCount": 26,
+      "firstPeriodEnd": "2021-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Payments to Acquire Loans Held-for-investment",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "PaymentsToAcquireMarketableSecurities",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Payments to Acquire Marketable Securities",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Payments to Acquire Property, Plant, and Equipment",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "PreferredStockLiquidationPreferenceValue",
+      "factCount": 2,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": "Preferred Stock, Liquidation Preference, Value",
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "PreferredStockSharesAuthorized",
+      "factCount": 2,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": "Preferred Stock, Shares Authorized",
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "PreferredStockSharesIssued",
+      "factCount": 2,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": "Preferred Stock, Shares Issued",
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "PreferredStockSharesOutstanding",
+      "factCount": 2,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": "Preferred Stock, Shares Outstanding",
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "PreferredStockValue",
+      "factCount": 2,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": "Preferred Stock, Value, Issued",
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "PrepaidExpenseAndOtherAssetsCurrent",
+      "factCount": 32,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Prepaid Expense and Other Assets, Current",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "PrepaidExpenseCurrent",
+      "factCount": 22,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Prepaid Expense, Current",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProceedsFromConvertibleDebt",
+      "factCount": 7,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Proceeds from Convertible Debt",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProceedsFromIssuanceInitialPublicOffering",
+      "factCount": 5,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Proceeds from Issuance Initial Public Offering",
+      "lastPeriodEnd": "2016-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProceedsFromIssuanceOfPreferredStockAndPreferenceStock",
+      "factCount": 17,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Proceeds from Issuance of Preferred Stock and Preference Stock",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProceedsFromPrincipalRepaymentsOnLoansAndLeasesHeldForInvestment",
+      "factCount": 26,
+      "firstPeriodEnd": "2021-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Proceeds from Principal Repayments on Loans and Leases Held-for-investment",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProceedsFromSaleAndMaturityOfMarketableSecurities",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Proceeds from Sale and Maturity of Marketable Securities",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProceedsFromSaleOfPropertyPlantAndEquipment",
+      "factCount": 3,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F"
+      ],
+      "label": "Proceeds from Sale of Property, Plant, and Equipment",
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProceedsFromStockOptionsExercised",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Proceeds from Stock Options Exercised",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "PropertyPlantAndEquipmentGross",
+      "factCount": 22,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Property, Plant and Equipment, Gross",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "PropertyPlantAndEquipmentNet",
+      "factCount": 32,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Property, Plant and Equipment, Net",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProvisionForDoubtfulAccounts",
+      "factCount": 36,
+      "firstPeriodEnd": "2016-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Accounts Receivable, Credit Loss Expense (Reversal)",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ProvisionForLoanLossesExpensed",
+      "factCount": 4,
+      "firstPeriodEnd": "2025-06-30",
+      "forms": [
+        "10-Q"
+      ],
+      "label": "Financing Receivable, Credit Loss, Expense (Reversal)",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "PurchaseObligation",
+      "factCount": 3,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Purchase Obligation",
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ReceivablesNetCurrent",
+      "factCount": 38,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Receivables, Net, Current",
+      "lastPeriodEnd": "2026-03-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ResearchAndDevelopmentExpense",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Research and Development Expense",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "RestrictedCash",
+      "factCount": 4,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Restricted Cash",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "RestrictedCashAndCashEquivalentsAtCarryingValue",
+      "factCount": 4,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Restricted Cash and Cash Equivalents, Current",
+      "lastPeriodEnd": "2016-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "CAD"
+      ]
+    },
+    {
+      "concept": "RestrictedStockExpense",
+      "factCount": 7,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Restricted Stock or Unit Expense",
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "RetainedEarningsAccumulatedDeficit",
+      "factCount": 32,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Retained Earnings (Accumulated Deficit)",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "factCount": 12,
+      "firstPeriodEnd": "2017-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Revenue from Contract with Customer, Excluding Assessed Tax",
+      "lastPeriodEnd": "2023-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "RevenueNotFromContractWithCustomer",
+      "factCount": 2,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Revenue Not from Contract with Customer",
+      "lastPeriodEnd": "2023-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "Revenues",
+      "factCount": 22,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "10-K",
+        "10-Q"
+      ],
+      "label": "Revenues",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "RightOfUseAssetObtainedInExchangeForOperatingLeaseLiability",
+      "factCount": 13,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Right-of-Use Asset Obtained in Exchange for Operating Lease Liability",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "SaleOfStockConsiderationReceivedOnTransaction",
+      "factCount": 15,
+      "firstPeriodEnd": "2016-08-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Sale of Stock, Consideration Received on Transaction",
+      "lastPeriodEnd": "2021-02-28",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "SaleOfStockPricePerShare",
+      "factCount": 14,
+      "firstPeriodEnd": "2017-05-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Sale of Stock, Price Per Share",
+      "lastPeriodEnd": "2021-02-28",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD/shares"
+      ]
+    },
+    {
+      "concept": "SalesAndExciseTaxPayableCurrent",
+      "factCount": 8,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Sales and Excise Tax Payable, Current",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "SalesAndExciseTaxPayableCurrentAndNoncurrent",
+      "factCount": 12,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Sales and Excise Tax Payable",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "SalesRevenueServicesGross",
+      "factCount": 7,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Sales Revenue, Services, Other (Deprecated 2018-01-31)",
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "SalesRevenueServicesNet",
+      "factCount": 7,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Sales Revenue, Services, Net (Deprecated 2018-01-31)",
+      "lastPeriodEnd": "2017-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "SecuritizationFinancialAssetForWhichTransferIsAccountedAsSaleGainLossOnSale",
+      "factCount": 8,
+      "firstPeriodEnd": "2024-06-30",
+      "forms": [
+        "10-Q"
+      ],
+      "label": "Securitization or Asset-backed Financing Arrangement, Financial Asset for which Transfer is Accounted as Sale, Gain (Loss) on Sale",
+      "lastPeriodEnd": "2025-09-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "SellingAndMarketingExpense",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Selling and Marketing Expense",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsExercisableNumber",
+      "factCount": 16,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Share-based Compensation Arrangement by Share-based Payment Award, Options, Exercisable, Number",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsExercisableWeightedAverageExercisePrice",
+      "factCount": 16,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Share-based Compensation Arrangement by Share-based Payment Award, Options, Exercisable, Weighted Average Exercise Price",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD/shares"
+      ]
+    },
+    {
+      "concept": "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsExercisesInPeriodTotalIntrinsicValue",
+      "factCount": 20,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Share-based Compensation Arrangement by Share-based Payment Award, Options, Exercises in Period, Intrinsic Value",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsForfeituresInPeriod",
+      "factCount": 27,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Share-based Compensation Arrangement by Share-based Payment Award, Options, Forfeitures in Period",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsGrantsInPeriodGross",
+      "factCount": 27,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Share-based Compensation Arrangement by Share-based Payment Award, Options, Grants in Period, Gross",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsGrantsInPeriodWeightedAverageGrantDateFairValue",
+      "factCount": 26,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Share-based Compensation Arrangement by Share-based Payment Award, Options, Grants in Period, Weighted Average Grant Date Fair Value",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD/shares"
+      ]
+    },
+    {
+      "concept": "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingIntrinsicValue",
+      "factCount": 43,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Share-based Compensation Arrangement by Share-based Payment Award, Options, Outstanding, Intrinsic Value",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingNumber",
+      "factCount": 43,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Share-based Compensation Arrangement by Share-based Payment Award, Options, Outstanding, Number",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingWeightedAverageExercisePrice",
+      "factCount": 43,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Share-based Compensation Arrangement by Share-based Payment Award, Options, Outstanding, Weighted Average Exercise Price",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD/shares"
+      ]
+    },
+    {
+      "concept": "ShareBasedCompensationArrangementsByShareBasedPaymentAwardOptionsExercisesInPeriodWeightedAverageExercisePrice",
+      "factCount": 27,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Share-based Compensation Arrangements by Share-based Payment Award, Options, Exercises in Period, Weighted Average Exercise Price",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD/shares"
+      ]
+    },
+    {
+      "concept": "ShareBasedCompensationArrangementsByShareBasedPaymentAwardOptionsForfeituresInPeriodWeightedAverageExercisePrice",
+      "factCount": 27,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Share-based Compensation Arrangements by Share-based Payment Award, Options, Forfeitures in Period, Weighted Average Exercise Price",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD/shares"
+      ]
+    },
+    {
+      "concept": "ShareBasedCompensationArrangementsByShareBasedPaymentAwardOptionsGrantsInPeriodWeightedAverageExercisePrice",
+      "factCount": 27,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Share-based Compensation Arrangements by Share-based Payment Award, Options, Grants in Period, Weighted Average Exercise Price",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD/shares"
+      ]
+    },
+    {
+      "concept": "SharebasedCompensationArrangementBySharebasedPaymentAwardOptionsExercisableIntrinsicValue1",
+      "factCount": 16,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Share-based Compensation Arrangement by Share-based Payment Award, Options, Exercisable, Intrinsic Value",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "SharebasedCompensationArrangementBySharebasedPaymentAwardOptionsNonvestedWeightedAverageGrantDateFairValue",
+      "factCount": 39,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Share-based Compensation Arrangement by Share-based Payment Award, Option, Nonvested, Weighted Average Exercise Price",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD/shares"
+      ]
+    },
+    {
+      "concept": "StockIssuedDuringPeriodSharesNewIssues",
+      "factCount": 1,
+      "firstPeriodEnd": "2022-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Stock Issued During Period, Shares, New Issues",
+      "lastPeriodEnd": "2022-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "StockIssuedDuringPeriodSharesStockOptionsExercised",
+      "factCount": 27,
+      "firstPeriodEnd": "2014-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Share-based Compensation Arrangement by Share-based Payment Award, Options, Exercises in Period",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "StockIssuedDuringPeriodValueAcquisitions",
+      "factCount": 15,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Stock Issued During Period, Value, Acquisitions",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "StockIssuedDuringPeriodValueConversionOfConvertibleSecurities",
+      "factCount": 2,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Stock Issued During Period, Value, Conversion of Convertible Securities",
+      "lastPeriodEnd": "2015-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "StockIssuedDuringPeriodValueNewIssues",
+      "factCount": 15,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Stock Issued During Period, Value, New Issues",
+      "lastPeriodEnd": "2021-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "StockIssuedDuringPeriodValueRestrictedStockAwardNetOfForfeitures",
+      "factCount": 39,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Stock Issued During Period, Value, Restricted Stock Award, Net of Forfeitures",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "StockIssuedDuringPeriodValueStockOptionsExercised",
+      "factCount": 43,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Stock Issued During Period, Value, Stock Options Exercised",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "StockOptionPlanExpense",
+      "factCount": 41,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Stock or Unit Option Plan Expense",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "StockRepurchaseProgramRemainingAuthorizedRepurchaseAmount1",
+      "factCount": 4,
+      "firstPeriodEnd": "2025-12-31",
+      "forms": [
+        "10-Q"
+      ],
+      "label": "Stock Repurchase Program, Remaining Authorized Repurchase Amount",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "StockRepurchasedDuringPeriodShares",
+      "factCount": 2,
+      "firstPeriodEnd": "2026-03-31",
+      "forms": [
+        "10-Q"
+      ],
+      "label": "Stock Repurchased During Period, Shares",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "StockRepurchasedDuringPeriodValue",
+      "factCount": 3,
+      "firstPeriodEnd": "2026-03-31",
+      "forms": [
+        "10-Q"
+      ],
+      "label": "Stock Repurchased During Period, Value",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "StockholdersEquity",
+      "factCount": 64,
+      "firstPeriodEnd": "2012-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "20-F",
+        "40-F"
+      ],
+      "label": "Stockholders' Equity Attributable to Parent",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterestAdjustedBalance1",
+      "factCount": 1,
+      "firstPeriodEnd": "2019-01-01",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Stockholders' Equity, Including Portion Attributable to Noncontrolling Interest, Adjusted Balance (Deprecated 2020-01-31)",
+      "lastPeriodEnd": "2019-01-01",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "SubleaseIncome",
+      "factCount": 11,
+      "firstPeriodEnd": "2021-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Sublease Income",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "TaxCreditCarryforwardAmount",
+      "factCount": 9,
+      "firstPeriodEnd": "2021-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Tax Credit Carryforward, Amount",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "TransferOfFinancialAssetsAccountedForAsSalesCashProceedsReceivedForAssetsDerecognizedAmount",
+      "factCount": 6,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K",
+        "10-Q"
+      ],
+      "label": "Transfer of Financial Assets Accounted for as Sales, Cash Proceeds Received for Assets Derecognized, Amount",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "TreasuryStockAcquiredAverageCostPerShare",
+      "factCount": 2,
+      "firstPeriodEnd": "2026-03-31",
+      "forms": [
+        "10-Q"
+      ],
+      "label": "Treasury Stock Acquired, Average Cost Per Share",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD/shares"
+      ]
+    },
+    {
+      "concept": "UnrealizedGainLossOnInvestments",
+      "factCount": 30,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Unrealized Gain (Loss) on Investments",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "UnrecognizedTaxBenefits",
+      "factCount": 12,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Unrecognized Tax Benefits",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "UnrecognizedTaxBenefitsIncomeTaxPenaltiesAndInterestAccrued",
+      "factCount": 8,
+      "firstPeriodEnd": "2015-12-31",
+      "forms": [
+        "40-F"
+      ],
+      "label": "Unrecognized Tax Benefits, Income Tax Penalties and Interest Accrued",
+      "lastPeriodEnd": "2019-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "UnrecognizedTaxBenefitsIncreasesResultingFromCurrentPeriodTaxPositions",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Unrecognized Tax Benefits, Increase Resulting from Current Period Tax Positions",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "UnrecognizedTaxBenefitsIncreasesResultingFromPriorPeriodTaxPositions",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Unrecognized Tax Benefits, Increase Resulting from Prior Period Tax Positions",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "UnrecognizedTaxBenefitsInterestOnIncomeTaxesAccrued",
+      "factCount": 3,
+      "firstPeriodEnd": "2023-12-31",
+      "forms": [
+        "10-K"
+      ],
+      "label": "Unrecognized Tax Benefits, Interest on Income Taxes Accrued",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "VariableLeaseCost",
+      "factCount": 15,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "10-K",
+        "40-F"
+      ],
+      "label": "Variable Lease, Cost",
+      "lastPeriodEnd": "2025-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "USD"
+      ]
+    },
+    {
+      "concept": "WeightedAverageNumberOfDilutedSharesOutstanding",
+      "factCount": 30,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Weighted Average Number of Shares Outstanding, Diluted",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "WeightedAverageNumberOfShareOutstandingBasicAndDiluted",
+      "factCount": 11,
+      "firstPeriodEnd": "2013-12-31",
+      "forms": [
+        "20-F",
+        "40-F"
+      ],
+      "label": "Weighted Average Number of Shares Outstanding, Basic and Diluted",
+      "lastPeriodEnd": "2019-12-31",
+      "taxonomy": "us-gaap",
+      "units": [
+        "shares"
+      ]
+    },
+    {
+      "concept": "WeightedAverageNumberOfSharesOutstandingBasic",
+      "factCount": 30,
+      "firstPeriodEnd": "2019-12-31",
+      "forms": [
+        "10-K",
+        "10-Q",
+        "40-F"
+      ],
+      "label": "Weighted Average Number of Shares Outstanding, Basic",
+      "lastPeriodEnd": "2026-06-30",
+      "taxonomy": "us-gaap",
+      "units": [
+        "shares"
+      ]
+    }
+  ],
+  "entityName": "Shopify Inc.",
+  "schemaVersion": 1
+}
