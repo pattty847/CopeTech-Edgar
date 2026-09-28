@@ -6,12 +6,24 @@ may contain breaking changes, which are always listed first.
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [0.2.0] - 2026-09-27
+
 Correctness and SEC-compliance pass from the 2026-07 architecture audit
 (see [docs/audit-2026-07.md](docs/audit-2026-07.md)). Every fix below was reproduced against
 a real SEC document or SEC's official XML technical specifications before being made, and
 re-verified afterwards.
 
-This work is targeted for `0.2.0`.
+It also carries the August 2026 financial-metrics expansion (composite and
+instant-balance metrics, enterprise-value multiples), its point-in-time fixes, and the
+September 2026 fundamentals audit.
+
+**Known limitation:** the live 20-issuer full-history audit
+(`.github/workflows/fundamentals-live-audit.yml`) still reports historical structural
+findings and unresolved period/entity-context issues on purpose, rather than discarding
+conflicts; see [docs/fundamentals-validation.md](docs/fundamentals-validation.md). The
+recorded-fixture suite is the release gate.
 
 ### Breaking
 
@@ -132,6 +144,21 @@ This work is targeted for `0.2.0`.
 - **`tests/test_app.py` could not be collected**, aborting the entire suite;
   `starlette.testclient` requires an httpx transport, now a dev dependency. 29 previously
   unrunnable tests now run.
+- **Financial facts were read by ticker instead of issuer CIK.** Share classes of one issuer
+  (GOOGL and GOOG) share a CIK and a Company Facts payload; whichever ticker was ingested
+  second silently dropped its rows, so GOOGL returned no history. Reads now resolve by CIK.
+- **Diluted shares are derived when an issuer never tags them non-dimensionally** (Alphabet
+  through mid-2024), so interim TTM reconstruction no longer collapses to annual points.
+- **Historical valuations keep point-in-time revision semantics:** restated denominators and
+  share histories are reconstructed, interim EPS is recomputed after bridge amendments, and a
+  derived Q4 is available only once every contributing filing is public.
+- **Revenue concept precedence:** total net sales are preferred over product revenue
+  (Microsoft had resolved to product revenue), and financial companies use the net revenue
+  aggregate. Normalization version is now 8, so cached derived series recompute.
+- **Aggregate debt and annual instant balances resolve correctly**, and missing invested
+  capital stays unknown instead of being treated as zero.
+- **Issuer fiscal calendars are preserved:** fiscal-year labels and shared annual filing
+  context survive storage (with a migration).
 
 ### Added
 
@@ -182,6 +209,20 @@ This work is targeted for `0.2.0`.
   `tests/test_http_client.py` gains concurrency, bounded-read and retry coverage. Suite: 115
   → 215 tests.
 - `docs/audit-2026-07.md` — full architecture and capability audit.
+
+- Financial metrics expansion: base metrics (gross profit, cost of revenue, operating income,
+  R&D, operating cash flow, capex, SBC, D&A, interest, tax, pretax income), derived series
+  (FCF, FCF margin, gross and operating margin, R&D intensity, revenue per share, SBC burden,
+  capex intensity, EBITDA, interest coverage, invested capital, ROIC), instant balance-sheet
+  metrics, and enterprise-value and trailing market-cap multiples. Derived values carry the
+  latest `availableAt`, the lowest confidence and the union of quality flags of the inputs
+  they used.
+- Cash-flow metrics derive standalone Q2/Q3 from year-to-date windows (`derived_from_ytd`).
+- Abnormal trailing-EPS moves are flagged so a one-time GAAP gain is not read as a cheap
+  multiple.
+- Deterministic fundamentals corpus audit over recorded filings, with CI canary fixtures
+  gating concept mappings; debt-hierarchy decisions carry their evidence into derived
+  availability and provenance.
 
 ### Changed
 
