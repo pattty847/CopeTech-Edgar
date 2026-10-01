@@ -68,7 +68,7 @@ jobs:
           import sys
 
           run_dir = Path(sys.argv[1])
-          payload = json.loads((run_dir / "findings.json").read_text())
+          payload = json.loads((run_dir / "findings.json").read_text(encoding="utf-8"))
           findings = payload.get("findings", payload) if isinstance(payload, dict) else payload
           severities = Counter(row["severity"] for row in findings)
           warning_codes = Counter(

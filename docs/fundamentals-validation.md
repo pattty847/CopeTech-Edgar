@@ -42,6 +42,15 @@ Never copy resolver output into `expected.json` and call it independent truth.
 Never waive a disagreement simply because another website displays a different
 number: first compare definitions, currencies, dates, and restatement policies.
 
+Normalization v9 adds blocking `ambiguous_derivation_inputs` findings when flow
+or composite arithmetic is withheld because input period ends are unresolved.
+The pipeline and report retain candidate evidence even for an unavailable result.
+Existing duplicate checks and fixture hashes remain unchanged. A decrease in
+derived observations is not evidence that the original full-history conflicts
+were reconciled; it must be accompanied by ambiguity records and support accounting.
+Regression coverage is in `tests/test_financial_conflicts.py`. Recorded UTF-8
+fixture files are read explicitly as UTF-8 on Windows as well as Unix systems.
+
 ## Work required for the intended 20-issuer full-history gate
 
 1. Capture complete Company Facts histories for the pinned issuers with source

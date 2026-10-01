@@ -29,6 +29,14 @@ from .financial_series_store import FinancialSeriesStore
 
 FetchFacts = Callable[[str, bool], Awaitable[Optional[dict[str, Any]]]]
 
+
+def _observations_with_ambiguity_candidates(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    return list(payload["observations"]) + [
+        candidate
+        for ambiguity in payload.get("ambiguities") or []
+        for candidate in ambiguity.get("candidates") or []
+    ]
+
 # Market-cap multiples served by the generic trailing-multiple engine. The
 # denominator is either a TTM flow (kind "ttm": a base metric or a derived
 # composite resolved from its components' TTM windows) or a point-in-time
@@ -261,7 +269,7 @@ class FinancialSeriesService:
                 set(payload.get("warnings") or []) | {source_warning}
             )
         if not include_provenance:
-            for observation in payload["observations"]:
+            for observation in _observations_with_ambiguity_candidates(payload):
                 observation.pop("sources", None)
                 observation.pop("availabilitySource", None)
                 observation.pop("selectedSource", None)
@@ -325,7 +333,7 @@ class FinancialSeriesService:
                 set(payload.get("warnings") or []) | {source_warning}
             )
         if not include_provenance:
-            for observation in payload["observations"]:
+            for observation in _observations_with_ambiguity_candidates(payload):
                 observation.pop("sources", None)
                 observation.pop("availabilitySource", None)
                 observation.pop("selectedSource", None)
@@ -473,7 +481,7 @@ class FinancialSeriesService:
                 set(payload.get("warnings") or []) | {source_warning}
             )
         if not include_provenance:
-            for observation in payload["observations"]:
+            for observation in _observations_with_ambiguity_candidates(payload):
                 observation.pop("sources", None)
                 observation.pop("availabilitySource", None)
                 observation.pop("selectedSource", None)

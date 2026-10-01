@@ -12,6 +12,10 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Iterable
 
+from .financial_conflicts import (
+    AMBIGUOUS_INPUT_WARNING, canonical_ambiguities, dependent_ambiguity,
+    unambiguous_observations,
+)
 from .financial_metrics import (
     MetricDefinition,
     concept_quality_flags,
@@ -19,7 +23,7 @@ from .financial_metrics import (
 )
 
 
-NORMALIZATION_VERSION = 8
+NORMALIZATION_VERSION = 9
 QUARTER_MIN_DAYS = 70
 QUARTER_MAX_DAYS = 110
 # Cumulative (year-to-date) windows from Q2/Q3 filings: roughly six and nine
@@ -107,6 +111,7 @@ def resolve_financial_series(
         and (cutoff is None or _parse_date(row.get("filed")) <= cutoff)
     ]
     extra_warnings: set[str] = set()
+    ambiguities: list[dict[str, Any]] = []
     if definition.fact_type == "instant":
         # Balance-sheet metrics have no duration cadence: "quarterly" means every
         # reported balance date, "annual" only the fiscal-year-end dates (those
@@ -135,14 +140,14 @@ def resolve_financial_series(
         if basis == "canonical" and definition.aggregation == "sum":
             if definition.ytd_cadence:
                 ytd = _resolve_duration_windows(candidates, definition, cadence="ytd")
-                quarterly = _add_quarters_derived_from_ytd(quarterly, ytd)
-            quarterly = _add_derived_fourth_quarters(quarterly, annual)
+                quarterly = _add_quarters_derived_from_ytd(quarterly, ytd, ambiguities=ambiguities)
+            quarterly = _add_derived_fourth_quarters(quarterly, annual, ambiguities=ambiguities)
         if frequency == "quarterly":
             observations = quarterly
         elif frequency == "annual":
             observations = annual
         else:
-            observations = _trailing_twelve_months(quarterly, definition)
+            observations = _trailing_twelve_months(quarterly, definition, ambiguities=ambiguities)
     observations = [
         row
         for row in observations
@@ -155,7 +160,14 @@ def resolve_financial_series(
             if alignment == "availability"
             else observation["periodEnd"]
         )
-    observations.sort(key=lambda row: (row["periodEnd"], row["availableAt"]))
+    # Upstream conflicts can withhold an output inside the requested range even
+    # when their own input ends lie outside it. Keep that evidence visible.
+    ambiguities = canonical_ambiguities(ambiguities)
+    if ambiguities:
+        extra_warnings.add(AMBIGUOUS_INPUT_WARNING)
+    observations.sort(
+        key=lambda row: (row["periodEnd"], row["availableAt"], row["periodStart"], row["unit"])
+    )
     warnings = sorted(
         {
             warning
@@ -182,6 +194,7 @@ def resolve_financial_series(
         "asOf": as_of,
         "normalizationVersion": NORMALIZATION_VERSION,
         "observations": observations,
+        "ambiguities": ambiguities,
         "warnings": warnings,
     }
 
@@ -415,6 +428,8 @@ def _resolve_window(
 def _add_quarters_derived_from_ytd(
     quarterly: list[dict[str, Any]],
     ytd: list[dict[str, Any]],
+    *,
+    ambiguities: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     """Derive standalone Q2/Q3 from cumulative windows: Qn = YTDn − YTDn−1.
 
@@ -428,8 +443,22 @@ def _add_quarters_derived_from_ytd(
     output = list(quarterly)
     existing_windows = {(row["periodStart"], row["periodEnd"]) for row in quarterly}
     grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
-    for row in quarterly + ytd:
+    before_guard = len(ambiguities)
+    for row in unambiguous_observations(
+        quarterly + ytd, stage="ytd", ambiguities=ambiguities
+    ):
         grouped.setdefault((row["periodStart"], row["unit"]), []).append(row)
+    for record in ambiguities[before_guard:]:
+        for cumulative in ytd:
+            increment = (_parse_date(cumulative["periodEnd"]) - _parse_date(record["periodEnd"])).days
+            if QUARTER_MIN_DAYS <= increment <= QUARTER_MAX_DAYS and any(
+                row["periodStart"] == cumulative["periodStart"]
+                for row in record["candidates"]
+            ):
+                ambiguities.append(dependent_ambiguity(
+                    stage="ytd", frequency="quarterly", period_end=cumulative["periodEnd"],
+                    candidates=[cumulative, *record["candidates"]],
+                ))
     for group in grouped.values():
         ordered = sorted(group, key=lambda row: row["periodEnd"])
         for index in range(1, len(ordered)):
@@ -486,14 +515,35 @@ def _add_quarters_derived_from_ytd(
 def _add_derived_fourth_quarters(
     quarterly: list[dict[str, Any]],
     annual: list[dict[str, Any]],
+    *,
+    ambiguities: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     output = list(quarterly)
     existing_windows = {(row["periodStart"], row["periodEnd"]) for row in quarterly}
-    for annual_row in annual:
+    safe_quarterly = unambiguous_observations(
+        quarterly, stage="q4_quarters", ambiguities=ambiguities
+    )
+    safe_annual = unambiguous_observations(
+        annual, stage="q4_annual", ambiguities=ambiguities
+    )
+    for annual_row in safe_annual:
+        upstream = [
+            record for record in ambiguities
+            if record["stage"] in {"ytd", "q4_quarters"}
+            and annual_row["periodStart"] <= record["periodEnd"] < annual_row["periodEnd"]
+        ]
+        if upstream:
+            ambiguities.append(dependent_ambiguity(
+                stage="q4", frequency="quarterly", period_end=annual_row["periodEnd"],
+                candidates=[annual_row, *[
+                    candidate for record in upstream for candidate in record["candidates"]
+                ]],
+            ))
+            continue
         contained = sorted(
             [
                 row
-                for row in quarterly
+                for row in safe_quarterly
                 if row["periodStart"] >= annual_row["periodStart"]
                 and row["periodEnd"] <= annual_row["periodEnd"]
                 and row["unit"] == annual_row["unit"]
@@ -555,13 +605,35 @@ def _add_derived_fourth_quarters(
 def _trailing_twelve_months(
     quarterly: list[dict[str, Any]],
     definition: MetricDefinition,
+    *,
+    ambiguities: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     if definition.aggregation != "sum":
         return []
-    ordered = sorted(quarterly, key=lambda row: row["periodEnd"])
+    ordered = sorted(
+        unambiguous_observations(quarterly, stage="ttm", ambiguities=ambiguities),
+        key=lambda row: row["periodEnd"],
+    )
+    # A withheld quarter also invalidates rolling windows ending in each of the
+    # following three reported quarters. Preserve output-end diagnostics so an
+    # optional component cannot fall back as though the withheld value were absent.
+    ends = sorted({row["periodEnd"] for row in quarterly})
+    for record in list(ambiguities):
+        following = [
+            period_end for period_end in ends
+            if 0 < (_parse_date(period_end) - _parse_date(record["periodEnd"])).days <= ANNUAL_MAX_DAYS
+        ][:3]
+        for period_end in following:
+            ambiguities.append(dependent_ambiguity(
+                stage="ttm", frequency="ttm", period_end=period_end,
+                candidates=record["candidates"],
+            ))
     output: list[dict[str, Any]] = []
+    blocked_ends = {record["periodEnd"] for record in ambiguities}
     for index in range(3, len(ordered)):
         window = ordered[index - 3 : index + 1]
+        if window[-1]["periodEnd"] in blocked_ends:
+            continue
         if len({row["unit"] for row in window}) != 1:
             continue
         gaps = [

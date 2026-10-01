@@ -16,6 +16,9 @@ from typing import Any, Callable
 
 from .debt_series import DEBT_COMPONENTS, debt_decision_evidence, invested_capital, net_debt
 from .financial_metrics import get_metric_definition, supported_frequencies
+from .financial_conflicts import (
+    AMBIGUOUS_INPUT_WARNING, canonical_ambiguities, unambiguous_observations,
+)
 
 # compute receives the component values present for one aligned window and
 # returns (value, extra_quality_flags, component_ids_actually_used), or None to
@@ -360,11 +363,23 @@ def resolve_derived_series(
 ) -> dict[str, Any]:
     definition = get_derived_definition(metric)
     indexed: dict[str, dict[tuple[str, str], dict[str, Any]]] = {}
-    for component, payload in component_payloads.items():
+    ambiguities: list[dict[str, Any]] = []
+    for component, payload in sorted(component_payloads.items()):
+        ambiguities.extend(
+            {**record, "component": component}
+            for record in payload.get("ambiguities") or []
+        )
+        safe_rows = unambiguous_observations(
+            payload.get("observations") or [],
+            stage=f"component:{component}", ambiguities=ambiguities,
+        )
         indexed[component] = {
             (row["periodStart"], row["periodEnd"]): row
-            for row in payload.get("observations", [])
+            for row in safe_rows
         }
+    # A conflicted optional operand is not missing data: do not invoke a fallback
+    # formula or use another start for the same unresolved reporting period.
+    blocked_ends = {record["periodEnd"] for record in ambiguities}
     warnings: set[str] = {
         warning
         for payload in component_payloads.values()
@@ -384,6 +399,8 @@ def resolve_derived_series(
     common = set.intersection(*(set(keys) for keys in required_windows)) if required_windows else set()
     observations: list[dict[str, Any]] = []
     for window in sorted(common):
+        if window[1] in blocked_ends:
+            continue
         component_rows = {
             component: indexed[component][window]
             for component in definition.required
@@ -450,6 +467,9 @@ def resolve_derived_series(
     ):
         warnings.add("debt_hierarchy_incomplete")
     warnings |= {flag for row in observations for flag in row["qualityFlags"] if flag}
+    ambiguities = canonical_ambiguities(ambiguities)
+    if ambiguities:
+        warnings.add(AMBIGUOUS_INPUT_WARNING)
     any_payload = next(iter(component_payloads.values()), {})
     return {
         "symbol": symbol.upper(),
@@ -465,5 +485,6 @@ def resolve_derived_series(
         "derived": True,
         "components": sorted(definition.required + definition.optional),
         "observations": observations,
+        "ambiguities": ambiguities,
         "warnings": sorted(warnings),
     }

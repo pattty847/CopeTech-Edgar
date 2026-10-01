@@ -23,10 +23,10 @@ def test_recorded_corpus_has_exactly_the_pinned_issuers():
 @pytest.mark.parametrize("symbol", sorted(corpus_by_ticker()))
 def test_recorded_companyfacts_match_independently_reviewed_periods(tmp_path: Path, symbol: str):
     fixture_dir = FIXTURE_ROOT / symbol.lower()
-    payload = json.loads((fixture_dir / "companyfacts.json").read_text())
-    expected = json.loads((fixture_dir / "expected.json").read_text())
-    manifest = json.loads((fixture_dir / "manifest.json").read_text())
-    inventory = json.loads((fixture_dir / "concept-index.json").read_text())
+    payload = json.loads((fixture_dir / "companyfacts.json").read_text(encoding="utf-8"))
+    expected = json.loads((fixture_dir / "expected.json").read_text(encoding="utf-8"))
+    manifest = json.loads((fixture_dir / "manifest.json").read_text(encoding="utf-8"))
+    inventory = json.loads((fixture_dir / "concept-index.json").read_text(encoding="utf-8"))
     assert str(payload["cik"]).zfill(10) == corpus_by_ticker()[symbol].cik
     assert canonical_json_sha256(payload) == manifest["fixtureContentSha256"]
     assert canonical_json_sha256(inventory) == manifest["conceptInventoryContentSha256"]

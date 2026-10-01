@@ -218,6 +218,10 @@ point-in-time semantics, source tradeoffs, and metric roadmap.
 See [Fundamentals validation](docs/fundamentals-validation.md) for measured test
 coverage and the remaining work toward broad, independently verified histories.
 
+Canonical flow and composite arithmetic with unresolved duplicate input periods
+is withheld with `ambiguous_derivation_inputs` and an `ambiguities` evidence list.
+Reported candidates remain available; conflicting inputs are not treated as zero.
+
 ## HTTP API
 
 The repo also exposes a small FastAPI service for cloud demos.

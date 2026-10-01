@@ -23,6 +23,9 @@ from datetime import date, timedelta
 from typing import Any
 
 from .financial_series import NORMALIZATION_VERSION
+from .financial_conflicts import (
+    AMBIGUOUS_INPUT_WARNING, canonical_ambiguities, unambiguous_observations,
+)
 
 #: How far back from a window edge a balance date may sit and still represent it.
 BALANCE_LOOKBACK_DAYS = 135
@@ -56,6 +59,27 @@ def resolve_roic_series(
     alignment: str = "availability",
     as_of: str | None = None,
 ) -> dict[str, Any]:
+    ambiguities: list[dict[str, Any]] = []
+    safe_payloads = []
+    for component, payload in zip(
+        ("operating_income", "tax_expense", "pretax_income", "invested_capital"),
+        (operating_income_ttm, tax_expense_ttm, pretax_income_ttm, invested_capital),
+    ):
+        records = [dict(record) for record in payload.get("ambiguities") or []]
+        safe_rows = unambiguous_observations(
+            payload.get("observations") or [], stage=f"roic:{component}", ambiguities=records,
+        )
+        ambiguities.extend({**record, "component": component} for record in records)
+        safe_payloads.append({**payload, "observations": safe_rows})
+    operating_income_ttm, tax_expense_ttm, pretax_income_ttm, invested_capital = safe_payloads
+    blocked_flow_ends = {
+        record["periodEnd"] for record in ambiguities
+        if record["component"] != "invested_capital"
+    }
+    blocked_balance_ends = {
+        record["periodEnd"] for record in ambiguities
+        if record["component"] == "invested_capital"
+    }
     warnings: set[str] = {
         warning
         for payload in (
@@ -79,6 +103,13 @@ def resolve_roic_series(
             key=lambda row: row["periodEnd"],
         )
         for window in operating_income_ttm.get("observations") or []:
+            if window["periodEnd"] in blocked_flow_ends:
+                continue
+            if any(
+                _balance_conflicted_at(balances, edge, blocked_balance_ends)
+                for edge in (window["periodStart"], window["periodEnd"])
+            ):
+                continue
             key = (window["periodStart"], window["periodEnd"])
             tax = tax_by_window.get(key)
             pretax = pretax_by_window.get(key)
@@ -161,6 +192,9 @@ def resolve_roic_series(
         warnings.add("roic_windows_skipped_non_positive_pretax")
     observations.sort(key=lambda row: (row["periodEnd"], row["availableAt"]))
     warnings |= {flag for row in observations for flag in row["qualityFlags"] if flag}
+    ambiguities = canonical_ambiguities(ambiguities)
+    if ambiguities:
+        warnings.add(AMBIGUOUS_INPUT_WARNING)
     return {
         "symbol": symbol.upper(),
         "cik": operating_income_ttm.get("cik"),
@@ -175,6 +209,7 @@ def resolve_roic_series(
         "derived": True,
         "components": list(ROIC_METRIC_INFO["components"]),
         "observations": observations,
+        "ambiguities": ambiguities,
         "warnings": sorted(warnings),
     }
 
@@ -196,3 +231,15 @@ def _balance_at(
         row for row in balances if floor <= row["periodEnd"] <= edge
     ]
     return eligible[-1] if eligible else None
+
+
+def _balance_conflicted_at(
+    balances: list[dict[str, Any]], edge: str, blocked_ends: set[str],
+) -> bool:
+    """Do not fall back past a conflicted balance to an older safe balance."""
+    floor = (date.fromisoformat(edge) - timedelta(days=BALANCE_LOOKBACK_DAYS)).isoformat()
+    latest_safe = max(
+        (row["periodEnd"] for row in balances if floor <= row["periodEnd"] <= edge),
+        default=floor,
+    )
+    return any(latest_safe <= period_end <= edge for period_end in blocked_ends)

@@ -75,6 +75,33 @@ TTM revenue is the sum of four contiguous canonical quarters. Derived rows keep
 all contributing sources and are explicitly flagged; they are never presented as
 reported facts.
 
+Normalization v9 guards YTD, Q4, TTM flow arithmetic and composite joins against
+unresolved duplicate input period ends. Candidate starts or units may disagree
+even when their numeric values match; this guard does not establish period or
+accounting-entity equivalence. It preserves reported observations and withholds
+dependent arithmetic rather than selecting the first or last candidate.
+
+Guarded payloads include an additive `ambiguities` list (empty when no conflict
+was encountered). Each record contains `reason`, `stage`, input `frequency`,
+`periodEnd`, and complete candidate observations, including their provenance.
+Composite payloads also identify inherited evidence by `component`. A nonempty
+list carries the warning `ambiguous_derivation_inputs`; no observation for an
+affected derivation means unresolved evidence, not a valid zero. An ambiguous
+optional operand cannot trigger a missing-data fallback. `include_provenance=False`
+removes source objects from candidate observations as well as ordinary observations.
+Filing-date cutoffs are applied before guards, so a later conflicting disclosure
+does not invalidate a previously unambiguous as-of query.
+Records can refer to upstream input periods outside an output `start`/`end`
+range. Withheld Q4 and subsequent TTM ends retain dependency diagnostics so
+optional components cannot convert that ambiguity into a missing-data fallback.
+
+This conservative guard does not reconcile alternate dates, accounting eras,
+concept definitions, or revised operand bases. Historical canonical-series queries
+may consequently expose fewer derived observations until those conflicts receive
+source-backed reconciliation. The ordinary exact-window restatement selection
+policy remains unchanged. Specialized EPS reconstruction and price-based valuation
+remain governed by their separate contracts below.
+
 Raw normalized facts are persisted in an append-only SQLite version ledger keyed by
 CIK, metric, taxonomy, concept, accession, unit, economic window, normalization
 version, and content hash. Acquisition time is separate from the SEC filing date.

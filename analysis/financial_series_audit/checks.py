@@ -55,6 +55,16 @@ def check_financial_series(
     ]
     findings: list[AuditFinding] = []
 
+    for ambiguity in payload.get("ambiguities") or []:
+        findings.append(
+            _finding(
+                "ambiguous_derivation_inputs", "error",
+                "Financial arithmetic was withheld because its inputs are ambiguous.",
+                symbol, metric, frequency, ambiguity.get("periodEnd"),
+                ambiguity=dict(ambiguity),
+            )
+        )
+
     findings.extend(
         _duplicate_window_findings(
             observations,

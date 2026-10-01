@@ -109,6 +109,7 @@ async def _resolve_metric(
         "rawFactCount": payload.get("rawFactCount"),
         "normalizationVersion": payload.get("normalizationVersion"),
         "observations": observations,
+        "ambiguities": list(payload.get("ambiguities") or []),
         "warnings": list(payload.get("warnings") or []),
     }
 
