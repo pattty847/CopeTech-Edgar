@@ -369,17 +369,23 @@ def resolve_derived_series(
             {**record, "component": component}
             for record in payload.get("ambiguities") or []
         )
+        component_ambiguities: list[dict[str, Any]] = []
         safe_rows = unambiguous_observations(
             payload.get("observations") or [],
-            stage=f"component:{component}", ambiguities=ambiguities,
+            stage=f"component:{component}", ambiguities=component_ambiguities,
+        )
+        ambiguities.extend(
+            {**record, "component": component} for record in component_ambiguities
         )
         indexed[component] = {
             (row["periodStart"], row["periodEnd"]): row
             for row in safe_rows
         }
-    # A conflicted optional operand is not missing data: do not invoke a fallback
-    # formula or use another start for the same unresolved reporting period.
-    blocked_ends = {record["periodEnd"] for record in ambiguities}
+    # A conflicted optional operand is not missing data. Keep its component
+    # identity so an unused fallback branch cannot suppress a sound preferred one.
+    blocked_components: dict[str, set[str]] = {}
+    for record in ambiguities:
+        blocked_components.setdefault(record["periodEnd"], set()).add(record["component"])
     warnings: set[str] = {
         warning
         for payload in component_payloads.values()
@@ -399,7 +405,10 @@ def resolve_derived_series(
     common = set.intersection(*(set(keys) for keys in required_windows)) if required_windows else set()
     observations: list[dict[str, Any]] = []
     for window in sorted(common):
-        if window[1] in blocked_ends:
+        conflicts = blocked_components.get(window[1], set())
+        if metric in {"gross_profit", "gross_margin"} and window in indexed.get("gross_profit", {}):
+            conflicts = conflicts - {"cost_of_revenue"}
+        if conflicts:
             continue
         component_rows = {
             component: indexed[component][window]

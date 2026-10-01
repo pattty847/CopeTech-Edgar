@@ -94,6 +94,11 @@ does not invalidate a previously unambiguous as-of query.
 Records can refer to upstream input periods outside an output `start`/`end`
 range. Withheld Q4 and subsequent TTM ends retain dependency diagnostics so
 optional components cannot convert that ambiguity into a missing-data fallback.
+Annual requests do not run unused quarterly derivations, so quarter-only conflicts
+do not invalidate unique annual operands. A unique reported gross-profit branch
+also remains usable when only its unused cost-of-revenue fallback is ambiguous.
+That unused conflict stays in payload evidence and remains a blocking audit finding;
+its sources are excluded from the valid observation's arithmetic and decision evidence.
 
 This conservative guard does not reconcile alternate dates, accounting eras,
 concept definitions, or revised operand bases. Historical canonical-series queries

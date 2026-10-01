@@ -137,7 +137,7 @@ def resolve_financial_series(
     else:
         quarterly = _resolve_duration_windows(candidates, definition, cadence="quarterly")
         annual = _resolve_duration_windows(candidates, definition, cadence="annual")
-        if basis == "canonical" and definition.aggregation == "sum":
+        if frequency != "annual" and basis == "canonical" and definition.aggregation == "sum":
             if definition.ytd_cadence:
                 ytd = _resolve_duration_windows(candidates, definition, cadence="ytd")
                 quarterly = _add_quarters_derived_from_ytd(quarterly, ytd, ambiguities=ambiguities)

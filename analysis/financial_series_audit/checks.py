@@ -59,7 +59,7 @@ def check_financial_series(
         findings.append(
             _finding(
                 "ambiguous_derivation_inputs", "error",
-                "Financial arithmetic was withheld because its inputs are ambiguous.",
+                "Unresolved financial inputs require review before dependent arithmetic.",
                 symbol, metric, frequency, ambiguity.get("periodEnd"),
                 ambiguity=dict(ambiguity),
             )

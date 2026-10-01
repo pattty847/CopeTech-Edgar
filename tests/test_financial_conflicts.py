@@ -71,6 +71,20 @@ def test_conflicting_ytd_end_cannot_feed_q3_or_q4():
                for a in december["ambiguities"])
 
 
+def test_quarter_only_conflict_does_not_suppress_unique_annual_fcf():
+    annual = resolve(FY + [fact(26, "2024-12-31", "2025-06-30", "alternate")],
+                     frequency="annual")
+    assert annual["ambiguities"] == []
+    capex = component(10)
+    capex["observations"][0].update(periodStart="2025-01-01", frequency="annual")
+    result = resolve_derived_series(
+        {"operating_cash_flow":annual, "capex":capex}, symbol="TEST", metric="fcf",
+        frequency="annual", basis="canonical", alignment="availability",
+    )
+    assert result["observations"][0]["value"] == 60  # Unique annual 70 - 10.
+    assert result["ambiguities"] == []
+
+
 def test_multiple_ytd_conflicts_have_deterministic_dependency_evidence():
     entries = FY + [
         fact(26, "2024-12-31", "2025-06-30", "alternate-h1"),
@@ -151,6 +165,25 @@ def test_conflicting_optional_input_cannot_be_treated_as_missing_for_fallback():
                       "gross_profit":gross_profit}, metric="gross_profit")
     assert result["observations"] == []
     assert result["ambiguities"]
+
+
+@pytest.mark.parametrize("metric", ["gross_profit", "gross_margin"])
+@pytest.mark.parametrize("gross_profit", [0, 40])
+def test_unused_cost_conflict_keeps_preferred_gross_profit(metric, gross_profit):
+    cost = component(60)
+    alternate = component(61)["observations"][0]
+    alternate["periodStart"] = "2025-10-02"
+    cost["observations"].append(alternate)
+    result = derived({"revenue":component(100), "gross_profit":component(gross_profit),
+                      "cost_of_revenue":cost}, metric=metric)
+    row = result["observations"][0]
+    assert row["value"] == (gross_profit if metric == "gross_profit" else gross_profit / 100)
+    assert "cost_of_revenue" not in row["inputMetrics"]
+    assert "cost_of_revenue" not in row["evidenceMetrics"]
+    assert {s["accessionNumber"] for s in row["sources"]}.isdisjoint({"60", "61"})
+    assert result["ambiguities"][0]["component"] == "cost_of_revenue"
+    assert any(f.code == "ambiguous_derivation_inputs" and f.severity == "error"
+               for f in check_financial_series(result))
 
 
 def test_unambiguous_composite_zero_is_not_missing():
